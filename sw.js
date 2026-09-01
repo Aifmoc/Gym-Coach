@@ -2,7 +2,7 @@
 // Gestiona el cacheo básico para uso offline y las notificaciones de descanso
 // programadas, que funcionan aunque el usuario salga de la app.
 
-const CACHE = 'gym-coach-v19';
+const CACHE = 'gym-coach-v21';
 const ASSETS = ['./', './index.html', './manifest.json'];
 
 self.addEventListener('install', (e) => {
