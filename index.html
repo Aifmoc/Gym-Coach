@@ -134,15 +134,53 @@ details.advanced>summary{cursor:pointer;font-weight:750;color:var(--accent2)}
 
 
 /* FINAL v11 · guardado robusto */
-.autosaveBar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#0d151d;margin-top:8px}
+.autosaveBar{display:flex;align-items:center;gap:8px;flex-wrap:nowrap;border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:#0d151d;margin-top:8px;min-height:40px;overflow:hidden}
+.autosaveBar #autosaveStatus{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .autosaveDot{width:9px;height:9px;border-radius:50%;background:var(--ok);display:inline-block}
 .autosaveDot.saving{background:#fbbf24}.autosaveDot.warn{background:#fb7185}
 .recoveryBox{border:1px solid rgba(96,165,250,.55);background:#0d1825;border-radius:12px;padding:10px}
 
+
+/* ===== v21 · Mobile stability + visual polish ===== */
+:root{--panel3:#17130f;--focusRing:0 0 0 3px rgba(226,118,44,.16)}
+body{overscroll-behavior-y:none}
+.card{box-shadow:0 7px 24px rgba(0,0,0,.28)}
+#record,#sets,.setwrap,.recordCompare,#nextSetGoal{overflow-anchor:none}
+#nextSetGoal{height:78px;overflow:auto;display:flex;align-items:center;line-height:1.35}
+#record .seriesCard{border-color:rgba(226,118,44,.28)}
+.setwrap{border-radius:12px;transition:border-color .12s,background .12s}
+.setwrap:focus-within{background:rgba(226,118,44,.045)}
+.setinput input:focus{box-shadow:var(--focusRing)}
+.quickExercise{transition:transform .08s,border-color .15s,background .15s}
+.quickExercise:active{transform:scale(.992)}
+.compareBox.today{border-color:rgba(226,118,44,.78);background:linear-gradient(145deg,#25180f,#1a1410)}
+.compareBox.last{background:linear-gradient(145deg,#191713,#14120f)}
+.v21Rir{display:inline-block;padding:1px 6px;border-radius:999px;background:rgba(226,118,44,.13);color:var(--accent2);font-size:11px;white-space:nowrap}
+.v21TargetLine{display:grid;grid-template-columns:22px 1fr;gap:6px;align-items:baseline;margin:2px 0}
+.v21TargetLine .n{color:var(--muted);font-size:11px;font-weight:800}
+.v21VolumeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v21Volume{background:#1a1611;border:1px solid var(--line);border-radius:12px;padding:9px}
+.v21Volume b{display:block;font-size:19px;font-family:'Oswald',system-ui,sans-serif}
+.v21DayCard .item{padding:9px 10px}
+.v21DayCard .item b{font-size:14px}
+.v21DayCard .small{line-height:1.35}
+body.keyboard-open #recordBottom{display:none!important}
+body.keyboard-open{padding-bottom:12px}
+body.keyboard-open .toast{bottom:18px}
+@media(max-width:620px){
+  #nextSetGoal{height:96px;font-size:12px}
+  .recordCompare{gap:6px}
+  .compareBox{padding:9px}
+  .compareMain{font-size:13px}
+  #record .wrap{padding-left:10px;padding-right:10px}
+  .setrow{scroll-margin-bottom:200px}
+}
+@media(min-width:700px){.v21VolumeGrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+
 </style>
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: reacondicionamiento flexible · volumen serio tras Japón · FINAL v11</div></div><div class="badge"><span id="topWeight">— kg</span></div></div></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v21</div></div><div class="badge"><span id="topWeight">— kg</span></div></div></div>
 <div class="wrap">
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="train">Entreno</button>
@@ -243,7 +281,7 @@ details.advanced>summary{cursor:pointer;font-weight:750;color:var(--accent2)}
             <div class="compareSub" id="lastComparableDate">—</div>
           </div>
         </div>
-        <div class="historyBox sectiongap" id="nextSetGoal"><b>Siguiente serie:</b> introduce la primera serie y el RIR.</div>
+        <div class="historyBox sectiongap" id="nextSetGoal" style="min-height:44px"><b>Siguiente serie:</b> introduce la primera serie y el RIR.</div>
 
         <details class="advanced sectiongap">
           <summary>Histórico y configuración</summary>
@@ -272,7 +310,7 @@ details.advanced>summary{cursor:pointer;font-weight:750;color:var(--accent2)}
         <div class="seriesHeader">
           <div>
             <h2 style="margin:0">Registro · reps × kg</h2>
-            <div class="small muted">Calentamientos = “aproximación”. El descanso vibra automáticamente al llegar al objetivo.</div>
+            <div class="small muted">Calentamientos = “aproximación”. El descanso usa reloj absoluto y se resincroniza al volver a la app.</div>
           </div>
           <div class="miniRest">
             <span class="small muted">📳</span>
@@ -292,7 +330,7 @@ details.advanced>summary{cursor:pointer;font-weight:750;color:var(--accent2)}
           <button class="btn" id="enableNotify" style="min-height:34px;padding:5px 10px">Activar avisos en 2º plano</button>
           <button class="btn ghost" id="testVibration" style="min-height:34px;padding:5px 10px">Probar</button>
         </div>
-        <div class="small muted" id="vibrationStatus">Aviso: se activa al iniciar el descanso.</div>
+        <div class="small muted" id="vibrationStatus">Aviso: pitido/vibración en primer plano; la notificación en segundo plano depende de Android y del navegador.</div>
         <div class="autosaveBar">
           <span class="autosaveDot" id="autosaveDot"></span>
           <span class="small" id="autosaveStatus"><b>Autoguardado activo.</b> Cada cambio se guarda al instante.</span>
@@ -314,114 +352,7 @@ details.advanced>summary{cursor:pointer;font-weight:750;color:var(--accent2)}
   </section>
 
   <section class="panel" id="week">
-    <div class="grid">
-      <div class="card">
-        <div class="row" style="justify-content:space-between;align-items:flex-start">
-          <div>
-            <h2 style="margin-bottom:4px">Rutina semanal objetivo</h2>
-            <div class="muted small">Pull / Push / Pierna / Pull / Push + segundo estímulo de pierna</div>
-          </div>
-          <span class="pill">5 días</span>
-        </div>
-        <div class="warn sectiongap"><b>Por qué esta distribución:</b> pecho y espalda tienen dos sesiones propias para progresar frescos; pierna recibe dos estímulos sin robar un segundo día completo; el hombro se prioriza con lateral/posterior, no acumulando presses. Si vuelves de ≥7 días sin entrenar, la primera semana quita 1 serie del primer ejercicio de cada grupo y no busques PR.</div>
-        <div class="kpis sectiongap">
-          <div class="kpi"><span class="small muted">Pecho</span><b>12</b><span class="small">series directas</span></div>
-          <div class="kpi"><span class="small muted">Espalda</span><b>14</b><span class="small">series directas</span></div>
-          <div class="kpi"><span class="small muted">Deltoide lateral</span><b>6</b><span class="small">+ 4 posterior</span></div>
-          <div class="kpi"><span class="small muted">ABS</span><b>6</b><span class="small">2 días</span></div>
-        </div>
-      </div>
-
-      <div class="card span6">
-        <h2>Lunes · Pull A</h2>
-        <div class="list">
-          <div class="item"><b>Jalón abierto</b><div class="small muted">6–8 → 8–10 → 10–12 · RIR 1–2 · 2:30</div></div>
-          <div class="item"><b>Remo unilateral máquina/discos</b><div class="small muted">8–10 → 10–12 → 10–12 · RIR 1–2 · 2:00–2:30</div></div>
-          <div class="item"><b>Remo T guiado / pecho apoyado</b><div class="small muted">8–10 → 10–12 · RIR 1–2 · 2:00</div></div>
-          <div class="item"><b>Reverse peck deck</b><div class="small muted">10–12 → 12–15 · RIR 0–1 · 1:30</div></div>
-          <div class="item"><b>Curl Bayesian</b><div class="small muted">8–10 → 10–12 → 12–15 · RIR 0–1 · 1:30</div></div>
-          <div class="item"><b>Curl martillo cuerda</b><div class="small muted">8–10 → 10–12 · RIR 0–1 · 1:30</div></div>
-        </div>
-        <div class="goal sectiongap"><b>Objetivo:</b> anchura + grosor de espalda y 5 series directas de bíceps. Referencia inicial: recuperar primero las cargas/reps de julio-agosto con técnica idéntica.</div>
-      </div>
-
-      <div class="card span6">
-        <h2>Martes · Push A + gemelo</h2>
-        <div class="list">
-          <div class="item"><b>1. Press inclinado multipower</b><div class="small muted">3: 6–8 / 8–10 / 10–12 · RIR 1 / 1 / 0–1 · 2:30–3:00<br>Alternativa: press inclinado disco/máquina. Mancuernas solo si te ves seguro al colocarlas.</div></div>
-          <div class="item"><b>2. Peck deck</b><div class="small muted">3: 8–10 / 10–12 / 12–15 · RIR 1 / 1 / 0–1 · 2:00</div></div>
-          <div class="item"><b>3. Press militar guiado</b><div class="small muted">2: 6–8 / 8–10 · RIR 1–2 / 1 · 2:00–2:30</div></div>
-          <div class="item"><b>4. Elevación lateral unilateral polea</b><div class="small muted">3×10–15 · RIR 1 / 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>5. Tríceps encima cabeza</b><div class="small muted">3: 8–10 / 10–12 / 12–15 · RIR 1 / 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>6. Tríceps V / unilateral</b><div class="small muted">2: 8–12 / 10–15 · RIR 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>7. Gemelo</b><div class="small muted">2×10–15 · RIR 1 / 0–1 · 1:30</div></div>
-        </div>
-        <div class="goal sectiongap"><b>Objetivo:</b> pecho como motor del día. El militar se queda en 2 series para no convertir la prioridad de hombro en sobrecarga del deltoide anterior.</div>
-      </div>
-
-      <div class="card span6">
-        <h2>Jueves · Pierna A + ABS</h2>
-        <div class="list">
-          <div class="item"><b>1. Perfect Squat</b><div class="small muted">3×8–12 · RIR 1–2 · 3:00</div></div>
-          <div class="item"><b>2. Prensa</b><div class="small muted">3×8–12 · RIR 1–2 · 3:00 · mismo setup cada semana</div></div>
-          <div class="item"><b>3. Curl femoral tumbado</b><div class="small muted">3×8–12 · RIR 0–1 · 2:00</div></div>
-          <div class="item"><b>4. Hip thrust máquina</b><div class="small muted">3×8–12 · RIR 1–2 · 2:30</div></div>
-          <div class="item"><b>5. Extensión cuádriceps</b><div class="small muted">2×8–12 · RIR 0–1 · 2:00</div></div>
-          <div class="item"><b>6. Crunch máquina</b><div class="small muted">3×12–20 · RIR 0–1 · 1:30</div></div>
-        </div>
-        <div class="goal sectiongap"><b>Objetivo:</b> progreso de pierna completo sin bisagra lumbar pesada. El peso muerto rumano queda fuera.</div>
-      </div>
-
-      <div class="card span6">
-        <h2>Viernes · Pull B + gemelo</h2>
-        <div class="list">
-          <div class="item"><b>1. Jalón biacromial</b><div class="small muted">3: 6–8 / 8–10 / 10–12 · RIR 1 / 1 / 0–1 · 2:30</div></div>
-          <div class="item"><b>2. Remo biacromial</b><div class="small muted">3: 8–10 / 10–12 / 10–12 · RIR 1 · 2:00–2:30</div></div>
-          <div class="item"><b>3. Pullover polea</b><div class="small muted">2×10–15 · RIR 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>4. Reverse peck deck</b><div class="small muted">2×10–15 · RIR 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>5. Curl Scott</b><div class="small muted">3: 6–8 / 8–10 / 10–12 · RIR 1 / 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>6. Gemelo</b><div class="small muted">2×10–15 · RIR 1 / 0–1 · 1:30</div></div>
-        </div>
-        <div class="goal sectiongap"><b>Objetivo:</b> segundo estímulo de espalda con variantes distintas. <b>Sin femoral ni aductor aquí</b> — el segundo estímulo de femoral es el sábado, para no entrenarlo 24 h después de Pierna A.</div>
-      </div>
-
-      <div class="card span6">
-        <h2>Sábado · Push B + pierna B + ABS</h2>
-        <div class="list">
-          <div class="item"><b>1. Press inclinado discos</b><div class="small muted">3: 6–8 / 8–10 / 10–12 · RIR 1 / 1 / 0–1 · 2:30–3:00<br>Segundo patrón principal de pecho; peso por lado.</div></div>
-          <div class="item"><b>2. Press sentado pecho</b><div class="small muted">2: 8–10 / 10–12 · RIR 1 / 0–1 · 2:00–2:30</div></div>
-          <div class="item"><b>3. Elevaciones laterales máquina</b><div class="small muted">3×10–15 · RIR 1 / 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>4. Tríceps polea V</b><div class="small muted">2: 8–12 / 10–15 · RIR 1 / 0–1 · 1:30</div></div>
-          <div class="item"><b>5. Extensión cuádriceps</b><div class="small muted">2×10–15 · RIR 1 / 0–1 · 2:00</div></div>
-          <div class="item"><b>6. Curl femoral</b><div class="small muted">2: 10–12 / 12–15 · RIR 1 / 0–1 · 2:00 · segundo estímulo semanal de femoral</div></div>
-          <div class="item"><b>7. Hip thrust</b><div class="small muted">2×10–15 · RIR 1 / 0–1 · 2:00</div></div>
-          <div class="item"><b>8. Abductor</b><div class="small muted">2×12–20 · RIR 1 / 0–1 · 1:00–1:30</div></div>
-          <div class="item"><b>9. ABS inferior apoyado</b><div class="small muted">3×12–20 · RIR 1 / 1 / 0–1 · 1:30</div></div>
-        </div>
-        <div class="goal sectiongap"><b>Objetivo:</b> segundo día fresco de pecho y completar pierna/ABS sin volumen basura. Incluye el segundo estímulo de femoral (movido desde el viernes). Si la sesión se alarga demasiado, recorta antes que añadir series porque sobre tiempo.</div>
-      </div>
-
-      <div class="card">
-        <h2>Volumen semanal de referencia</h2>
-        <div class="tablewrap">
-          <table>
-            <thead><tr><th>Grupo</th><th>Series directas aprox.</th><th>Lectura</th></tr></thead>
-            <tbody>
-              <tr><td>Pecho</td><td>12</td><td>Prioridad alta y dos días frescos.</td></tr>
-              <tr><td>Espalda</td><td>14</td><td>Dos sesiones propias; suficiente para seguir progresando sin hacer volumen basura.</td></tr>
-              <tr><td>Deltoide lateral</td><td>6</td><td>Prioridad estética prudente; se subirá solo si el hombro lo tolera.</td></tr>
-              <tr><td>Deltoide posterior</td><td>4</td><td>Dos estímulos junto a espalda.</td></tr>
-              <tr><td>Press militar</td><td>2</td><td>El deltoide anterior ya recibe mucho trabajo de los presses de pecho.</td></tr>
-              <tr><td>Bíceps / tríceps</td><td>8 / 8</td><td>Más todo el trabajo indirecto.</td></tr>
-              <tr><td>Cuádriceps</td><td>11</td><td>8 el jueves + 3 el sábado.</td></tr>
-              <tr><td>Femoral</td><td>5</td><td>3 + 2; podemos subir a 6–7 si lo necesitas.</td></tr>
-              <tr><td>Glúteo</td><td>5 directas + Perfect Squat/prensa</td><td>Suficiente para progresar sin convertirlo en prioridad nº1.</td></tr>
-              <tr><td>Abdominales</td><td>6</td><td>2 sesiones semanales, progresando carga/reps.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+    <div class="grid" id="weekPlanV21"></div>
   </section>
 
 
@@ -838,7 +769,7 @@ const DEFAULT={
  {id:'perfect',name:'Perfect Squat',group:'Pierna',repMin:8,repMax:12,rest:180,setup:'preferida frente a barra/mancuernas',fallback:'Sentadilla máquina discos'},
  {id:'legpress',name:'Prensa',group:'Pierna',repMin:8,repMax:15,rest:180,setup:'posición habitual: registrar agujeros/posición pies',fallback:'Perfect Squat'},
  {id:'quadext',name:'Extensión cuádriceps',group:'Pierna',repMin:8,repMax:15,rest:120,setup:'preferir menos reps y más intensidad frente a series eternas',fallback:''},
- {id:'hamcurl',name:'Curl femoral',group:'Pierna',repMin:8,repMax:15,rest:120,setup:'registrar sentado/tumbado y ajustes',fallback:''},
+ {id:'hamcurl',name:'Curl femoral',group:'Pierna',repMin:8,repMax:15,rest:120,setup:'Basic Fit Goya: rodillo pies 3 · ajuste derecha 2 · respaldo punto 1, posición más sacada. Separar sentado/tumbado y gimnasio como variante.',fallback:''},
  {id:'hipthrust',name:'Hip thrust máquina',group:'Glúteo',repMin:8,repMax:15,rest:150,setup:'',fallback:''},
  {id:'abductor',name:'Abductor máquina/polea',group:'Glúteo',repMin:12,repMax:20,rest:90,setup:'Pelvis y torso estables; abrir con control, sin impulso.',fallback:''},
  {id:'calf',name:'Gemelo',group:'Gemelo',repMin:10,repMax:15,rest:90,setup:'opcional sábado',fallback:''},
@@ -1175,6 +1106,95 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<20){
   localStorage.setItem(APPKEY,JSON.stringify(db));
 }
 
+// Migración v25: nueva tanda de alimentos (valores por 100 g salvo nota; respeta userEdited)
+if(!db.profile.foodDbVersion || db.profile.foodDbVersion<25){
+  db.foods=db.foods||[];
+  // [nombre, cat, unit, base, defaultQty, kcal, p, c, f, modo, note, editable]
+  const V25=[
+    ['Chocolate negro (onza)','Grasas','onza',1,1,55,0.7,4.5,3.8,'tal cual','~10 g/onza (>70%); editable',true],
+    ['Barrita chocolate con leche','Grasas','unidad',1,1,110,1.5,12,6,'tal cual','~20 g; editable según marca',true],
+    ['Yogur natural','Lácteos','unidad',1,1,61,3.5,4.7,3.3,'tal cual','~125 g; entero',true],
+    ['Yogur de sabor','Lácteos','unidad',1,1,90,3.3,14,2.5,'tal cual','~125 g; azucarado, editable',true],
+    ['Pan normal (barra)','Hidratos','g',100,60,265,9,49,3.2,'tal cual','pan blanco de barra',true],
+    ['Jamón serrano (lonchas)','Proteína','g',100,40,240,31,0.5,12,'tal cual','curado; editable',true],
+    ['Tortilla de patatas (por huevo)','Proteína','huevo',1,2,160,7,9,10,'tal cual','por huevo, incluye patata y aceite proporcional; estimación editable',true],
+    ['Tortilla francesa con pavo (por huevo)','Proteína','huevo',1,2,110,10,1,7,'tal cual','por huevo + pavo proporcional; estimación editable',true],
+    ['Tsatziki Mercadona','Grasas','g',100,60,130,3,4,11,'tal cual','editable según etiqueta',true],
+    ['Anchoas','Proteína','g',100,30,210,25,0,12,'tal cual','en aceite, escurridas; editable',true],
+    ['Rodaja de piña','Fruta','rodaja',1,1,45,0.5,11,0.1,'tal cual','~90 g/rodaja',false],
+    ['Salsa de soja','Grasas','ml',10,10,6,1,0.5,0,'tal cual','por 10 ml; muy salada',false],
+    ['Tomate artesano Mercadona','Verdura','g',100,150,18,0.9,3.5,0.2,'crudo','',false],
+    ['Queso semicurado','Proteína','g',100,40,370,25,1,30,'tal cual','editable según marca',true],
+    ['Leche semidesnatada','Lácteos','ml',100,250,46,3.2,4.8,1.6,'tal cual','por 100 ml',false],
+    ['Café solo','Bebida','ml',100,50,2,0.1,0,0,'tal cual','sin azúcar ni leche',false],
+    ['Croquetas de jamón','Grasas','unidad',1,3,70,2,6,4,'tal cual','~30 g/ud; estimación editable',true],
+    ['Torreznos','Grasas','g',100,40,610,30,0,54,'tal cual','editable',true],
+    ['Hamburguesa (carne)','Proteína','g',100,150,250,17,1,20,'crudo','solo la carne; estimación editable',true],
+    ['Pimiento verde','Verdura','g',100,100,20,0.9,3.7,0.2,'crudo','',false],
+    ['Ajo','Verdura','g',5,5,149,6.4,33,0.5,'tal cual','por 100 g; ración pequeña',false],
+    ['Picos','Hidratos','g',100,30,400,11,72,8,'tal cual','picos de pan; editable',true],
+    ['Alcaparras','Verdura','g',10,10,23,2.4,4.9,0.9,'tal cual','por 100 g; ración pequeña',false],
+    ['Salmón ahumado','Proteína','g',100,80,180,18,0.5,12,'tal cual','editable según marca',true],
+    ['Mejillones','Proteína','g',100,150,86,12,3.7,2.2,'tal cual','cocidos, sin concha',false]
+  ];
+  V25.forEach(a=>{
+    const [name,cat,unit,base,defaultQty,kcal,p,c,f,modo,note,editable]=a;
+    const ex=db.foods.find(x=>x.name===name);
+    if(ex && ex.userEdited)return;
+    const obj={name,cat,unit,base,defaultQty,kcal,p,c,f,modo,note,editable:!!editable};
+    if(ex)Object.assign(ex,obj); else db.foods.push(obj);
+  });
+  db.profile.foodDbVersion=25;
+  localStorage.setItem(APPKEY,JSON.stringify(db));
+}
+
+// Migración v26: correcciones y alimentos frecuentes. Nunca pisa userEdited=true.
+if(!db.profile.foodDbVersion || db.profile.foodDbVersion<26){
+  db.foods=db.foods||[];
+  const normFoodName=x=>(x||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ');
+  const upsertFood=(nf,aliases=[])=>{
+    const keys=[nf.name,...aliases].map(normFoodName);
+    let ex=db.foods.find(f=>keys.includes(normFoodName(f.name)));
+    if(ex&&ex.userEdited)return;
+    if(ex)Object.assign(ex,nf); else db.foods.push({...nf});
+  };
+  // Productos habituales / valores de etiqueta conocidos. editables por si cambia el proveedor.
+  upsertFood({name:'Leche +Proteínas desnatada Hacendado',cat:'Lácteos',unit:'ml',base:100,defaultQty:500,kcal:44,p:6,c:4.6,f:0.2,modo:'tal cual',note:'por 100 ml · Hacendado · editable si cambia etiqueta',editable:true},['Leche proteica','Leche proteica Hacendado']);
+  upsertFood({name:'Macarrón Hacendado seco',cat:'Hidratos',unit:'g',base:100,defaultQty:90,kcal:354,p:13,c:71,f:1.5,modo:'seco',note:'peso en seco · editable según formato',editable:true},['Pasta']);
+  upsertFood({name:'Queso fresco batido 0% Hacendado',cat:'Lácteos',unit:'g',base:100,defaultQty:200,kcal:46,p:8,c:3.5,f:0.1,modo:'tal cual',note:'editable si cambia etiqueta',editable:true});
+  upsertFood({name:'Yogur +Proteínas natural Hacendado',cat:'Lácteos',unit:'g',base:100,defaultQty:125,kcal:52,p:10,c:3.1,f:0.5,modo:'tal cual',note:'por 100 g · editable si cambia etiqueta',editable:true},['Yogur proteico']);
+  upsertFood({name:'Gelatina +Proteínas 10 g Hacendado',cat:'Lácteos',unit:'unidad',base:1,defaultQty:1,kcal:40,p:10,c:0,f:0,modo:'tal cual',note:'1 unidad/envase según etiqueta · editable',editable:true},['Gelatina +Proteínas Hacendado']);
+  upsertFood({name:'Gelatina proteínas frutos rojos Hacendado',cat:'Lácteos',unit:'g',base:100,defaultQty:100,kcal:39,p:6,c:3.8,f:0,modo:'tal cual',note:'por 100 g · editable',editable:true});
+  upsertFood({name:'Soja texturizada seca',cat:'Proteína',unit:'g',base:100,defaultQty:50,kcal:340,p:52,c:30,f:2,modo:'seco',note:'antes aparecía como “Proteína de soja”; revisar etiqueta de la marca',editable:true},['Proteína de soja']);
+  upsertFood({name:'Proteína aislada soja HSN',cat:'Proteína',unit:'g',base:30,defaultQty:30,kcal:110,p:24,c:1.5,f:1.5,modo:'seco',note:'valor orientativo por 30 g; editar con la etiqueta exacta de tu bote',editable:true});
+
+  const extras=[
+    {name:'Atún al natural Hacendado',cat:'Proteína',unit:'g',base:100,defaultQty:80,kcal:116,p:26,c:0,f:1,modo:'tal cual',note:'escurrido · editable según lata',editable:true},
+    {name:'Atún en aceite de oliva Hacendado',cat:'Proteína',unit:'g',base:100,defaultQty:80,kcal:205,p:25,c:0,f:11,modo:'tal cual',note:'escurrido · editable según lata',editable:true},
+    {name:'Guacamole Hacendado',cat:'Grasas',unit:'g',base:100,defaultQty:60,kcal:170,p:2,c:5,f:15.5,modo:'tal cual',note:'orientativo; priorizar etiqueta actual',editable:true},
+    {name:'Arroz cocido vasito Hacendado',cat:'Hidratos',unit:'g',base:100,defaultQty:125,kcal:155,p:3.2,c:33,f:1,modo:'tal cual',note:'orientativo; revisar variedad/etiqueta',editable:true},
+    {name:'Conejo crudo',cat:'Proteína',unit:'g',base:100,defaultQty:200,kcal:136,p:20.1,c:0,f:5.6,modo:'crudo',note:'peso crudo; valor genérico',editable:false},
+    {name:'Lomo de cerdo crudo',cat:'Proteína',unit:'g',base:100,defaultQty:180,kcal:143,p:21.5,c:0,f:6,modo:'crudo',note:'corte magro; valor genérico',editable:true},
+    {name:'Carrillera de ternera cruda',cat:'Proteína',unit:'g',base:100,defaultQty:180,kcal:150,p:20,c:0,f:7.5,modo:'crudo',note:'estimación; depende del recorte de grasa',editable:true},
+    {name:'Aceitunas',cat:'Grasas',unit:'g',base:100,defaultQty:30,kcal:145,p:1,c:4,f:14,modo:'tal cual',note:'genérico; cambia con relleno/salmuera',editable:true},
+    {name:'Pepino',cat:'Verdura',unit:'g',base:100,defaultQty:150,kcal:15,p:0.7,c:3.6,f:0.1,modo:'crudo',note:'',editable:false},
+    {name:'Calabacín',cat:'Verdura',unit:'g',base:100,defaultQty:200,kcal:17,p:1.2,c:3.1,f:0.3,modo:'crudo',note:'',editable:false},
+    {name:'Zanahoria',cat:'Verdura',unit:'g',base:100,defaultQty:120,kcal:41,p:0.9,c:9.6,f:0.2,modo:'crudo',note:'',editable:false},
+    {name:'Champiñones',cat:'Verdura',unit:'g',base:100,defaultQty:180,kcal:22,p:3.1,c:3.3,f:0.3,modo:'crudo',note:'',editable:false},
+    {name:'Brócoli',cat:'Verdura',unit:'g',base:100,defaultQty:200,kcal:34,p:2.8,c:6.6,f:0.4,modo:'crudo',note:'',editable:false},
+    {name:'Judías verdes',cat:'Verdura',unit:'g',base:100,defaultQty:200,kcal:31,p:1.8,c:7,f:0.2,modo:'crudo',note:'',editable:false},
+    {name:'Mandarina',cat:'Fruta',unit:'g',base:100,defaultQty:120,kcal:53,p:0.8,c:13.3,f:0.3,modo:'tal cual',note:'peso comestible',editable:false},
+    {name:'Naranja',cat:'Fruta',unit:'g',base:100,defaultQty:180,kcal:47,p:0.9,c:11.8,f:0.1,modo:'tal cual',note:'peso comestible',editable:false},
+    {name:'Manzana',cat:'Fruta',unit:'g',base:100,defaultQty:180,kcal:52,p:0.3,c:13.8,f:0.2,modo:'tal cual',note:'peso comestible',editable:false},
+    {name:'Kiwi',cat:'Fruta',unit:'g',base:100,defaultQty:100,kcal:61,p:1.1,c:14.7,f:0.5,modo:'tal cual',note:'peso comestible',editable:false}
+  ];
+  extras.forEach(x=>upsertFood(x));
+  const bat=db.foods.find(f=>normFoodName(f.name)==='batata');if(bat&&!bat.userEdited)bat.cat='Hidratos';
+  ['Mozzarella','Cottage','Cottage (smoothie)','QuesPro Hacendado'].forEach(n=>{const f=db.foods.find(x=>normFoodName(x.name)===normFoodName(n));if(f&&!f.userEdited)f.cat='Lácteos'});
+  db.profile.foodDbVersion=26;
+  localStorage.setItem(APPKEY,JSON.stringify(db));
+}
+
 // Migración v8: progresión adaptativa, sustituciones, completar macros y compra
 const V8SHOPPING={"Mercadona":[{"cat":"Desayuno","name":"Leche proteica Hacendado","qty":"4–5 L/sem","why":"Base del desayuno; guardar etiqueta exacta."},{"cat":"Desayuno","name":"Avena","qty":"500 g","why":"75 g/día en el desayuno base."},{"cat":"Desayuno","name":"Chía","qty":"1 bolsa","why":"15 g/día."},{"cat":"Desayuno","name":"Arándanos congelados","qty":"1–2 bolsas","why":"100 g/día cuando desayunes en casa."},{"cat":"Snack","name":"Yogur +Proteínas Hacendado","qty":"4–8 uds","why":"Proteína rápida y fácil de automatizar."},{"cat":"Hidratos","name":"Arroz","qty":"1 kg","why":"Base de 2–3 comidas semanales."},{"cat":"Hidratos","name":"Pasta","qty":"500 g","why":"Rotación con arroz/noodles."},{"cat":"Legumbres","name":"Lentejas y garbanzos","qty":"500 g de cada","why":"Crema o con espinacas."},{"cat":"Verduras","name":"Espinacas frescas/congeladas","qty":"600–900 g","why":"Legumbres, pasta, ensaladas."},{"cat":"Verduras","name":"Gazpacho tradicional/fresco","qty":"2 L","why":"Comida fácil; ajusta macros según versión."},{"cat":"Proteína","name":"Pechuga de pollo","qty":"800 g–1,2 kg","why":"Batch cooking."},{"cat":"Proteína","name":"Pavo","qty":"500–700 g","why":"Pasta, legumbres y tostas."},{"cat":"Proteína","name":"Hígado vacuno","qty":"1 bandeja","why":"Rotación ocasional con arroz."},{"cat":"Proteína","name":"Contramuslo sin piel","qty":"400–600 g","why":"Alternativa más sabrosa al pollo."},{"cat":"Cenas","name":"Salmón / pulpo / lubina","qty":"2–3 cenas","why":"Rotar según precio y disponibilidad."},{"cat":"Cenas","name":"Patata / batata","qty":"2–3 kg","why":"Base de cenas y días de descanso."},{"cat":"Fruta","name":"Fruta variada","qty":"7–12 raciones","why":"Plátano alrededor de entreno + fruta de temporada."},{"cat":"Grasas","name":"AOVE + pistachos/nueces","qty":"reponer","why":"Ajuste fácil de grasas/calorías."}],"Carrefour":[{"cat":"Lácteos","name":"Cottage alto en proteína / Protein Plus","qty":"2–4 tarrinas","why":"Muy útil para snack o smoothie."},{"cat":"Lácteos","name":"Queso fresco batido 0%","qty":"1–2 tarrinas","why":"Proteína económica y flexible."},{"cat":"Hidratos","name":"Arroz + pasta + noodles de arroz","qty":"reponer","why":"Más variedad de formatos/marcas."},{"cat":"Legumbres","name":"Lentejas + garbanzos secos","qty":"500 g de cada","why":"Para cremas y espinacas."},{"cat":"Proteína","name":"Pollo/pavo/ternera magra","qty":"1,5–2 kg total","why":"Compra grande para batch cooking."},{"cat":"Pescado","name":"Salmón, lubina, gambas","qty":"2–4 cenas","why":"Elegir según oferta/calidad."},{"cat":"Verduras","name":"Espinacas + verduras congeladas","qty":"1–2 kg","why":"Reserva rápida para comidas."},{"cat":"Despensa","name":"Quinoa, soja baja en sal, tomate triturado","qty":"reponer","why":"Amplía platos sin complicarlos."},{"cat":"Snack","name":"Pan 100% integral","qty":"1 unidad","why":"Tostas y ajuste de carbohidrato."},{"cat":"Fruta","name":"Fruta de temporada","qty":"7–12 raciones","why":"Variar sin necesidad de productos fitness."}],"Lidl":[{"cat":"Lácteos","name":"Yogur natural / griego light Milbona","qty":"1–2 packs","why":"Usar etiqueta real; combinar con whey/cottage si falta proteína."},{"cat":"Proteína","name":"Pollo, pavo y carne magra","qty":"1–1,5 kg","why":"Aprovechar precio/ofertas."},{"cat":"Pescado","name":"Salmón/pescado fresco o congelado","qty":"2–3 cenas","why":"Comprar cuando compense la oferta."},{"cat":"Congelados","name":"Gambas + verduras congeladas","qty":"1 bolsa de cada","why":"Noodles rápidos en 10–15 min."},{"cat":"Verduras","name":"Espinacas y verduras frescas","qty":"700 g–1 kg","why":"Comidas y cenas."},{"cat":"Hidratos","name":"Arroz, pasta y patata","qty":"reponer","why":"Básicos baratos y versátiles."},{"cat":"Legumbres","name":"Lentejas y garbanzos","qty":"reponer","why":"Secos o cocidos según comodidad."},{"cat":"Frutos secos","name":"Nueces/pistachos/almendras","qty":"1 bolsa","why":"Raciones de 10–20 g."},{"cat":"Fruta","name":"Fruta de temporada","qty":"7–12 raciones","why":"Priorizar lo que esté mejor de precio."},{"cat":"Pan","name":"Pan integral","qty":"1 unidad","why":"Tostas/acompañamiento ajustable."}]};
 
@@ -1373,7 +1393,7 @@ function renderExerciseSuggest(){
 }
 function hideExerciseSuggest(){setTimeout(()=>{const b=byId('exerciseSuggest');if(b)b.classList.add('hidden')},150)}
 function addSetRow(opts={}){const n=byId('sets').querySelectorAll('.setrow').length+1;const wrap=document.createElement('div');wrap.className='setwrap';wrap.innerHTML=`<div class="setrow"><div class="setnum">${n}${opts.drop?'↳':''}</div><div class="setinput repsField"><span class="miniLabel">Reps</span><input class="reps" inputmode="decimal" type="number" step="0.5" placeholder="reps" value="${opts.reps??''}"></div><div class="setinput weightField"><span class="miniLabel weightLabel">Carga</span><input class="weight" inputmode="decimal" type="number" step="0.1" placeholder="kg" value="${opts.weight??''}"></div><div class="rirgrid"><button type="button" class="rirbtn" data-rir="0">0</button><button type="button" class="rirbtn" data-rir="1">1</button><button type="button" class="rirbtn" data-rir="2">2</button><button type="button" class="rirbtn" data-rir="3">3+</button></div><button type="button" class="btn bad del">×</button></div><div class="setmeta"><label class="check"><input class="warmup" type="checkbox" ${opts.warmup?'checked':''}> aproximación</label><label class="check"><input class="partial" type="checkbox" ${opts.partial?'checked':''}> parcial</label><label class="check"><input class="drop" type="checkbox" ${opts.drop?'checked':''}> drop vinculado</label><input class="setnote" placeholder="nota serie" style="min-height:34px;max-width:260px"></div>`;
- wrap.querySelectorAll('.rirbtn').forEach(b=>b.addEventListener('click',()=>{wrap.dataset.rir=b.dataset.rir;wrap.querySelectorAll('.rirbtn').forEach(x=>x.classList.toggle('sel',x===b));updateNextSetSuggestion()}));wrap.querySelectorAll('.reps,.weight,.warmup,.partial,.drop').forEach(el=>el.addEventListener('input',updateNextSetSuggestion));wrap.querySelector('.del').addEventListener('click',()=>{wrap.remove();renumberSets()});byId('sets').appendChild(wrap);updateSetWeightLabels()}
+ wrap.querySelectorAll('.rirbtn').forEach(b=>b.addEventListener('click',()=>{wrap.dataset.rir=b.dataset.rir;wrap.querySelectorAll('.rirbtn').forEach(x=>x.classList.toggle('sel',x===b));updateNextSetSuggestion()}));const _debNext=debounce(updateNextSetSuggestion,400);wrap.querySelectorAll('.reps,.weight').forEach(el=>el.addEventListener('input',_debNext));wrap.querySelectorAll('.warmup,.partial,.drop').forEach(el=>el.addEventListener('change',updateNextSetSuggestion));wrap.querySelector('.del').addEventListener('click',()=>{wrap.remove();renumberSets()});byId('sets').appendChild(wrap);updateSetWeightLabels()}
 function renumberSets(){byId('sets').querySelectorAll('.setwrap').forEach((w,i)=>{w.querySelector('.setnum').textContent=(i+1)+(w.querySelector('.drop').checked?'↳':'')})}
 function clearSetRows(){byId('sets').innerHTML='';addSetRow();addSetRow();addSetRow()}
 
@@ -1382,6 +1402,17 @@ function validWorkSets(log){
   return (log?.sets||[]).filter(s=>!s.warmup&&!s.drop&&!s.partial&&s.reps>0&&s.weight>0);
 }
 function daysBetween(a,b){return Math.round(Math.abs(new Date(a+'T12:00:00')-new Date(b+'T12:00:00'))/864e5)}
+function prefatigueNote(e){
+  // ¿Ya se ha entrenado hoy el mismo grupo muscular antes de este ejercicio?
+  const ss=currentSession();
+  if(!ss||!e)return '';
+  const group=(e.group||'').toLowerCase();
+  if(!group)return '';
+  const prev=(ss.exercises||[]).filter(x=>{const xe=exById(x.exerciseId);return xe&&(xe.group||'').toLowerCase()===group});
+  if(!prev.length)return '';
+  const nombres=prev.map(x=>exById(x.exerciseId)?.name).filter(Boolean);
+  return `⚠️ Hoy ya has trabajado ${e.group.toLowerCase()} (${nombres.join(', ')}). El músculo llega pre-fatigado: baja la carga respecto a la referencia y guíate por RIR y sensaciones, no por el número.`;
+}
 function adaptiveGoal(logs,e){
   if(!logs.length) return {text:'Primera referencia limpia: 2–3 series dentro del rango, compuestos RIR 1–2 y aislamientos seguros RIR 0–1.',confidence:'baja'};
   const last=logs[0], sets=validWorkSets(last);
@@ -1397,12 +1428,14 @@ function adaptiveGoal(logs,e){
   const recency=daysBetween(last.date,today());
   if(logs.length>=2 && sameOrder && recency<=21) conf='alta';
   if(recency>35 || !sameOrder) conf='media-baja';
-  return {text:`${targetR}×${fmt(targetW)} kg · ${reason}. Referencia: ${fmt(top.reps)}×${fmt(top.weight)} @RIR${Number.isFinite(top.rir)?top.rir:'?'}.`,confidence:conf};
+  const pf=prefatigueNote(e);
+  return {text:`${targetR}×${fmt(targetW)} kg · ${reason}. Referencia: ${fmt(top.reps)}×${fmt(top.weight)} @RIR${Number.isFinite(top.rir)?top.rir:'?'}.${pf?'\n'+pf:''}`,confidence:conf,prefatigue:!!pf};
 }
 function goalFrom(log,e){
   const logs=log?comparableLogs(e.id,byId('variant').value):[];
   const g=adaptiveGoal(logs,e),scheme=plannedScheme(e.id);
-  return `${scheme?`Esquema de reps: ${scheme}. `:''}Objetivo adaptativo (${g.confidence} confianza): ${g.text}`;
+  const pf=prefatigueNote(e);
+  return `${scheme?`Esquema de reps: ${scheme}. `:''}Objetivo adaptativo (${g.confidence} confianza): ${g.text}${pf&&!g.prefatigue?'\n'+pf:''}`;
 }
 function currentEnteredWorkSet(){
   const rows=[...byId('sets').querySelectorAll('.setwrap')];
@@ -1613,7 +1646,10 @@ function tick(){
   updateTimer(elapsed);
   if(elapsed>=restSec&&!restAlerted){
     restAlerted=true;
-    triggerRestAlert(false);
+    // Si el momento de fin fue hace más de 3 s (la app estuvo dormida y "despierta" tarde),
+    // no disparamos el pitido con retraso: de eso ya se encarga la notificación del sistema.
+    const overshoot=elapsed-restSec;
+    if(overshoot<=3) triggerRestAlert(false);
   }
 }
 function updateTimer(elapsed){const t=byId('timer');const bar=byId('timerBar');if(elapsed<=restSec){const left=restSec-elapsed;const m=Math.floor(left/60),s=left%60;t.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;t.classList.toggle('done',left===0);t.classList.remove('over');bar.style.width=`${Math.min(100,(elapsed/restSec)*100)}%`}else{const over=elapsed-restSec;const m=Math.floor(over/60),s=over%60;t.textContent=`+${m}:${String(s).padStart(2,'0')}`;t.classList.add('over');t.classList.remove('done');bar.style.width='100%'}}
@@ -2325,7 +2361,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
   localStorage.setItem(APPKEY,JSON.stringify(db));
 })();
 
-const WORKOUT_PLAN_FINAL={
+const WORKOUT_PLAN_LEGACY={
 1:{name:'Pull A',subtitle:'Espalda + bíceps + deltoide posterior',duration:'50–60 min',goal:'Orden flexible por disponibilidad. En los movimientos principales usamos top set + back-offs: menos carga y más reps conforme avanza el ejercicio.',items:[['pulldown_open','6–8 → 8–10 → 10–12','2:30'],['row_uni','8–10 → 10–12 → 10–12','2:00–2:30'],['row_t','8–10 → 10–12','2:00'],['reverse','10–12 → 12–15','1:30'],['bayesian','8–10 → 10–12 → 12–15','1:30'],['hammer_rope','8–10 → 10–12','1:30']]},
 2:{name:'Push A + gemelo',subtitle:'Pecho + hombro + tríceps + gemelo',duration:'50–60 min',goal:'Pecho como motor del día; top set + back-offs en presses y progresión de reps en aislamientos.',items:[['inc_smith','6–8 → 8–10 → 10–12','2:30–3:00'],['pecdeck','8–10 → 10–12 → 12–15','2:00'],['military','6–8 → 8–10','2:00–2:30'],['latraise','10–15 → 10–15 → 10–15','1:30'],['triceps_oh','8–10 → 10–12 → 12–15','1:30'],['triceps_v','8–12 → 10–15','1:30'],['calf','10–15 → 10–15','1:30']]},
 4:{name:'Pierna A + ABS',subtitle:'Pierna completa + abdomen',duration:'50–60 min',goal:'Progresar pierna sin bisagra lumbar pesada. En básicos no forzamos repeticiones muy altas por sistema. ABS: 3x12-20 con la misma variante; cuando llegues a ~20/20/20 con técnica limpia, sube dificultad.',items:[['perfect','8–10 → 10–12 → 10–12','3:00'],['legpress','8–10 → 10–12 → 10–12','3:00'],['hamcurl','8–10 → 10–12 → 12–15','2:00'],['hipthrust','8–10 → 10–12 → 10–12','2:30'],['quadext','8–12 → 10–15','2:00'],['crunch','12–20 → 12–20 → 12–20','1:30']]},
@@ -2338,13 +2374,14 @@ function activateTab(name){
   const rb=byId('recordBottom'); if(rb) rb.classList.toggle('show',name==='record');
   const top=document.querySelector('.top'); if(top) top.classList.toggle('compact',name==='record');
   if(name==='progress')renderProgress();
+  if(name==='week')renderWeekV21();
   if(name==='shopping')renderShopping();
   if(name==='record')renderQuickPlan();
   if(name==='nutrition'){renderFoodSearch();renderPlates();renderDayFoodLog()}
 }
 function plannedItem(exerciseId){
   const pick=workoutPlanSelection();
-  const p=!pick.rest&&WORKOUT_PLAN_FINAL[pick.key];
+  const p=!pick.rest&&WORKOUT_PLAN_LEGACY[pick.key];
   return p?.items?.find(it=>it[0]===exerciseId)||null;
 }
 function plannedScheme(exerciseId){return plannedItem(exerciseId)?.[1]||''}
@@ -2389,10 +2426,10 @@ function chooseExerciseFromPlan(exerciseId){
 function renderQuickPlan(){
   const box=byId('quickPlanExercises');if(!box)return;
   const pick=workoutPlanSelection();
-  if(pick.rest||!WORKOUT_PLAN_FINAL[pick.key]){
+  if(pick.rest||!WORKOUT_PLAN_LEGACY[pick.key]){
     box.innerHTML='<div class="muted">No hay sesión seleccionada. Elige una en la pestaña Entreno.</div>';return;
   }
-  const p=WORKOUT_PLAN_FINAL[pick.key],ss=db.sessions.find(x=>x.date===today());
+  const p=WORKOUT_PLAN_LEGACY[pick.key],ss=db.sessions.find(x=>x.date===today());
   const current=exerciseFromInput();
   box.innerHTML=p.items.map(it=>{
     const e=exById(it[0]),logs=(ss?.exercises||[]).filter(x=>x.exerciseId===it[0]);
@@ -2439,7 +2476,7 @@ function workoutPlanSelection(){
   const calendarDow=new Date(today()+'T12:00:00').getDay();
   const override=workoutOverrideForToday();
   if(override==='rest') return {key:null,manual:true,calendarDow,rest:true};
-  if(override!=='auto' && WORKOUT_PLAN_FINAL[+override]) return {key:+override,manual:true,calendarDow,rest:false};
+  if(override!=='auto' && TRAINING_PLAN_V21[+override]) return {key:+override,manual:true,calendarDow,rest:false};
   return {key:calendarDow,manual:false,calendarDow,rest:false};
 }
 
@@ -2470,9 +2507,9 @@ function renderCombineOptions(){
 function combinedPlanItems(){
   const pick=workoutPlanSelection();
   let items=[];
-  if(!pick.rest&&WORKOUT_PLAN_FINAL[pick.key])items=[...WORKOUT_PLAN_FINAL[pick.key].items];
+  if(!pick.rest&&WORKOUT_PLAN_LEGACY[pick.key])items=[...WORKOUT_PLAN_LEGACY[pick.key].items];
   combineSelectionForToday().forEach(k=>{
-    const p=WORKOUT_PLAN_FINAL[+k];
+    const p=WORKOUT_PLAN_LEGACY[+k];
     if(p)p.items.forEach(it=>{if(!items.some(x=>x[0]===it[0]))items.push(it)});
   });
   return items;
@@ -2484,7 +2521,7 @@ function renderTodayPlan(){
   const resetBtn=byId('resetWorkoutDay');
   if(resetBtn)resetBtn.classList.toggle('hidden',workoutOverrideForToday()==='auto');
   renderCombineOptions();
-  if(pick.rest||!WORKOUT_PLAN_FINAL[pick.key]){
+  if(pick.rest||!WORKOUT_PLAN_LEGACY[pick.key]){
     byId('todayPlanTitle').textContent=pick.manual?'Hoy · descanso elegido':'Hoy · descanso / actividad normal';
     byId('todayPlanSubtitle').textContent=pick.manual?'Selección manual':'Día sin sesión base';
     byId('todayPlanDuration').textContent='—';
@@ -2493,7 +2530,7 @@ function renderTodayPlan(){
     renderQuickPlan();
     return;
   }
-  const p=WORKOUT_PLAN_FINAL[pick.key];
+  const p=WORKOUT_PLAN_LEGACY[pick.key];
   const baseDay=({1:'lunes',2:'martes',4:'jueves',5:'viernes',6:'sábado'})[pick.key]||'';
   byId('todayPlanTitle').textContent=`Hoy · ${p.name}${pick.manual?' · manual':''}`;
   byId('todayPlanSubtitle').textContent=pick.manual?`${p.subtitle} · rutina base del ${baseDay}, realizada hoy`:p.subtitle;
@@ -2512,8 +2549,50 @@ function loadExerciseContext(){const e=exerciseFromInput(),hint=byId('exerciseSe
 
 function currentRestElapsed(){return restStarted?Math.max(0,Math.floor((Date.now()-restStarted)/1000)):null}
 function confirmCurrentSet(){const wraps=[...byId('sets').querySelectorAll('.setwrap')],target=wraps.find(w=>w.dataset.confirmed!=='1'&&(+w.querySelector('.reps').value||0)>0);if(!target){toast('Introduce una serie nueva');return}const prev=[...wraps].filter(w=>w.dataset.confirmed==='1').slice(-1)[0];if(prev&&restStarted)prev.dataset.restActual=String(currentRestElapsed());target.dataset.confirmed='1';target.classList.add('confirmedSet');target.dataset.confirmedAt=String(Date.now());startRest();updateNextSetSuggestion();toast('Serie confirmada · descanso iniciado')}
-function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),exerciseId:e.id,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};currentSession().exercises.push(log);persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
-function renderToday(){const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}el.innerHTML=ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}</div>`}).join('');renderQuickPlan()}
+function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),exerciseId:e.id,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};currentSession().exercises.push(log);persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
+function renderToday(){const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}el.innerHTML=ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}<div class="row sectiongap" style="gap:8px"><button class="btn reopenEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Reabrir / añadir serie</button><button class="btn bad delEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Borrar</button></div></div>`}).join('');el.querySelectorAll('.reopenEx').forEach(b=>b.addEventListener('click',()=>reopenExercise(b.dataset.id)));el.querySelectorAll('.delEx').forEach(b=>b.addEventListener('click',()=>deleteExercise(b.dataset.id)));renderQuickPlan()}
+function deleteExercise(logId){
+  const ss=db.sessions.find(x=>x.date===today());if(!ss)return;
+  const i=ss.exercises.findIndex(x=>x.id===logId);if(i<0)return;
+  const nom=exById(ss.exercises[i].exerciseId)?.name||'este ejercicio';
+  if(!confirm(`¿Borrar "${nom}" de la sesión de hoy? No se puede deshacer.`))return;
+  ss.exercises.splice(i,1);
+  ss.exercises.forEach((x,idx)=>x.order=idx+1);
+  persist();renderToday();renderQuickPlan();renderPerformanceComparison();
+  toast('Ejercicio borrado');
+}
+function reopenExercise(logId){
+  const ss=db.sessions.find(x=>x.date===today());if(!ss)return;
+  const i=ss.exercises.findIndex(x=>x.id===logId);if(i<0)return;
+  const log=ss.exercises[i];
+  const e=exById(log.exerciseId);if(!e){toast('No encuentro el ejercicio');return}
+  // Cargar el ejercicio en el registro con sus series para editarlo
+  byId('exerciseSelect').value=e.name;
+  if(byId('variant'))byId('variant').value=log.variant||'';
+  loadExerciseContext();
+  // Reconstruir las filas de series con los datos guardados (vaciar sin las 3 por defecto)
+  byId('sets').innerHTML='';
+  log.sets.forEach(s=>addSetRow({reps:s.reps,weight:s.weight,warmup:s.warmup,partial:s.partial,drop:s.drop}));
+  if(!log.sets.length)addSetRow();
+  // Restaurar RIR y notas de cada serie en las filas creadas
+  const wraps=[...byId('sets').querySelectorAll('.setwrap')];
+  log.sets.forEach((s,idx)=>{
+    const w=wraps[idx];if(!w)return;
+    if(Number.isFinite(s.rir)){w.dataset.rir=String(s.rir);w.querySelectorAll('.rirbtn').forEach(bb=>bb.classList.toggle('sel',+bb.dataset.rir===s.rir))}
+    if(s.note){const n=w.querySelector('.setnote');if(n)n.value=s.note}
+  });
+  if(byId('exerciseNotes'))byId('exerciseNotes').value=log.notes||'';
+  if(byId('painZone'))byId('painZone').value=log.painZone||'';
+  if(byId('painScore'))byId('painScore').value=log.painScore||'';
+  // Quitar el ejercicio del histórico (se volverá a añadir al finalizar)
+  ss.exercises.splice(i,1);
+  ss.exercises.forEach((x,idx)=>x.order=idx+1);
+  persist();renderToday();
+  activateTab('record');
+  updateNextSetSuggestion();
+  setTimeout(()=>byId('exerciseSelect')?.scrollIntoView({behavior:'smooth',block:'start'}),50);
+  toast('Ejercicio reabierto · añade la serie y finaliza otra vez');
+}
 
 function saveReadiness(){const obj={date:today(),weight:+byId('preWeight').value||null,sleep:+document.querySelector('[data-score="sleep"]').dataset.selected||null,energy:+document.querySelector('[data-score="energy"]').dataset.selected||null,stress:+document.querySelector('[data-score="stress"]').dataset.selected||null,painZone:byId('prePainZone').value.trim(),painScore:+byId('prePainScore').value||0};db.readiness=db.readiness.filter(x=>x.date!==today());db.readiness.push(obj);if(obj.weight){db.weights=db.weights.filter(x=>x.date!==today());db.weights.push({date:today(),weight:obj.weight,source:'lectura directa'})}currentSession().readiness=obj;persist();renderReadinessAdvice();renderTodayPlan();updateReadinessCollapse();toast('Estado guardado')}
 function updateReadinessCollapse(){
@@ -2556,7 +2635,7 @@ function renderImportPreview(){if(byId('legacyImportPreview')&&db.importReviews?
 
 function buildCheckin(){const ws=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date)),a7=avg(ws.slice(-7).map(x=>x.weight)),prev7=avg(ws.slice(-14,-7).map(x=>x.weight));const m=[...db.measures].sort((a,b)=>b.date.localeCompare(a.date))[0],recentSessions=[...db.sessions].sort((a,b)=>b.date.localeCompare(a.date)).filter(ss=>{const d=new Date(ss.date+'T12:00:00');return(Date.now()-d.getTime())<=8*864e5}),nut=[...db.nutrition].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7),pk=avg(nut.map(x=>x.kcal).filter(Number.isFinite)),pp=avg(nut.map(x=>x.protein).filter(Number.isFinite)),pains=recentSessions.flatMap(ss=>ss.exercises.filter(x=>x.painScore).map(x=>`${exById(x.exerciseId)?.name}: ${x.painZone||'molestia'} ${x.painScore}/10`)),rr=readinessRecommendation(db.readiness.find(x=>x.date===today()));byId('checkinText').value=[`CHECK-IN SEMANAL`,a7?`Peso medio 7 días: ${fmt(a7)} kg${prev7?` (${a7-prev7>=0?'+':''}${fmt(a7-prev7)} vs semana anterior)`:''}`:'Peso medio: pendiente',m?`Última cintura: ${fmt(m.waist)} cm (${dateLabel(m.date)})`:'Cintura: pendiente',`Entrenos últimos 8 días: ${recentSessions.length}`,pk?`Kcal medias: ${fmt(pk)}`:'Kcal medias: sin datos',pp?`Proteína media: ${fmt(pp)} g`:'Proteína media: sin datos',`Objetivos: entreno ${db.nutritionTargets.trainKcal} / descanso ${db.nutritionTargets.restKcal} kcal`,pains.length?`Molestias: ${pains.join(' | ')}`:'Molestias: ninguna registrada',`Readiness: ${rr.text}`,`Notas: ${byId('weeklyNotes').value.trim()||'—'}`].join('\n')}
 function exportCsv(){const rows=[['date','exercise','location','machine','variant','variant_key','load_unit','base_load','setup','order','set','reps','load_value','rir','warmup','drop','partial','rest_actual_sec','raw_text','parse_confidence','needs_review','set_note','exercise_notes','pain_zone','pain_score']];db.sessions.forEach(ss=>ss.exercises.forEach(x=>x.sets.forEach((z,i)=>rows.push([ss.date,exById(x.exerciseId)?.name||'',x.location||'',x.machine||'',x.variant||'',x.variantKey||'',z.loadUnit||x.loadUnit||'unknown',z.baseLoad??x.baseLoad??'',x.setup||'',x.order||'',i+1,z.reps??'',z.weight??'',z.rir??'',z.warmup,z.drop,z.partial,z.restActual??'',z.rawText||'',z.parseConfidence||x.parseConfidence||'',z.needsReview??x.needsReview??'',z.note||'',x.notes||'',x.painZone||'',x.painScore||'']))));const csv=rows.map(r=>r.map(v=>`"${String(v??'').replaceAll('"','""')}"`).join(',')).join('\n');download('gym-coach-entrenos-final.csv',csv,'text/csv')}
-function renderAll(){renderToday();renderProgress();renderMeals();renderFoods();renderBuilder();renderNutritionTarget();renderShopping();renderProfile();fillExercises();renderReadinessAdvice();renderTodayPlan();renderVariantMap();renderImportPreview();updateNextSetSuggestion();refreshVariantKey();updateSetWeightLabels();renderQuickPlan();renderPerformanceComparison();renderFoodMatrix();renderDayFoodLog();renderBreakfastPreview();renderPlates()}
+function renderAll(){renderToday();renderProgress();renderMeals();renderFoods();renderBuilder();renderNutritionTarget();renderShopping();renderProfile();fillExercises();renderReadinessAdvice();renderTodayPlan();renderVariantMap();renderImportPreview();updateNextSetSuggestion();refreshVariantKey();updateSetWeightLabels();renderQuickPlan();renderPerformanceComparison();renderFoodMatrix();renderDayFoodLog();renderBreakfastPreview();renderPlates();renderWeekV21()}
 
 function v9ExerciseLogsAnyVariant(exid){
   return db.sessions.flatMap(ss=>(ss.exercises||[]).map((x,idx)=>({...x,date:ss.date,order:x.order||idx+1})))
@@ -2624,7 +2703,8 @@ function renderPerformanceComparison(){
     const rg=ranges[i]||null, s=targetSource[i]||null;
     lines.push(`${i+1}) ${v9SeriesTarget(e,s,rg,i)}`);
   }
-  todayBox.innerHTML=lines.join('<br>');
+  const pf=prefatigueNote(e);
+  todayBox.innerHTML=lines.join('<br>')+(pf?`<div class="sectiongap" style="color:var(--warn);font-weight:600">${pf}</div>`:'');
 }
 
 
@@ -2746,8 +2826,8 @@ function autosaveDraftSoon(){
       const d=collectActiveDraft();
       if(d)localStorage.setItem(DRAFT_KEY,JSON.stringify(d));
       localStorage.setItem(APPKEY,JSON.stringify(db));
-      setAutosaveStatus('<b>Guardado.</b> Puedes cerrar la app sin perder estas series.');
-    }catch(e){setAutosaveStatus('<b>No se pudo guardar.</b> No cierres la app.','warn')}
+      setAutosaveStatus('<b>Guardado.</b>');
+    }catch(e){setAutosaveStatus('<b>No se pudo guardar.</b>','warn')}
   },120);
 }
 function clearDraft(){
@@ -2798,7 +2878,180 @@ function bindAutosaveListeners(){
   },true));
 }
 
-// =============== END FINAL OVERRIDES ===============
+
+// =============== v21 TRAINING / MOBILE / TIMER OVERRIDES ===============
+const TRAINING_PLAN_V21={
+  1:{name:'Pull A',subtitle:'Espalda + bíceps + deltoide posterior',duration:'50–60 min',goal:'Espalda prioritaria, técnica estable y progresión por slot. Orden flexible por disponibilidad.',items:[
+    {id:'pulldown_open',label:'Jalón abierto',rest:'2:30',volume:'Espalda',sets:[[6,8,'1'],[8,10,'1'],[10,12,'0–1']]},
+    {id:'row_uni',label:'Remo unilateral',rest:'2:00–2:30',volume:'Espalda',sets:[[8,10,'1'],[10,12,'1'],[10,12,'1']]},
+    {id:'row_t',label:'Remo T',rest:'2:00',volume:'Espalda',sets:[[8,10,'1'],[10,12,'0–1']]},
+    {id:'reverse',label:'Reverse peck deck',rest:'1:30',volume:'Deltoide posterior',sets:[[10,15,'1'],[12,15,'0–1']]},
+    {id:'bayesian',label:'Curl Bayesian',rest:'1:30',volume:'Bíceps',sets:[[8,10,'1'],[10,12,'1'],[12,15,'0–1']]},
+    {id:'hammer_rope',label:'Curl martillo cuerda',rest:'1:30',volume:'Bíceps',sets:[[8,10,'1'],[10,12,'0–1']]}
+  ]},
+  2:{name:'Push A + gemelo',subtitle:'Pecho + hombro + tríceps + gemelo',duration:'55–65 min',goal:'Pecho como motor del día. Evitar encadenar fallos: compuestos con margen y fallo solo selectivo en aislamientos seguros.',items:[
+    {id:'inc_smith',label:'Press inclinado multipower',rest:'2:30–3:00',volume:'Pecho',sets:[[6,8,'1'],[8,10,'1'],[10,12,'0–1']]},
+    {id:'pecdeck',label:'Peck deck',rest:'2:00',volume:'Pecho',sets:[[8,10,'1'],[10,12,'1'],[12,15,'0–1']]},
+    {id:'military',label:'Press militar',rest:'2:00–2:30',volume:'Press militar',sets:[[6,8,'1–2'],[8,10,'1']]},
+    {id:'latraise',label:'Elevación lateral unilateral polea',rest:'1:30',volume:'Deltoide lateral',sets:[[10,15,'1'],[10,15,'1'],[10,15,'0–1']]},
+    {id:'triceps_oh',label:'Tríceps encima cabeza',rest:'1:30',volume:'Tríceps',sets:[[8,10,'1'],[10,12,'1'],[12,15,'0–1']]},
+    {id:'triceps_v',label:'Tríceps V / unilateral',rest:'1:30',volume:'Tríceps',sets:[[8,12,'1'],[10,15,'0–1']]},
+    {id:'calf',label:'Gemelo',rest:'1:30',volume:'Gemelo',sets:[[10,15,'1'],[10,15,'0–1']]}
+  ]},
+  4:{name:'Pierna A + ABS',subtitle:'Pierna completa + abdomen',duration:'55–65 min',goal:'Progresar sin bisagra lumbar pesada. Perfect Squat es la prioridad; prensa/hip thrust pueden intercambiarse si una máquina está libre.',items:[
+    {id:'perfect',label:'Perfect Squat',rest:'3:00',volume:'Cuádriceps',sets:[[8,10,'1–2'],[10,12,'1'],[10,12,'1']]},
+    {id:'legpress',label:'Prensa',rest:'3:00',volume:'Cuádriceps',sets:[[8,10,'1–2'],[10,12,'1'],[10,12,'1']]},
+    {id:'hamcurl',label:'Curl femoral',rest:'2:00',volume:'Femoral',sets:[[8,10,'1'],[10,12,'1'],[12,15,'0–1']]},
+    {id:'hipthrust',label:'Hip thrust máquina',rest:'2:30',volume:'Glúteo',sets:[[8,10,'1'],[10,12,'1'],[10,12,'0–1']]},
+    {id:'quadext',label:'Extensión cuádriceps',rest:'2:00',volume:'Cuádriceps',sets:[[8,12,'1'],[10,15,'0–1']]},
+    {id:'crunch',label:'Crunch máquina',rest:'1:30',volume:'ABS',sets:[[12,20,'1'],[12,20,'1'],[12,20,'0–1']]}
+  ]},
+  5:{name:'Pull B + gemelo',subtitle:'Segundo estímulo de espalda + bíceps + gemelo',duration:'50–60 min',goal:'Segundo estímulo de espalda con variantes distintas. Sin femoral aquí.',items:[
+    {id:'pulldown_bi',label:'Jalón biacromial',rest:'2:30',volume:'Espalda',sets:[[6,8,'1'],[8,10,'1'],[10,12,'0–1']]},
+    {id:'row_bi',label:'Remo biacromial',rest:'2:00–2:30',volume:'Espalda',sets:[[8,10,'1'],[10,12,'1'],[10,12,'1']]},
+    {id:'pullover',label:'Pullover polea',rest:'1:30',volume:'Espalda',sets:[[10,15,'1'],[10,15,'0–1']]},
+    {id:'reverse',label:'Reverse peck deck',rest:'1:30',volume:'Deltoide posterior',sets:[[10,15,'1'],[10,15,'0–1']]},
+    {id:'scott',label:'Curl Scott',rest:'1:30',volume:'Bíceps',sets:[[6,8,'1'],[8,10,'1'],[10,12,'0–1']]},
+    {id:'calf',label:'Gemelo',rest:'1:30',volume:'Gemelo',sets:[[10,15,'1'],[10,15,'0–1']]}
+  ]},
+  6:{name:'Push B + pierna B + ABS',subtitle:'Pecho/hombro + segundo estímulo de pierna',duration:'75–90 min',goal:'Segundo día de pecho y complemento de pierna sin volumen basura. El femoral vive aquí, no el viernes.',items:[
+    {id:'inc_plate',label:'Press inclinado discos',rest:'2:30–3:00',volume:'Pecho',sets:[[6,8,'1'],[8,10,'1'],[10,12,'0–1']]},
+    {id:'chestpress',label:'Press sentado',rest:'2:00–2:30',volume:'Pecho',sets:[[8,10,'1'],[10,12,'0–1']]},
+    {id:'latraise',label:'Elevaciones laterales máquina',rest:'1:30',volume:'Deltoide lateral',sets:[[10,15,'1'],[10,15,'1'],[10,15,'0–1']]},
+    {id:'triceps_v',label:'Tríceps polea V',rest:'1:30',volume:'Tríceps',sets:[[8,12,'1'],[10,15,'0–1']]},
+    {id:'quadext',label:'Extensión cuádriceps',rest:'2:00',volume:'Cuádriceps',sets:[[10,15,'1'],[10,15,'0–1']]},
+    {id:'hamcurl',label:'Curl femoral',rest:'2:00',volume:'Femoral',sets:[[10,12,'1'],[12,15,'0–1']]},
+    {id:'hipthrust',label:'Hip thrust',rest:'2:00',volume:'Glúteo',sets:[[10,15,'1'],[10,15,'0–1']]},
+    {id:'abductor',label:'Abductor',rest:'1:00–1:30',volume:'Abductor',sets:[[12,20,'1'],[12,20,'0–1']]},
+    {id:'absinf',label:'ABS inferior apoyado',rest:'1:30',volume:'ABS',sets:[[12,20,'1'],[12,20,'1'],[12,20,'0–1']]}
+  ]}
+};
+function v21Plan(){const p=workoutPlanSelection();return (!p.rest&&TRAINING_PLAN_V21[p.key])?TRAINING_PLAN_V21[p.key]:null}
+function v21CombinedItems(){
+  const p=v21Plan();let items=p?[...p.items]:[];
+  combineSelectionForToday().forEach(k=>{const x=TRAINING_PLAN_V21[+k];if(x)x.items.forEach(it=>{if(!items.some(z=>z.id===it.id))items.push(it)})});
+  return items;
+}
+function plannedItem(exerciseId){return v21CombinedItems().find(it=>it.id===exerciseId)||null}
+function plannedScheme(exerciseId){const it=plannedItem(exerciseId);return it?it.sets.map(s=>`${s[0]}–${s[1]}`).join(' → '):''}
+function v21RirMin(label){const m=String(label||'1').match(/\d+/);return m?+m[0]:1}
+function v21RirHtml(label){return `<span class="v21Rir">RIR ${label}</span>`}
+function v21Unit(){return v9UnitLabel()}
+function v21FormatPlanSet(st){return `${st[0]}–${st[1]} reps · RIR ${st[2]}`}
+function comparableLogs(exid,variant){
+  const e=exById(exid),key=e?makeVariantKey(e):null,loc=normText(byId('location')?.value||db.settings.defaultLocation||''),mach=normText(byId('machine')?.value||''),v=normText(variant);
+  return db.sessions.flatMap(ss=>(ss.exercises||[]).map((x,idx)=>({...x,date:ss.date,sessionId:ss.id,order:x.order||idx+1}))).filter(x=>{
+    if(x.exerciseId!==exid)return false;
+    if(x.variantKey)return x.variantKey===key;
+    return normText(x.location||'')===loc && normText(x.machine||'')===mach && normText(x.variant||'')===v;
+  }).sort((a,b)=>b.date.localeCompare(a.date));
+}
+function v21FindExact(e){
+  const exact=comparableLogs(e.id,byId('variant')?.value||'').filter(x=>x.date<today());
+  if(exact.length)return {log:exact[0],exact:true};
+  const any=v9ExerciseLogsAnyVariant(e.id);return any.length?{log:any[0],exact:false}:{log:null,exact:false};
+}
+function v21WorkSets(log){return (log?.sets||[]).filter(s=>!s.warmup&&!s.drop&&!s.partial&&s.reps>0&&s.weight>0)}
+function v21SeriesTarget(e,prevSet,target){
+  const unit=v21Unit(), inc=+(e.increment||2.5), lo=target[0], hi=target[1], rirLabel=target[2], minRir=v21RirMin(rirLabel);
+  if(!prevSet)return `${lo}–${hi} reps · ${v21RirHtml(rirLabel)} · calibra carga`;
+  let w=+prevSet.weight, reps=+prevSet.reps, rir=Number.isFinite(prevSet.rir)?+prevSet.rir:null, repText=`${lo}–${hi}`, note='mantén carga';
+  if(rir===null){note='mantén carga y registra RIR para afinar';}
+  else if(reps>=hi){
+    if(rir>=minRir){w=Math.round((w+inc)*100)/100;repText=`${lo}–${Math.min(hi,lo+1)}`;note='rango completado con margen: mínimo salto';}
+    else {repText=String(hi);note=`consolida ${hi} reps con RIR ${rirLabel} antes de subir`;}
+  }else if(reps>=lo){repText=String(Math.min(hi,Math.floor(reps)+1));note='busca +1 rep con la misma carga';}
+  else if(rir!==null&&rir<=1){w=Math.max(0,Math.round((w-inc)*100)/100);repText=`${lo}–${hi}`;note='por debajo del rango al límite: baja un salto';}
+  else {repText=`${lo}–${hi}`;note='mantén o ajusta solo si la técnica/RIR lo piden';}
+  return `${fmt(w)}${unit} × ${repText} · ${v21RirHtml(rirLabel)}<div class="small muted">${note}</div>`;
+}
+function renderPerformanceComparison(){
+  const e=exerciseFromInput(),todayBox=byId('todayGoal'),lastBox=byId('lastComparableMini'),lastDate=byId('lastComparableDate');
+  if(!todayBox||!lastBox||!lastDate)return;
+  if(!e){todayBox.textContent='Selecciona un ejercicio.';lastBox.textContent='Aún sin referencia.';lastDate.textContent='—';return}
+  const it=plannedItem(e.id), targets=it?.sets||[];
+  const prev=v21FindExact(e),log=prev.log,prevSets=v21WorkSets(log);
+  if(log){lastBox.innerHTML=prevSets.map((z,i)=>`<span>${i+1}) ${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}</span>`).join(' · ');lastDate.textContent=`${dateLabel(log.date)}${prev.exact?' · misma máquina/variante':' · otra máquina/variante · solo contexto'}`}
+  else{lastBox.textContent='Primera referencia limpia.';lastDate.textContent='Sin registro anterior'}
+  if(!targets.length){todayBox.textContent='Sin esquema fijo: 2–3 series dentro del rango del ejercicio, guiadas por técnica y RIR.';return}
+  const lines=targets.map((t,i)=>{
+    const body=prev.exact?v21SeriesTarget(e,prevSets[i]||null,t):`${t[0]}–${t[1]} reps · ${v21RirHtml(t[2])} · calibra carga en esta máquina`;
+    return `<div class="v21TargetLine"><span class="n">${i+1}</span><div>${body}</div></div>`;
+  });
+  const pf=prefatigueNote(e);
+  todayBox.innerHTML=lines.join('')+(!prev.exact&&log?'<div class="small muted sectiongap">No copio kilos de otra máquina/gimnasio.</div>':'')+(pf?`<div class="sectiongap" style="color:var(--warn);font-weight:600">${pf}</div>`:'');
+}
+function updateNextSetSuggestion(){
+  const box=byId('nextSetGoal');if(!box)return;
+  const e=exerciseFromInput();if(!e){box.innerHTML='<b>Siguiente serie:</b>&nbsp; selecciona un ejercicio.';return}
+  const it=plannedItem(e.id), entered=workSetsEntered(), idx=entered.length, target=it?.sets?.[idx]||null, last=entered[entered.length-1]||null;
+  if(!target){box.innerHTML=entered.length?'<b>Series objetivo completadas.</b>&nbsp; No añadas volumen por inercia; solo una extra si estaba planificada por un motivo concreto.':'<b>Siguiente serie:</b>&nbsp; usa el rango habitual del ejercicio.';return}
+  if(!last){box.innerHTML=`<b>Serie ${idx+1}:</b>&nbsp; ${target[0]}–${target[1]} reps · ${v21RirHtml(target[2])}. Ajusta la carga sin perseguir fallo.`;return}
+  if(!Number.isFinite(last.rir)){box.innerHTML=`<b>Serie ${idx+1}:</b>&nbsp; ${target[0]}–${target[1]} reps · ${v21RirHtml(target[2])}. Marca el RIR de la anterior para afinar la bajada/mantenimiento de carga.`;return}
+  let action='ajusta solo lo necesario para entrar en rango con el RIR objetivo';
+  if(last.rir===0&&v21RirMin(target[2])>=1)action='vienes de fallo: recupera margen; baja un escalón si hace falta';
+  else if(last.rir>=2&&target[0]>last.reps)action='puedes mantener carga o bajar muy poco; aún había margen';
+  else if(target[0]>last.reps)action='si el siguiente slot pide más reps, reduce carga de forma mínima';
+  box.innerHTML=`<b>Serie ${idx+1}:</b>&nbsp; ${target[0]}–${target[1]} reps · ${v21RirHtml(target[2])}. <span class="muted">${action}.</span>`;
+}
+function renderQuickPlan(){
+  const box=byId('quickPlanExercises');if(!box)return;const p=v21Plan();
+  if(!p){box.innerHTML='<div class="muted">No hay sesión seleccionada. Elige una en Entreno.</div>';return}
+  const ss=db.sessions.find(x=>x.date===today()),current=exerciseFromInput(),items=v21CombinedItems();
+  box.innerHTML=items.map(it=>{const e=exById(it.id),logs=(ss?.exercises||[]).filter(x=>x.exerciseId===it.id),setN=logs.reduce((n,x)=>n+v21WorkSets(x).length,0),done=logs.length>0;return `<button class="quickExercise ${done?'done':''} ${current?.id===it.id?'current':''}" data-id="${it.id}"><span class="qstatus">${done?`✓ ${setN} series`:'pendiente'}</span><div class="qname">${e?.name||it.label}</div><div class="qmeta">${it.sets.map(s=>`${s[0]}–${s[1]}@${s[2]}`).join(' · ')} · descanso ${it.rest}</div></button>`}).join('');
+  box.querySelectorAll('.quickExercise').forEach(b=>b.addEventListener('click',()=>chooseExerciseFromPlan(b.dataset.id)));
+}
+function renderTodayPlan(){
+  if(!byId('todayPlanCard'))return;const pick=workoutPlanSelection(),sel=byId('todayWorkoutSelect');if(sel)sel.value=workoutOverrideForToday();
+  const resetBtn=byId('resetWorkoutDay');if(resetBtn)resetBtn.classList.toggle('hidden',workoutOverrideForToday()==='auto');renderCombineOptions();
+  const p=v21Plan();if(!p){byId('todayPlanTitle').textContent=pick.manual?'Hoy · descanso elegido':'Hoy · descanso / actividad normal';byId('todayPlanSubtitle').textContent='Sin sesión base';byId('todayPlanDuration').textContent='—';byId('todayPlanAdvice').innerHTML='<b>Objetivo:</b> recuperar; actividad normal y nutrición sin compensaciones.';byId('todayPlanExercises').innerHTML='<div class="muted">Elige una sesión si quieres entrenar hoy.</div>';renderQuickPlan();return}
+  const rr=readinessRecommendation(db.readiness.find(x=>x.date===today())||currentSession().readiness),ds=deloadSignal();
+  byId('todayPlanTitle').textContent=`Hoy · ${p.name}${pick.manual?' · manual':''}`;byId('todayPlanSubtitle').textContent=p.subtitle;byId('todayPlanDuration').textContent=p.duration;byId('todayPlanAdvice').innerHTML=`<b>Objetivo:</b> ${p.goal}<div class="small muted sectiongap">${rr.text}${ds.level!=='normal'?' '+ds.text:''}</div>`;
+  byId('todayPlanExercises').innerHTML=v21CombinedItems().map(it=>{const e=exById(it.id);return `<div class="item"><div class="itemtop"><div><b>${e?.name||it.label}</b><div class="small muted">${it.sets.map(v21FormatPlanSet).join(' · ')} · descanso ${it.rest}</div></div><button class="btn planLoad" data-id="${it.id}" style="min-height:34px;padding:5px 9px">Registrar</button></div></div>`}).join('');
+  document.querySelectorAll('.planLoad').forEach(b=>b.addEventListener('click',()=>chooseExerciseFromPlan(b.dataset.id)));renderQuickPlan();
+}
+function v21WeeklyVolume(){const out={};Object.values(TRAINING_PLAN_V21).forEach(p=>p.items.forEach(it=>{out[it.volume]=(out[it.volume]||0)+it.sets.length}));return out}
+function renderWeekV21(){
+  const box=byId('weekPlanV21');if(!box)return;const vol=v21WeeklyVolume();
+  const order=['Pecho','Espalda','Deltoide lateral','Deltoide posterior','Press militar','Bíceps','Tríceps','Cuádriceps','Femoral','Glúteo','Abductor','Gemelo','ABS'];
+  const intro=`<div class="card"><div class="row" style="justify-content:space-between"><div><h2 style="margin-bottom:4px">Rutina semanal v21</h2><div class="small muted">Una sola fuente para plan, objetivos, RIR y volumen.</div></div><span class="pill">5 días</span></div><div class="v21VolumeGrid sectiongap">${order.map(k=>`<div class="v21Volume"><span class="small muted">${k}</span><b>${vol[k]||0}</b><span class="small">series directas</span></div>`).join('')}</div><div class="planFlexNote sectiongap"><b>Orden flexible:</b> el orden registrado sigue siendo el real. Si haces hip thrust antes de prensa porque está libre, la app conserva esa fatiga previa en el histórico.</div></div>`;
+  const dayNames={1:'Lunes',2:'Martes',4:'Jueves',5:'Viernes',6:'Sábado'};
+  const cards=Object.entries(TRAINING_PLAN_V21).map(([k,p])=>`<div class="card span6 v21DayCard"><h2>${dayNames[k]} · ${p.name}</h2><div class="list">${p.items.map(it=>`<div class="item"><b>${it.label}</b><div class="small muted">${it.sets.map(v21FormatPlanSet).join(' · ')} · descanso ${it.rest}</div></div>`).join('')}</div><div class="goal sectiongap"><b>Objetivo:</b> ${p.goal}</div></div>`).join('');
+  box.innerHTML=intro+cards;
+}
+
+// Registro móvil estable: escribir reps/kg no recalcula DOM visible.
+function addSetRow(opts={}){const n=byId('sets').querySelectorAll('.setrow').length+1,wrap=document.createElement('div');wrap.className='setwrap';wrap.innerHTML=`<div class="setrow"><div class="setnum">${n}${opts.drop?'↳':''}</div><div class="setinput repsField"><span class="miniLabel">Reps</span><input class="reps" inputmode="decimal" type="number" step="0.5" enterkeyhint="next" placeholder="reps" value="${opts.reps??''}"></div><div class="setinput weightField"><span class="miniLabel weightLabel">Carga</span><input class="weight" inputmode="decimal" type="number" step="0.1" enterkeyhint="done" placeholder="kg" value="${opts.weight??''}"></div><div class="rirgrid"><button type="button" class="rirbtn" data-rir="0">0</button><button type="button" class="rirbtn" data-rir="1">1</button><button type="button" class="rirbtn" data-rir="2">2</button><button type="button" class="rirbtn" data-rir="3">3+</button></div><button type="button" class="btn bad del">×</button></div><div class="setmeta"><label class="check"><input class="warmup" type="checkbox" ${opts.warmup?'checked':''}> aproximación</label><label class="check"><input class="partial" type="checkbox" ${opts.partial?'checked':''}> parcial</label><label class="check"><input class="drop" type="checkbox" ${opts.drop?'checked':''}> drop vinculado</label><input class="setnote" placeholder="nota serie" style="min-height:34px;max-width:260px"></div>`;
+  wrap.querySelectorAll('.rirbtn').forEach(b=>b.addEventListener('click',()=>{wrap.dataset.rir=b.dataset.rir;wrap.querySelectorAll('.rirbtn').forEach(x=>x.classList.toggle('sel',x===b));updateNextSetSuggestion()}));
+  wrap.querySelectorAll('.reps,.weight').forEach(el=>{el.addEventListener('change',updateNextSetSuggestion);el.addEventListener('blur',updateNextSetSuggestion)});
+  wrap.querySelectorAll('.warmup,.partial,.drop').forEach(el=>el.addEventListener('change',updateNextSetSuggestion));wrap.querySelector('.del').addEventListener('click',()=>{wrap.remove();renumberSets();updateNextSetSuggestion()});byId('sets').appendChild(wrap);updateSetWeightLabels();
+}
+function setupMobileViewportV21(){
+  const vv=window.visualViewport;if(!vv)return;let maxH=vv.height;
+  const editable=()=>{const a=document.activeElement;return !!a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)};
+  const sync=()=>{if(!editable())maxH=Math.max(maxH,vv.height);const open=editable()&&(maxH-vv.height>140);document.body.classList.toggle('keyboard-open',open)};
+  vv.addEventListener('resize',sync);vv.addEventListener('scroll',sync);document.addEventListener('focusin',()=>setTimeout(sync,60));document.addEventListener('focusout',()=>setTimeout(()=>{maxH=Math.max(maxH,vv.height);sync()},120));sync();
+}
+
+// Timer absoluto: setInterval solo pinta la UI; la fuente de verdad es restEndsAt.
+const REST_END_KEY=APPKEY+'_rest_ends_v21';let restEndsAt=+(localStorage.getItem(REST_END_KEY)||0),wakeLockV21=null;
+async function requestWakeLockV21(){try{if('wakeLock' in navigator&&document.visibilityState==='visible'&&restStarted&&!wakeLockV21){wakeLockV21=await navigator.wakeLock.request('screen');wakeLockV21.addEventListener('release',()=>wakeLockV21=null)}}catch(e){}}
+function releaseWakeLockV21(){if(wakeLockV21){try{wakeLockV21.release()}catch(e){}wakeLockV21=null}}
+function storeRestEndV21(){if(restEndsAt>0)localStorage.setItem(REST_END_KEY,String(restEndsAt));else localStorage.removeItem(REST_END_KEY)}
+function scheduleRestNotification(){clearTimeout(restNotifyTimeout);if(!('Notification' in window)||Notification.permission!=='granted'||!restEndsAt)return;const ms=Math.max(0,restEndsAt-Date.now());if(navigator.serviceWorker&&navigator.serviceWorker.controller){navigator.serviceWorker.controller.postMessage({type:'schedule-rest',dueAt:restEndsAt,ms,title:'Descanso terminado',body:'Toca para volver a la serie.'});return}restNotifyTimeout=setTimeout(()=>{try{const n=new Notification('Descanso terminado',{body:'Toca para volver a la serie.',tag:'gym-rest',renotify:true,silent:false,vibrate:[400,180,400,180,700]});n.onclick=()=>{window.focus();n.close()}}catch(e){}},ms)}
+function cancelRestNotification(){clearTimeout(restNotifyTimeout);restNotifyTimeout=null;if(navigator.serviceWorker&&navigator.serviceWorker.controller)navigator.serviceWorker.controller.postMessage({type:'cancel-rest'})}
+function setRest(sec){restSec=sec;restStarted=null;pausedAt=null;restEndsAt=0;restAlerted=false;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);document.querySelectorAll('.restPreset').forEach(b=>b.classList.toggle('primary',+b.dataset.sec===sec))}
+function startRest(){restStarted=Date.now();pausedAt=null;restEndsAt=restStarted+restSec*1000;restAlerted=false;storeRestEndV21();startKeepAlive();requestWakeLockV21();scheduleRestNotification();clearInterval(timerInterval);timerInterval=setInterval(tick,250);tick()}
+function tick(){if(!restStarted||!restEndsAt)return;const elapsed=Math.max(0,Math.floor((Date.now()-restStarted)/1000));updateTimer(elapsed);if(Date.now()>=restEndsAt&&!restAlerted){restAlerted=true;const overshoot=(Date.now()-restEndsAt)/1000;if(overshoot<=5)triggerRestAlert(false)}}
+function toggleRestV21(){if(restStarted){const elapsed=Math.max(0,Date.now()-restStarted);pausedAt=Math.min(restSec*1000,elapsed);restStarted=null;restEndsAt=0;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();clearInterval(timerInterval)}else{restStarted=Date.now()-(pausedAt||0);restEndsAt=restStarted+restSec*1000;restAlerted=false;storeRestEndV21();requestWakeLockV21();scheduleRestNotification();clearInterval(timerInterval);timerInterval=setInterval(tick,250);tick()}}
+function syncRestV21(){if(restStarted&&restEndsAt){tick();if(document.visibilityState==='visible')requestWakeLockV21()}else if(restEndsAt>Date.now()){restStarted=restEndsAt-restSec*1000;clearInterval(timerInterval);timerInterval=setInterval(tick,250);tick();requestWakeLockV21()}else if(restEndsAt&&restEndsAt<=Date.now()){restStarted=restEndsAt-restSec*1000;updateTimer(Math.max(restSec,Math.floor((Date.now()-restStarted)/1000)));restEndsAt=0;storeRestEndV21()}}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncRestV21();else releaseWakeLockV21()});window.addEventListener('pageshow',syncRestV21);window.addEventListener('focus',syncRestV21);
+
+// App metadata
+if(!db.profile.appVersion||db.profile.appVersion<21){db.profile.appVersion=21;localStorage.setItem(APPKEY,JSON.stringify(db))}
+const hamV21=db.exercises.find(e=>e.id==='hamcurl');if(hamV21&&!/rodillo pies 3/i.test(hamV21.setup||'')){hamV21.setup='Basic Fit Goya: rodillo pies 3 · ajuste derecha 2 · respaldo punto 1, posición más sacada. Separar sentado/tumbado y gimnasio como variante.';localStorage.setItem(APPKEY,JSON.stringify(db))}
+// =============== END v21 OVERRIDES ===============
+
 
 // tabs
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));
@@ -2859,7 +3112,7 @@ document.querySelectorAll('.shopStore').forEach(b=>b.addEventListener('click',()
 if(byId('shopReset')) byId('shopReset').addEventListener('click',()=>{db.shopping.checked={};localStorage.setItem(APPKEY,JSON.stringify(db));renderShopping()});
 ['kcal','protein','carbs','fat'].forEach(id=>{if(byId(id))byId(id).addEventListener('input',()=>{renderNutritionTarget();const r=macroRemaining();if(byId('macroRemaining'))byId('macroRemaining').textContent=r?`Faltan aprox. ${fmt(r.kcal)} kcal · P ${fmt(r.p)} · C ${fmt(r.c)} · G ${fmt(r.f)}`:'Sin objetivo estricto';})});
 byId('saveMeasures').addEventListener('click',saveMeasures);if(byId('toggleMeasures'))byId('toggleMeasures').addEventListener('click',()=>{const b=byId('measuresBox');if(b)b.classList.toggle('hidden')});const _debouncedExCtx=debounce(loadExerciseContext,300);byId('exerciseSelect').addEventListener('input',()=>{renderExerciseSuggest();_debouncedExCtx()});byId('exerciseSelect').addEventListener('focus',function(){this.select();renderExerciseSuggest()});byId('exerciseSelect').addEventListener('blur',hideExerciseSuggest);byId('exerciseSelect').addEventListener('change',()=>{loadExerciseContext();refreshVariantKey()});byId('exerciseGroup').addEventListener('change',()=>{if(!exerciseFromInput())loadExerciseContext()});byId('variant').addEventListener('change',()=>{loadExerciseContext();renderPerformanceComparison()});byId('progressExercise').addEventListener('change',renderExerciseProgress);byId('progressVariant').addEventListener('input',renderExerciseProgress);
-document.querySelectorAll('.restPreset').forEach(b=>b.addEventListener('click',()=>setRest(+b.dataset.sec)));byId('timerReset').addEventListener('click',()=>setRest(restSec));if(byId('testVibration'))byId('testVibration').addEventListener('click',()=>{ensureAudio();triggerRestAlert(true)});if(byId('vibrationEnabled'))byId('vibrationEnabled').addEventListener('change',()=>updateVibrationStatus());if(byId('enableNotify'))byId('enableNotify').addEventListener('click',async()=>{ensureAudio();const r=await requestNotifyPermission();if(r==='granted'){updateVibrationStatus('Avisos en 2º plano activados');toast('Avisos activados. Sonarán aunque salgas de la app.')}else if(r==='denied'){toast('Permiso denegado. Actívalo en ajustes del navegador.')}else if(r==='unsupported'){toast('Este navegador no soporta notificaciones.')}else{toast('Permiso no concedido.')}});byId('timerToggle').addEventListener('click',()=>{if(restStarted){clearInterval(timerInterval);const elapsed=Date.now()-restStarted;restStarted=null;pausedAt=elapsed}else{restStarted=Date.now()-(pausedAt||0);if((pausedAt||0)/1000<restSec)restAlerted=false;timerInterval=setInterval(tick,250);tick()}});
+document.querySelectorAll('.restPreset').forEach(b=>b.addEventListener('click',()=>setRest(+b.dataset.sec)));byId('timerReset').addEventListener('click',()=>setRest(restSec));if(byId('testVibration'))byId('testVibration').addEventListener('click',()=>{ensureAudio();triggerRestAlert(true)});if(byId('vibrationEnabled'))byId('vibrationEnabled').addEventListener('change',()=>updateVibrationStatus());if(byId('enableNotify'))byId('enableNotify').addEventListener('click',async()=>{ensureAudio();const r=await requestNotifyPermission();if(r==='granted'){updateVibrationStatus('Avisos de sistema activados · best effort en segundo plano');toast('Avisos activados. Android puede retrasarlos si duerme la PWA.')}else if(r==='denied'){toast('Permiso denegado. Actívalo en ajustes del navegador.')}else if(r==='unsupported'){toast('Este navegador no soporta notificaciones.')}else{toast('Permiso no concedido.')}});byId('timerToggle').addEventListener('click',toggleRestV21);
 byId('buildCheckin').addEventListener('click',async()=>{buildCheckin();try{await navigator.clipboard.writeText(byId('checkinText').value);toast('Check-in generado y copiado')}catch{toast('Check-in generado abajo')}});if(byId('copyTodayQuick'))byId('copyTodayQuick').addEventListener('click',async()=>{const t=todayText(true);try{await navigator.clipboard.writeText(t);toast('Copiado con prompt · pégalo en Claude o ChatGPT')}catch{byId('checkinText').value=t;activateTab('checkin');toast('Texto preparado en Check-in')}});byId('copyCheckin').addEventListener('click',async()=>{buildCheckin();try{await navigator.clipboard.writeText(byId('checkinText').value);toast('Copiado')}catch{toast('Selecciona y copia el texto')}});byId('copyToday').addEventListener('click',async()=>{const t=todayText(true);byId('checkinText').value=t;try{await navigator.clipboard.writeText(t);toast('Sesión copiada con prompt')}catch{}});
 if(byId('addMealTemplate'))byId('addMealTemplate').addEventListener('click',()=>{
  const name=prompt('Nombre de la plantilla');if(!name)return;
@@ -2870,7 +3123,7 @@ if(byId('addMealTemplate'))byId('addMealTemplate').addEventListener('click',()=>
 byId('exportJson').addEventListener('click',()=>download('gym-coach-backup.json',JSON.stringify(db,null,2)));byId('exportCsv').addEventListener('click',exportCsv);byId('importJson').addEventListener('change',async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());if(!x.profile||!x.exercises)throw Error();db=x;persist();toast('Backup restaurado')}catch{alert('JSON no válido')}});
 
 if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js').catch(()=>{});
-renderAll();renderFoodMatrix();renderPerformanceComparison();activateTab('train');bindAutosaveListeners();restoreActiveDraft(false);updateReadinessCollapse();
+renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
 })();
 </script>
 </body>
