@@ -1,8 +1,8 @@
-// Gym Coach v21 · Service Worker
+// Gym Coach v23 · Service Worker
 // Offline-first para assets. Las notificaciones de descanso son best-effort:
 // Android/Chrome puede suspender el service worker con la pantalla bloqueada.
 
-const CACHE = 'gym-coach-v21-20260909';
+const CACHE = 'gym-coach-v23-20260921';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 
 self.addEventListener('install', (event) => {
