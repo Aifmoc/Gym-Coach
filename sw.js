@@ -1,103 +1,38 @@
-// Gym Coach v23 · Service Worker
-// Offline-first para assets. Las notificaciones de descanso son best-effort:
-// Android/Chrome puede suspender el service worker con la pantalla bloqueada.
-
-const CACHE = 'gym-coach-v23-20260921';
-const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
-
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS).catch(() => {})));
+/* Gym Coach v31. Replacement worker: scoped offline shell + existing rest messages. */
+const VERSION='v31-20261003';
+const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
+const CACHE=PREFIX+VERSION;
+const SHELL=new URL('index.html',self.registration.scope).href;
+let restTimer=null;
+self.addEventListener('install',event=>{
+  event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.add(new Request(SHELL,{cache:'reload'}));await self.skipWaiting()})());
 });
-
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    Promise.all([
-      caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))),
-      self.clients.claim(),
-    ])
-  );
+self.addEventListener('activate',event=>{
+  event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim()})());
 });
-
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  if (req.method !== 'GET') return;
-
-  // Para navegación/index priorizamos red para que un push de GitHub Pages no quede atrapado en caché antigua.
-  if (req.mode === 'navigate' || new URL(req.url).pathname.endsWith('/index.html')) {
-    event.respondWith(
-      fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => caches.match(req).then((r) => r || caches.match('./index.html')))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(req).then((cached) => {
-      const network = fetch(req)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
-          return res;
-        })
-        .catch(() => cached);
-      return cached || network;
-    })
-  );
+self.addEventListener('fetch',event=>{
+  const request=event.request,url=new URL(request.url);
+  if(request.method!=='GET'||url.origin!==self.location.origin||!url.href.startsWith(self.registration.scope)||url.pathname.endsWith('/sw.js'))return;
+  if(request.mode==='navigate')event.respondWith((async()=>{
+    const cache=await caches.open(CACHE);
+    try{const response=await fetch(request);if(response.ok)await cache.put(SHELL,response.clone());return response}
+    catch(error){const cached=await cache.match(SHELL);if(cached)return cached;throw error}
+  })());
 });
-
-let restTimer = null;
-let restDueAt = 0;
-
-function showRestNotification(data = {}) {
-  return self.registration.showNotification(data.title || 'Descanso terminado', {
-    body: data.body || 'Toca para volver a la serie.',
-    tag: 'gym-rest',
-    renotify: true,
-    vibrate: [400, 180, 400, 180, 700],
-    silent: false,
-    requireInteraction: true,
-    data: { kind: 'gym-rest' },
-  });
-}
-
-self.addEventListener('message', (event) => {
-  const data = event.data || {};
-  if (data.type === 'schedule-rest') {
-    clearTimeout(restTimer);
-    restDueAt = Math.max(Date.now(), +data.dueAt || (Date.now() + Math.max(0, +data.ms || 0)));
-    const delay = Math.max(0, restDueAt - Date.now());
-
-    // setTimeout dentro de un SW NO es garantía con Android dormido; es solo el mejor fallback web disponible.
-    restTimer = setTimeout(() => {
-      showRestNotification(data).catch(() => {});
-      restDueAt = 0;
-    }, delay);
-  }
-
-  if (data.type === 'cancel-rest') {
-    clearTimeout(restTimer);
-    restTimer = null;
-    restDueAt = 0;
-    self.registration.getNotifications({ tag: 'gym-rest' })
-      .then((ns) => ns.forEach((n) => n.close()))
-      .catch(() => {});
-  }
+self.addEventListener('message',event=>{
+  const data=event.data||{};
+  if(data.type==='SKIP_WAITING'){self.skipWaiting();return}
+  if(data.type==='cancel-rest'){clearTimeout(restTimer);restTimer=null;return}
+  if(data.type!=='schedule-rest')return;
+  clearTimeout(restTimer);
+  const delay=Number.isFinite(+data.dueAt)?Math.max(0,+data.dueAt-Date.now()):Math.max(0,+data.ms||0);
+  // Browser suspension may end worker timers; foreground alert remains in index.html.
+  restTimer=setTimeout(()=>{
+    restTimer=null;
+    self.registration.showNotification(data.title||'Descanso terminado',{body:data.body||'Toca para volver a la serie.',tag:'gym-rest',renotify:true,vibrate:[400,180,400],data:{url:SHELL}}).catch(()=>{});
+  },Math.min(delay,2147483647));
 });
-
-self.addEventListener('notificationclick', (event) => {
+self.addEventListener('notificationclick',event=>{
   event.notification.close();
-  event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      for (const client of list) {
-        if ('focus' in client) return client.focus();
-      }
-      if (self.clients.openWindow) return self.clients.openWindow('./');
-    })
-  );
+  event.waitUntil((async()=>{const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});const client=windows.find(c=>c.url.startsWith(self.registration.scope));if(client)return client.focus();return self.clients.openWindow(SHELL)})());
 });
