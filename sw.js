@@ -1,5 +1,5 @@
-/* Gym Coach v32. Replacement worker: scoped offline shell + existing rest messages. */
-const VERSION='v32-20261005';
+/* Gym Coach v33. Replacement worker: scoped offline shell + existing rest messages. */
+const VERSION='v33-20261006';
 const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
 const CACHE=PREFIX+VERSION;
 const SHELL=new URL('index.html',self.registration.scope).href;
