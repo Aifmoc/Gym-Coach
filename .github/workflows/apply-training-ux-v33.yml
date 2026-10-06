@@ -1,0 +1,90 @@
+name: Apply training UX v33
+
+on:
+  push:
+    branches:
+      - chatgpt/training-ux-v33
+    paths:
+      - .github/workflows/apply-training-ux-v33.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: chatgpt/training-ux-v33
+          fetch-depth: 0
+
+      - name: Patch timer, completed exercise state, Push A label and workout duration
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+
+          replacements=[
+            (
+              ".quickExercise.done{border-color:rgba(74,222,128,.55)}",
+              ".quickExercise.done{border-color:rgba(74,222,128,.85);background:#102319;box-shadow:inset 0 0 0 1px rgba(74,222,128,.18)}"
+            ),
+            (
+              "{id:'military',label:'Press militar',rest:'2:00–2:30',volume:'Press militar',sets:[[6,8,'1–2'],[8,10,'1']]}",
+              "{id:'military',label:'Press militar en multipower',rest:'2:00–2:30',volume:'Press militar',sets:[[6,8,'1–2'],[8,10,'1']]}"
+            ),
+            (
+              "function tick(){if(!restStarted||!restEndsAt)return;const elapsed=Math.max(0,Math.floor((Date.now()-restStarted)/1000));updateTimer(elapsed);if(Date.now()>=restEndsAt&&!restAlerted){restAlerted=true;const overshoot=(Date.now()-restEndsAt)/1000;if(overshoot<=5)triggerRestAlert(false)}}",
+              "function tick(){if(!restStarted||!restEndsAt)return;const elapsed=Math.max(0,Math.floor((Date.now()-restStarted)/1000));updateTimer(elapsed);if(Date.now()>=restEndsAt&&!restAlerted){restAlerted=true;triggerRestAlert(false)}}"
+            ),
+            (
+              "else if(restEndsAt&&restEndsAt<=Date.now()){restStarted=restEndsAt-restSec*1000;updateTimer(Math.max(restSec,Math.floor((Date.now()-restStarted)/1000)));restEndsAt=0;storeRestEndV21()}}",
+              "else if(restEndsAt&&restEndsAt<=Date.now()){restStarted=restEndsAt-restSec*1000;updateTimer(Math.max(restSec,Math.floor((Date.now()-restStarted)/1000)));if(!restAlerted){restAlerted=true;triggerRestAlert(false)}restEndsAt=0;storeRestEndV21()}}"
+            ),
+            (
+              "target.dataset.confirmed='1';target.classList.add('confirmedSet');target.dataset.confirmedAt=String(Date.now());startRest();",
+              "target.dataset.confirmed='1';target.classList.add('confirmedSet');target.dataset.confirmedAt=String(Date.now());markTrainingEntry(+target.dataset.confirmedAt);startRest();"
+            ),
+            (
+              "currentSession().exercises.push(log);consumeCoachTargetV22(e,log);",
+              "const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();if(!_session.startedAt)_session.startedAt=log.loggedAt;_session.lastEntryAt=log.loggedAt;consumeCoachTargetV22(e,log);"
+            ),
+            (
+              "el.innerHTML=ss.exercises.map(x=>{",
+              "const duration=trainingDurationLabel(ss);el.innerHTML=(duration?`<div class=\"good\"><b>Duración registrada:</b> ${duration}<div class=\"small muted\">Desde la primera serie anotada hasta la última anotación del entreno.</div></div><div class=\"sectiongap\"></div>`:'')+ss.exercises.map(x=>{"
+            ),
+          ]
+          for old,new in replacements:
+              if old not in s:
+                  raise SystemExit('Missing expected pattern: '+old[:120])
+              s=s.replace(old,new,1)
+
+          marker="function currentRestElapsed(){return restStarted?Math.max(0,Math.floor((Date.now()-restStarted)/1000)):null}"
+          helper="""function markTrainingEntry(ts=Date.now()){const ss=currentSession();if(!ss.startedAt)ss.startedAt=ts;ss.lastEntryAt=ts;localStorage.setItem(APPKEY,JSON.stringify(db));return ss}\nfunction trainingDurationLabel(ss){if(!ss||!Number.isFinite(+ss.startedAt)||!Number.isFinite(+ss.lastEntryAt)||+ss.lastEntryAt<+ss.startedAt)return '';const mins=Math.max(0,Math.round((+ss.lastEntryAt-(+ss.startedAt))/60000));const h=Math.floor(mins/60),m=mins%60;return h?`${h} h ${m} min`:`${m} min`}\n"""
+          if 'function markTrainingEntry(' not in s:
+              if marker not in s: raise SystemExit('currentRestElapsed marker missing')
+              s=s.replace(marker,helper+marker,1)
+
+          p.write_text(s,encoding='utf-8')
+
+          sw=Path('sw.js')
+          t=sw.read_text(encoding='utf-8')
+          t=t.replace("/* Gym Coach v32.","/* Gym Coach v33.")
+          t=t.replace("const VERSION='v32-20261005';","const VERSION='v33-20261006';")
+          sw.write_text(t,encoding='utf-8')
+          PY
+
+      - name: Commit patched app
+        shell: bash
+        run: |
+          rm -f .github/workflows/apply-training-ux-v33.yml
+          git config user.name "chatgpt-gym-coach"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html sw.js .github/workflows/apply-training-ux-v33.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: improve workout timer and session tracking"
+          git push origin HEAD:chatgpt/training-ux-v33
