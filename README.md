@@ -65,3 +65,25 @@ Las sesiones sin horas registradas indican «no disponible»; no se inventa su d
 ```sh
 node --test tests/training-duration.test.cjs
 ```
+
+## Diseño v37 y vuelta a v36
+
+Navegación principal: Hoy, Dieta, Progreso y Más. Más conserva Registro, Semana,
+Check-in, Plan y Datos. Registro reúne el ejercicio, objetivos, series y descanso;
+el estado verde sigue vinculado al slot/configuración de cada ejecución. Los códigos
+internos siguen en exportaciones y configuración avanzada, pero no en las tarjetas.
+Dieta empieza con los restantes calculados desde los objetivos guardados y el log;
+viaje/social no inventa un objetivo de energía, y un exceso se muestra como tal.
+
+La copia `v36/` conserva el código de la versión anterior y usa las mismas claves
+de datos locales, borrador y cuenta. «Volver a v36» en Más o Datos guarda la
+preferencia únicamente en este dispositivo. La v36 permite «Volver a v37».
+No hay migración de estructura ni caducidad para probar el diseño. Sus service
+workers tienen ámbitos y cachés distintos; navegar a v36 no sustituye el shell v37.
+
+```sh
+node --test tests/*.test.cjs
+```
+
+La rama `version-36` apunta al commit `3d8ff712c736e1985dffde77170c5fa213ce9e95`
+como referencia independiente para una reversión completa del despliegue.

@@ -1,10 +1,9 @@
 <!doctype html>
 <html lang="es">
 <head>
-<script data-ui-preference>try{if(localStorage.getItem('gymCoachUiVersion')==='36')location.replace(new URL('./v36/',location.href).href)}catch(e){}</script>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111315">
+<meta name="theme-color" content="#15130f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -210,25 +209,24 @@ body.keyboard-open .toast{bottom:18px}
 @media(max-width:620px){.setTargetHint{margin-left:41px;font-size:11px}.coachTargetInput{min-height:190px}}
 
 </style>
-<link rel="stylesheet" href="design37.css?v=37">
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v37</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
+<div style="background:#26201a;border-bottom:1px solid #a89678;padding:10px 14px;text-align:center;font:14px system-ui;color:#f4efe4">Diseño v36 · tus datos y tu cuenta se conservan. <button type="button" onclick="localStorage.removeItem('gymCoachUiVersion');location.href='../'" style="margin-left:8px;padding:8px 12px;border-radius:8px;background:#e2762c;color:#15130f;border:0;font-weight:bold">Volver a v37</button></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v36</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
 <div class="wrap">
-  <nav class="tabs" id="tabs" aria-label="Navegación principal">
-    <button class="tab active" data-tab="train">Hoy</button>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="train">Entreno</button>
+    <button class="tab" data-tab="record">Registro</button>
+    <button class="tab" data-tab="week">Semana</button>
     <button class="tab" data-tab="nutrition">Dieta</button>
     <button class="tab" data-tab="progress">Progreso</button>
-    <button class="tab" data-tab="more">Más</button>
-  </nav>
+    <button class="tab" data-tab="checkin">Check-in</button>
+    <button class="tab" data-tab="plan">Plan</button>
+    <button class="tab" data-tab="data">Datos</button>
+  </div>
 
   <section class="panel active" id="train">
     <div class="grid">
-      <div class="card hero37">
-        <div class="heroHeading37"><div><span class="eyebrow37">Tu sesión</span><h2 id="heroTitle37">Hoy</h2></div><button class="btn primary" id="startWorkout37">Empezar entreno</button></div>
-        <div class="sessionMetrics37" id="sessionOverview37"></div>
-        <div class="sessionNext37" id="sessionNext37"></div>
-      </div>
       <div class="card span4" id="readinessCard">
         <div class="row" style="justify-content:space-between;align-items:center">
           <h2 style="margin:0">Estado antes de entrenar</h2>
@@ -288,16 +286,15 @@ body.keyboard-open .toast{bottom:18px}
 
   <section class="panel" id="record">
     <div class="grid">
-      <div class="card sessionStrip37" id="recordOverview37"><span class="stripNumbers37" id="recordNumbers37">Sesión de hoy</span><span class="stripName37" id="recordNext37"></span><button class="btn ghost" id="recordPlan37">Ver plan</button></div>
       <div class="card" id="quickPlanCard">
         <div class="row" style="justify-content:space-between;align-items:flex-start">
-          <div><h2 style="margin-bottom:3px">Ejercicios de hoy</h2><div class="small muted">Elige el que esté libre. Los ejercicios cubiertos se marcan en verde.</div></div>
+          <div><h2 style="margin-bottom:3px">Ejercicios de hoy</h2><div class="small muted">Toca el que esté libre. ✓ = ya finalizado hoy.</div></div>
           <span class="pill">orden flexible</span>
         </div>
         <div id="quickPlanExercises" class="quickPlanGrid sectiongap"></div>
       </div>
 
-      <div class="card exerciseFocus37" id="exerciseFocus37">
+      <div class="card">
         <div class="row" style="justify-content:space-between"><h2 style="margin:0">Ejercicio actual</h2><span class="pill" id="sessionDate"></span></div>
         <div class="row sectiongap">
           <div class="field grow" style="position:relative"><span class="label">Ejercicio</span><input id="exerciseSelect" autocomplete="off" placeholder="Escribe para buscar o crear"><div id="exerciseSuggest" class="suggestBox hidden"></div></div>
@@ -329,7 +326,7 @@ body.keyboard-open .toast{bottom:18px}
           <div class="row sectiongap">
             <div class="field grow"><span class="label">Unidad de carga</span><select id="loadUnit"><option value="unknown">Pendiente / desconocida</option><option value="stack_kg">Stack / selector (kg)</option><option value="kg_per_side">Kg por lado</option><option value="kg_per_hand">Kg por mancuerna/mano</option><option value="added_kg">Kg añadidos a carga base</option><option value="total_kg">Kg totales</option><option value="bodyweight">Peso corporal</option><option value="bodyweight_plus_kg">Peso corporal + lastre</option><option value="assistance_kg">Kg de asistencia</option><option value="seconds">Segundos / isométrico</option></select></div>
             <div class="field" style="width:145px"><span class="label">Carga base (kg)</span><input id="baseLoad" type="number" step="0.1" placeholder="0"></div>
-            <div class="field grow"><span class="label">Identificador técnico</span><div id="variantKeyView" class="historyBox code" style="min-height:44px">—</div></div>
+            <div class="field grow"><span class="label">variant_key</span><div id="variantKeyView" class="historyBox code" style="min-height:44px">—</div></div>
           </div>
           <div class="row sectiongap">
             <div class="field grow"><span class="label">Setup habitual</span><input id="setup" placeholder="asiento, agujeros, banco, agarre..."></div>
@@ -345,11 +342,11 @@ body.keyboard-open .toast{bottom:18px}
         <div class="seriesHeader">
           <div>
             <h2 style="margin:0">Registro · reps × kg</h2>
-            <div class="small muted">Calentamientos = “aproximación”. El aviso de descanso continúa al volver a la app.</div>
+            <div class="small muted">Calentamientos = “aproximación”. El descanso usa reloj absoluto y se resincroniza al volver a la app.</div>
           </div>
           <div class="miniRest">
             <span class="small muted">📳</span>
-            <div class="timer" id="timer" aria-label="Tiempo de descanso">02:00</div><button class="btn ghost" id="restOptions37" aria-expanded="false" aria-label="Cambiar tiempo de descanso">Ajustar</button>
+            <div class="timer" id="timer">02:00</div>
             <button class="btn restPreset" data-sec="90">1:30</button>
             <button class="btn restPreset" data-sec="120">2:00</button>
             <button class="btn restPreset" data-sec="150">2:30</button>
@@ -375,7 +372,6 @@ body.keyboard-open .toast{bottom:18px}
         <div class="sethead sectiongap"><div>#</div><div>Reps</div><div>Carga</div><div>RIR</div><div></div></div>
         <div id="sets"></div>
         <div class="row"><button class="btn" id="addSet">+ Serie</button><button class="btn" id="addDrop">+ Drop vinculado</button></div>
-        <div class="inlineActions37"><button class="btn primary" id="confirmSeriesInline37">Confirmar serie</button><button class="btn ok" id="finishExerciseInline37">Finalizar ejercicio</button></div>
         <div class="field sectiongap"><span class="label">Comentarios del ejercicio</span><textarea id="exerciseNotes" rows="2" placeholder="técnica, straps, sensación, etc."></textarea></div>
         <div class="row sectiongap"><div class="field grow"><span class="label">Molestia al terminar</span><input id="painZone" placeholder="zona (solo si aparece)"></div><div class="field" style="width:110px"><span class="label">0–10</span><input id="painScore" type="number" min="0" max="10" step="1"></div></div>
       </div>
@@ -473,13 +469,11 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
         </div>
       </div>
 
-      <div class="card" id="nutritionOverview37" style="border-color:var(--accent)">
+      <div class="card" style="border-color:var(--accent)">
         <div class="row" style="justify-content:space-between;align-items:center">
-          <h2 class="nutritionTitle37">Tu día de comida</h2>
+          <h2 style="margin:0">Lo que llevas hoy</h2>
           <div class="field" style="min-width:150px;margin:0"><select id="dayType"><option value="train">Día de entreno</option><option value="rest">Día de descanso</option><option value="travel">Viaje / social</option></select></div>
         </div>
-        <div id="macroRemaining37" class="macroRemaining37"></div>
-        <div class="nutritionQuick37"><button class="btn" id="jumpFood37">+ Alimento</button><button class="btn" id="jumpBreakfast37">Desayuno habitual</button><button class="btn" id="jumpPlates37">Mis platos</button></div>
         <div id="liveMacroSummary" class="goal sectiongap">Aún no has añadido nada hoy. Usa el desayuno o busca un alimento — todo se suma aquí automáticamente.</div>
         <div id="macroBars" class="sectiongap"></div>
         <span class="pill hidden" id="liveMacroPill">—</span>
@@ -792,20 +786,8 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
     <div class="grid"><div class="card span6"><h2>Check-in semanal</h2><div class="small muted sectiongap">Resumen de tu semana (peso medio, entrenos, dieta, molestias) para enviar a tu conversación de análisis. Distinto de la sesión diaria: esto es el balance de los últimos 7 días.</div><div class="field sectiongap"><span class="label">Notas de la semana</span><textarea id="weeklyNotes" rows="4" placeholder="entrenos completados, recuperación, molestias, dieta social, viajes..."></textarea></div><button class="btn primary sectiongap" id="buildCheckin">Generar y copiar check-in</button></div><div class="card span6"><h2>Resumen generado</h2><textarea id="checkinText" rows="14" readonly></textarea><div class="row sectiongap"><button class="btn ok grow" id="copyCheckin">Copiar check-in</button><button class="btn" id="copyToday">Copiar sesión de hoy con prompt</button></div></div></div>
   </section>
 
-  <section class="panel" id="more">
-    <div class="card"><h2>Más herramientas</h2><div class="moreGrid37">
-      <button class="tab" data-tab="week"><b>Rutina semanal</b><span>Ejercicios, series y distribución</span></button>
-      <button class="tab" data-tab="checkin"><b>Check-in</b><span>Tu balance semanal y medidas</span></button>
-      <button class="tab" data-tab="plan"><b>Plan y objetivos</b><span>Objetivos del entrenador y progresión</span></button>
-      <button class="tab" data-tab="data"><b>Cuenta y datos</b><span>Sincronización y copias de seguridad</span></button>
-      <button class="tab" data-tab="record"><b>Registro</b><span>Continuar o añadir un ejercicio libre</span></button>
-    </div></div>
-    <div class="card versionChoice37 sectiongap"><h2>Prueba el nuevo diseño</h2><div class="muted">La v36 sigue disponible sin fecha límite. Puedes cambiar de versión conservando tus registros y tu cuenta.</div><div class="row"><a class="btn" href="./v36/" id="useV36More">Volver a v36</a></div></div>
-  </section>
-
   <section class="panel" id="data">
     <div class="grid">
-      <div class="card versionChoice37"><h2>Diseño v37</h2><div class="muted">Si prefieres el diseño anterior, vuelve a v36. Tus entrenos, alimentos y sesión de cuenta se conservan.</div><div class="row"><a class="btn" href="./v36/" id="useV36Data">Volver a v36</a></div></div>
       <div class="card" id="cloudCard">
         <h2>Sincronización móvil ↔ PC</h2>
         <p class="small" id="cloudStatus" role="status" aria-live="polite">Tus datos están guardados en este dispositivo.</p>
@@ -836,10 +818,10 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
     </div>
   </section>
 </div>
-<div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios</button><button class="btn primary" id="quickSave">Confirmar serie</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
+<div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios de hoy</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
-<script src="cloud-config.js?v=37"></script>
-<script src="cloud-sync.js?v=37"></script>
+<script src="cloud-config.js?v=36"></script>
+<script src="cloud-sync.js?v=36"></script>
 <script>
 (()=>{
 'use strict';
@@ -2701,7 +2683,7 @@ function renderQuickPlan(){
   const box=byId('quickPlanExercises');if(!box)return;
   const pick=workoutPlanSelection();
   if(pick.rest||!WORKOUT_PLAN_LEGACY[pick.key]){
-    box.innerHTML='<div class="muted">No hay sesión seleccionada. Elige una en Hoy.</div>';return;
+    box.innerHTML='<div class="muted">No hay sesión seleccionada. Elige una en la pestaña Entreno.</div>';return;
   }
   const p=WORKOUT_PLAN_LEGACY[pick.key],ss=db.sessions.find(x=>x.date===today());
   const current=exerciseFromInput();
@@ -3426,13 +3408,13 @@ function updateNextSetSuggestion(){
   let action='ajusta solo lo necesario para entrar en rango con el RIR objetivo';
   if(Number.isFinite(last.rir)&&last.rir===0&&target.rirMin>=1)action='vienes de fallo: recupera margen; baja un escalón si hace falta';
   else if(Number.isFinite(last.rir)&&last.rir>=2&&target.repMin>last.reps)action='puedes mantener carga o bajar muy poco; aún había margen';
-  else if(target.repMin>last.reps)action='si la siguiente serie pide más reps, reduce carga de forma mínima';
+  else if(target.repMin>last.reps)action='si el siguiente slot pide más reps, reduce carga de forma mínima';
   box.innerHTML=`<div><b>Serie ${idx+1}:</b>&nbsp; ${fmt(target.repMin)}–${fmt(target.repMax)} reps · <span class="v21Rir">RIR ${target.rirLabel}</span>. <span class="muted">${action}.</span>${assessment?`<div class="small sectiongap">${assessment}</div>`:''}</div>`;
 }
 
 function renderQuickPlan(){
   const box=byId('quickPlanExercises');if(!box)return;const p=v21Plan();
-  if(!p){box.innerHTML='<div class="muted">No hay sesión seleccionada. Elige una en Hoy.</div>';return}
+  if(!p){box.innerHTML='<div class="muted">No hay sesión seleccionada. Elige una en Entreno.</div>';return}
   const ss=db.sessions.find(x=>x.date===today()),current=exerciseFromInput(),items=v21CombinedItems();
   box.innerHTML=items.map(it=>{const e=exById(it.id),logs=(ss?.exercises||[]).filter(x=>x.exerciseId===it.id),setN=logs.reduce((n,x)=>n+v21WorkSets(x).length,0),done=logs.length>0;return `<button class="quickExercise ${done?'done':''} ${current?.id===it.id?'current':''}" data-id="${it.id}"><span class="qstatus">${done?`✓ ${setN} series`:'pendiente'}</span><div class="qname">${e?.name||it.label}</div><div class="qmeta">${it.sets.map(s=>`${s[0]}–${s[1]}@${s[2]}`).join(' · ')} · descanso ${it.rest}</div></button>`}).join('');
   box.querySelectorAll('.quickExercise').forEach(b=>b.addEventListener('click',()=>chooseExerciseFromPlan(b.dataset.id)));
@@ -3590,12 +3572,12 @@ chooseExerciseFromPlan=function(id){const it=v21CombinedItems().find(it=>it.id==
 coachTargetForV22=function(e){if(!e)return null;const slot=gcCurrentSlot(e.id),loc=v22CoachNorm(byId('location')?.value||db.settings.defaultLocation||''),mach=v22CoachNorm(byId('machine')?.value||''),variant=v22CoachNorm(byId('variant')?.value||'');return [...(db.coachTargets||[])].filter(t=>t.status==='pending'&&t.exerciseId===e.id&&t.workoutSlotId===slot&&v22CoachNorm(t.location)===loc&&v22CoachNorm(t.machine||'')===mach&&v22CoachNorm(t.variant||'')===variant).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))[0]||null};
 function gcMismatch(e){const ts=(db.coachTargets||[]).filter(t=>t.exerciseId===e.id);if(!ts.length)return 'Sin objetivo del entrenador importado para este ejercicio.';const loc=v22CoachNorm(byId('location')?.value||db.settings.defaultLocation||''),mach=v22CoachNorm(byId('machine')?.value||''),variant=v22CoachNorm(byId('variant')?.value||'');return [...new Set(ts.map(t=>{const why=[];if(!t.workoutSlotId)why.push('objetivo antiguo sin slot: asigna su día');else if(t.workoutSlotId!==gcCurrentSlot(e.id))why.push('otro slot/día de rutina');if(v22CoachNorm(t.location)!==loc)why.push('otra ubicación');if(v22CoachNorm(t.machine||'')!==mach)why.push('máquina diferente (incluido campo vacío)');if(v22CoachNorm(t.variant||'')!==variant)why.push('variante diferente (incluido campo vacío)');if(t.status!=='pending')why.push(t.status==='done'?'objetivo consumido':`objetivo ${t.status}`);return why.join(', ')}))].filter(Boolean).join(' · ')}
 const gcCompare=renderPerformanceComparison;
-renderPerformanceComparison=function(){gcCompare();const e=exerciseFromInput(),box=byId('coachContext37');if(box)box.textContent=e&&!coachTargetForV22(e)?`Objetivo del entrenador: ${gcMismatch(e)}`:''};
+renderPerformanceComparison=function(){gcCompare();const e=exerciseFromInput(),box=byId('todayGoal');if(e&&box&&!coachTargetForV22(e))box.insertAdjacentHTML('beforeend',`<div class="small muted sectiongap">COACH: ${escapeHtml(gcMismatch(e))}</div>`)};
 const gcScope=v22CoachScope;
-v22CoachScope=function(t){return gcScope(t)};
+v22CoachScope=function(t){return [gcScope(t),t.workoutSlotId?`slot=${t.workoutSlotId}`:'sin slot (requiere asignación)'].join(' · ')};
 const gcTargets=renderCoachTargetsV22;
 renderCoachTargetsV22=function(){gcTargets();const box=byId('coachTargetList');if(!box)return;const legacy=(db.coachTargets||[]).filter(t=>t.status==='pending'&&!t.workoutSlotId);legacy.forEach(t=>{const wrap=document.createElement('div');wrap.className='item';const label=document.createElement('div');label.textContent=`Asignar día: ${t.exerciseName}`;const sel=document.createElement('select');sel.innerHTML='<option value="">Elige el día original</option>'+Object.entries(TRAINING_PLAN_V21).filter(([k,p])=>p.items.some(it=>it.id===t.exerciseId)).map(([k,p])=>`<option value="${gcSlot(k,t.exerciseId)}">${escapeHtml(p.name)}</option>`).join('')+`<option value="extra:${t.exerciseId}">Fuera de rutina</option>`;sel.onchange=()=>{if(sel.value){t.workoutSlotId=sel.value;gcStore();renderCoachTargetsV22();renderPerformanceComparison()}};wrap.append(label,sel);box.append(wrap)})};
-renderQuickPlan=function(){gcReconcilePending();const box=byId('quickPlanExercises');if(!box)return;const items=v21CombinedItems();box.innerHTML='';items.forEach(it=>{const row=document.createElement('div');const covered=gcCovered(it.workoutSlotId),e=exById(it.id);row.className=`item ${covered?'exerciseComplete':''}`;row.dataset.slot=it.workoutSlotId;row.innerHTML=`<b>${escapeHtml(e?.name||it.label)}</b> <span class="pill">${covered?'✓ COMPLETADO':'pendiente'}</span><div class="small muted">${it.sets.length} series · ${it.sets.map(s=>`${s[0]}–${s[1]} reps · RIR ${s[2]}`).join(' / ')}</div>`;const load=document.createElement('button');load.className='btn';load.textContent='Registrar';load.onclick=()=>gcLoad(it);const pending=document.createElement('button');pending.className='btn';pending.textContent='Pendiente semanal';pending.disabled=covered;pending.onclick=()=>gcMarkPending(it);const sel=document.createElement('select');sel.setAttribute('aria-label','Sustituir ejercicio');sel.innerHTML='<option value="">Sustituir por…</option>'+db.exercises.filter(e=>e.id!==it.id).map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');sel.onchange=()=>{if(sel.value)gcLoad({id:sel.value,workoutSlotId:`extra:${sel.value}`},{slot:it.workoutSlotId})};const options=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Alternativas y pendientes';options.append(summary,pending,sel);row.append(load,options);box.append(row)});const header=document.createElement('div');header.className='small sectiongap';header.textContent='Pendientes de esta semana (lunes–domingo). Las sustituciones cuentan para el ejercicio del plan al finalizar y guardar.';box.append(header);db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='pending'&&!gcCovered(p.workoutSlotId)).forEach(p=>{const row=document.createElement('div');row.className='item';const title=document.createElement('div');title.textContent=`${exById(p.exerciseId)?.name||p.exerciseId} · pendiente del ${dateLabel(p.sourceDate)}`;const add=document.createElement('button');add.className='btn';add.textContent=p.addedDate===today()?'Añadido a hoy':'Añadir a hoy';add.disabled=p.addedDate===today();add.onclick=()=>{p.addedDate=today();gcStore();renderTodayPlan();renderQuickPlan()};const discard=document.createElement('button');discard.className='btn';discard.textContent='Descartar';discard.onclick=()=>{p.status='discarded';gcStore();renderTodayPlan();renderQuickPlan()};row.append(title,add,discard);box.append(row)})};
+renderQuickPlan=function(){gcReconcilePending();const box=byId('quickPlanExercises');if(!box)return;const items=v21CombinedItems();box.innerHTML='';items.forEach(it=>{const row=document.createElement('div');const covered=gcCovered(it.workoutSlotId),e=exById(it.id);row.className=`item ${covered?'exerciseComplete':''}`;row.dataset.slot=it.workoutSlotId;row.innerHTML=`<b>${escapeHtml(e?.name||it.label)}</b> <span class="pill">${covered?'✓ COMPLETADO':'pendiente'}</span><div class="small muted">${escapeHtml(it.workoutSlotId)} · ${it.sets.map(s=>`${s[0]}–${s[1]}@${s[2]}`).join(' · ')}</div>`;const load=document.createElement('button');load.className='btn';load.textContent='Registrar';load.onclick=()=>gcLoad(it);const pending=document.createElement('button');pending.className='btn';pending.textContent='Pendiente semanal';pending.disabled=covered;pending.onclick=()=>gcMarkPending(it);const sel=document.createElement('select');sel.setAttribute('aria-label','Sustituir ejercicio');sel.innerHTML='<option value="">Sustituir por…</option>'+db.exercises.filter(e=>e.id!==it.id).map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');sel.onchange=()=>{if(sel.value)gcLoad({id:sel.value,workoutSlotId:`extra:${sel.value}`},{slot:it.workoutSlotId})};row.append(load,pending,sel);box.append(row)});const header=document.createElement('div');header.className='small sectiongap';header.textContent='Pendientes de esta semana (lunes–domingo). Las sustituciones cubren el slot al finalizar y guardar.';box.append(header);db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='pending'&&!gcCovered(p.workoutSlotId)).forEach(p=>{const row=document.createElement('div');row.className='item';const title=document.createElement('div');title.textContent=`${exById(p.exerciseId)?.name||p.exerciseId} · origen ${p.sourceDate} · ${p.workoutSlotId}`;const add=document.createElement('button');add.className='btn';add.textContent=p.addedDate===today()?'Añadido a hoy':'Añadir a hoy';add.disabled=p.addedDate===today();add.onclick=()=>{p.addedDate=today();gcStore();renderTodayPlan();renderQuickPlan()};const discard=document.createElement('button');discard.className='btn';discard.textContent='Descartar';discard.onclick=()=>{p.status='discarded';gcStore();renderTodayPlan();renderQuickPlan()};row.append(title,add,discard);box.append(row)})};
 const gcImportUI=document.createElement('label');gcImportUI.className='small';gcImportUI.textContent='Día de destino para líneas sin slot: ';
 const gcDaySelect=document.createElement('select');gcDaySelect.innerHTML='<option value="current">Rutina de hoy (si es inequívoco)</option>'+Object.entries(TRAINING_PLAN_V21).map(([k,p])=>`<option value="${k}">${escapeHtml(p.name)}</option>`).join('');gcDaySelect.value=db.settings.coachImportDay;gcDaySelect.onchange=()=>{db.settings.coachImportDay=gcDaySelect.value;gcStore()};gcImportUI.append(gcDaySelect);byId('coachTargetInput')?.before(gcImportUI);
 db.profile.appVersion=Math.max(db.profile.appVersion||0,29);
@@ -3703,80 +3685,8 @@ const gcAll=renderAll;
 renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settings||{};gcFoods31();gcBeverages32();gcAll()};
 
 
-// v37 changes presentation only; data, targets and sync retain their existing engine.
-function gcRemaining37(target,actual){
-  if(!Number.isFinite(target)||target<=0)return {value:'—',caption:'Sin objetivo fijo',state:''};
-  const delta=target-(+actual||0);
-  return {value:fmt(Math.round(Math.abs(delta))),caption:delta<0?'Por encima':delta===0?'Objetivo alcanzado':'Te quedan',state:delta<0?'excess37':delta===0?'met37':''};
-}
-function gcOverview37(){
-  const items=[...new Map(v21CombinedItems().map(it=>[it.workoutSlotId,it])).values()];
-  const done=items.filter(it=>gcCovered(it.workoutSlotId)).length;
-  const ss=db.sessions.find(s=>s.date===today());
-  const series=(ss?.exercises||[]).reduce((n,x)=>n+(x.sets||[]).filter(s=>!s.warmup&&!s.drop&&s.reps>0).length,0);
-  return {items,done,total:items.length,next:items.find(it=>!gcCovered(it.workoutSlotId))||null,series,duration:trainingDurationLabel(ss)};
-}
-function gcRenderOverview37(){
-  if(!byId('sessionOverview37'))return;
-  const x=gcOverview37(),plan=v21Plan(),current=exerciseFromInput(),active=hasUnsavedSeries();
-  byId('heroTitle37').textContent=plan?.name||'Hoy · descanso';
-  const metric=(value,label)=>`<div class="sessionMetric37"><b>${value}</b><span>${label}</span></div>`;
-  byId('sessionOverview37').innerHTML=metric(x.total?`${x.done}/${x.total}`:'—','ejercicios cubiertos esta semana')+metric(x.duration||'—','duración registrada hoy')+metric(x.series,'series efectivas hoy');
-  const nextName=x.next?exById(x.next.id)?.name||x.next.label:'';
-  byId('sessionNext37').textContent=active&&current?`En curso: ${current.name}`:nextName?`Siguiente pendiente: ${nextName}`:x.total?'✓ Plan cubierto esta semana.':'Selecciona una rutina abajo o registra un ejercicio libre.';
-  byId('startWorkout37').textContent=active?'Continuar entreno':x.next?'Registrar entreno':x.total?'Ver sesión':'Registro libre';
-  byId('recordNumbers37').textContent=`${x.done}/${x.total} cubiertos · ${x.duration||'sin tiempo aún'}`;
-  byId('recordNext37').textContent=active&&current?current.name:nextName?`Siguiente: ${nextName}`:'Plan cubierto';
-}
-function gcRenderRemaining37(){
-  const box=byId('macroRemaining37');if(!box)return;
-  const g=nutritionGoal(currentDayType()),t=dayTotals();
-  const tile=(label,target,actual,unit)=>{const r=gcRemaining37(target,actual);return `<div class="remainingTile37 ${r.state}"><span class="small">${label} · ${r.caption}</span><b>${r.value}${r.value==='—'?'':` <small>${unit}</small>`}</b><span class="small">${fmt(actual)}${Number.isFinite(target)?` / ${fmt(target)}`:''} ${unit} registrados</span></div>`;};
-  box.innerHTML=tile('Energía',g.kcal,t.kcal,'kcal')+tile('Proteína',g.p,t.p,'g')+tile('Carbohidratos',g.c,t.c,'g')+tile('Grasa',g.f,t.f,'g');
-}
-function gcNav37(name){
-  const primary=name==='record'?'train':['train','nutrition','progress'].includes(name)?name:'more';
-  document.querySelectorAll('#tabs .tab').forEach(b=>{const active=b.dataset.tab===primary;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current');});
-  document.querySelectorAll('.backMore37').forEach(b=>b.classList.toggle('hidden',!['week','checkin','plan','data'].includes(name)));
-}
-function gcInitUx37(){
-  const focus=byId('exerciseFocus37'),advanced=focus.querySelector('details.advanced'),series=document.querySelector('#record .seriesCard');
-  focus.insertBefore(series,advanced);
-  const last=focus.querySelector('.compareBox.last');if(last)advanced.insertBefore(last,advanced.children[1]||null);
-  const coach=document.createElement('div');coach.id='coachContext37';coach.className='small muted sectiongap';advanced.appendChild(coach);
-  const options=document.createElement('details');options.className='options37';const title=document.createElement('summary');title.textContent='Avisos de descanso';options.appendChild(title);
-  const alerts=byId('vibrationEnabled').closest('.row');options.appendChild(alerts);options.appendChild(byId('vibrationStatus'));series.querySelector('.seriesHeader').after(options);
-  const nutritionGrid=byId('nutrition').querySelector('.grid'),overview=byId('nutritionOverview37');
-  const guide=nutritionGrid.firstElementChild;const details=document.createElement('details');details.className='card nutritionGuide37';
-  const summary=document.createElement('summary');summary.textContent='Objetivos y criterios de la fase actual';details.appendChild(summary);
-  while(guide.firstChild)details.appendChild(guide.firstChild);
-  guide.replaceWith(details);nutritionGrid.prepend(overview);nutritionGrid.appendChild(details);
-  const food=byId('foodSearch').closest('.card'),breakfast=byId('breakfastPreview').closest('.card'),plates=byId('platesList').closest('.card'),log=byId('dayFoodLog').closest('.card');
-  overview.after(food,breakfast,plates,log);
-  const progress=byId('progress').querySelector('.grid'),baseline=progress.firstElementChild;
-  const old=document.createElement('details');old.className='card baseline37';const baselineTitle=document.createElement('summary');baselineTitle.textContent='Punto de partida · agosto 2026';old.appendChild(baselineTitle);
-  while(baseline.firstChild)old.appendChild(baseline.firstChild);
-  baseline.replaceWith(old);progress.appendChild(old);
-  for(const name of ['week','checkin','plan','data']){
-    const button=document.createElement('button');button.className='btn ghost backMore37 hidden';button.textContent='← Más herramientas';button.onclick=()=>activateTab('more');byId(name).prepend(button);
-  }
-  byId('startWorkout37').onclick=()=>{const x=gcOverview37();if(hasUnsavedSeries()||!x.next)activateTab('record');else gcLoad(x.next);focus.scrollIntoView({behavior:'smooth',block:'start'});};
-  byId('recordPlan37').onclick=()=>activateTab('train');
-  byId('restOptions37').onclick=()=>{const row=byId('restOptions37').closest('.miniRest'),show=!row.classList.contains('showRestOptions37');row.classList.toggle('showRestOptions37',show);byId('restOptions37').setAttribute('aria-expanded',String(show));};
-  byId('confirmSeriesInline37').onclick=confirmCurrentSet;byId('finishExerciseInline37').onclick=saveExercise;
-  const jump=(button,target)=>{byId(button).onclick=()=>{target.scrollIntoView({behavior:'smooth',block:'start'});if(button==='jumpFood37')byId('foodSearch').focus();};};
-  jump('jumpFood37',food);jump('jumpBreakfast37',breakfast);jump('jumpPlates37',plates);
-  for(const id of ['useV36More','useV36Data'])byId(id).addEventListener('click',()=>{try{localStorage.setItem('gymCoachUiVersion','36')}catch(e){}});
-  const activate36=activateTab;activateTab=function(name){activate36(name);gcNav37(name);gcRenderOverview37();};
-  const render36=renderAll;renderAll=function(){render36();gcRenderOverview37();gcRenderRemaining37();};
-  const nutrition36=renderNutritionTarget;renderNutritionTarget=function(){nutrition36();gcRenderRemaining37();};
-  const duration36=renderTrainingDuration;renderTrainingDuration=function(){duration36();gcRenderOverview37();};
-  const quick36=renderQuickPlan;renderQuickPlan=function(){quick36();gcRenderOverview37();};
-}
-
-gcInitUx37();
-db.profile.appVersion=Math.max(db.profile.appVersion||0,37);gcStore();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=37', {updateViaCache:'none'}).catch(()=>{});
+db.profile.appVersion=Math.max(db.profile.appVersion||0,36);gcStore();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=36', {updateViaCache:'none'}).catch(()=>{});
 renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();bindTrainingTimeListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
 function startCloudSync(){
   if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}

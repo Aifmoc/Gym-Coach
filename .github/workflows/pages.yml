@@ -22,7 +22,8 @@ jobs:
       - name: Prepare static app
         run: |
           mkdir -p _site
-          cp index.html cloud-config.js cloud-sync.js sw.js manifest.json icon-192.png icon-512.png _site/
+          cp index.html cloud-config.js cloud-sync.js sw.js manifest.json design37.css icon-192.png icon-512.png _site/
+          cp -R v36 _site/v36
       - name: Upload app
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
