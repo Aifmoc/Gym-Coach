@@ -12,6 +12,10 @@ function server(){
     if(api.error)return response(api.error,{message:'Connection error'});
     const body=options.body?JSON.parse(options.body):{};
     if(url.includes('/auth/v1/token'))return response(200,{access_token:'test-access',refresh_token:'test-refresh',expires_at:Math.floor(Date.now()/1000)+3600,user:{id:'test-user',email:'test@example.test'}});
+    if(url.endsWith('/auth/v1/verify')){
+      assert.equal(options.headers.Authorization,undefined);assert.deepEqual(body,{token_hash:'test-confirmation',type:'signup'});
+      return response(200,{access_token:'test-access',refresh_token:'test-refresh',expires_at:Math.floor(Date.now()/1000)+3600,user:{id:'test-user',email:'test@example.test'}});
+    }
     if(url.includes('/auth/v1/logout'))return response(200,{});
     assert.equal(options.headers.Authorization,'Bearer test-access');
     if(url.includes('/rest/v1/gym_coach_state'))return response(200,api.row?[api.row]:[]);
@@ -31,6 +35,21 @@ function client(api,data=state()){
 test('Public config rejects secret keys, arbitrary hosts and insecure URLs',()=>{
   assert.equal(validConfig(config),true);assert.equal(validConfig({...config,publishableKey:'sb_secret_do_not_use'}),false);
   assert.equal(validConfig({...config,url:'https://evil.test'}),false);assert.equal(validConfig({...config,url:'http://test-project.supabase.co'}),false);
+});
+test('Email confirmation from the app uploads the mobile data without following a redirect',async()=>{
+  const api=server(),a=client(api);a.data.weights.push({date:'2020-01-01',weight:70});
+  await a.sync.confirmEmail(config.url+'/auth/v1/verify?token=test-confirmation&type=signup&redirect_to=http%3A%2F%2Flocalhost%3A3000');
+  assert.equal(a.sync.state,'synced');assert.equal(api.row.document.weights[0].weight,70);a.stop();
+});
+test('Confirmation links to other servers or other account actions never trigger an API request',async()=>{
+  let calls=0;const a=client({fetch:async()=>{calls++;throw Error('Unexpected request')}});
+  for(const link of ['https://evil.test/auth/v1/verify?token=test-confirmation&type=signup',config.url+'/auth/v1/verify?token=test-confirmation&type=recovery'])await assert.rejects(a.sync.confirmEmail(link));
+  assert.equal(calls,0);a.stop();
+});
+test('Confirming a different account preserves this device owner and local data',async()=>{
+  const a=client(server());a.sync.owner='another-account';const original=copy(a.data);
+  await assert.rejects(a.sync.confirmEmail(config.url+'/auth/v1/verify?token=test-confirmation&type=signup'),/otra cuenta/);
+  assert.equal(a.sync.session,null);assert.deepEqual(a.data,original);a.stop();
 });
 test('First mobile uploads; PC downloads that account with a recoverable local backup',async()=>{
   const api=server(),mobile=client(api);mobile.data.weights.push({date:'2020-01-01',weight:70});

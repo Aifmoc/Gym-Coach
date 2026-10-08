@@ -211,7 +211,7 @@ body.keyboard-open .toast{bottom:18px}
 </style>
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v34</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v35</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
 <div class="wrap">
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="train">Entreno</button>
@@ -796,6 +796,11 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
           <button class="btn primary" id="cloudLogin" type="submit" style="align-self:end">Entrar</button>
           <button class="btn" id="cloudSignup" type="button" style="align-self:end">Crear cuenta</button>
         </form>
+        <details id="cloudConfirmation" class="sectiongap">
+          <summary>Confirmar el correo desde esta app</summary>
+          <p class="small">Después de crear tu cuenta, copia el enlace del botón «Confirm your mail» del correo de confirmación y pégalo aquí. Esto confirma tu cuenta sin salir de la app. Si ya lo has abierto, vuelve arriba y pulsa Entrar con tu correo y contraseña.</p>
+          <form id="cloudConfirmForm" class="row"><div class="field grow"><label class="label" for="cloudConfirmLink">Enlace de confirmación</label><input id="cloudConfirmLink" type="url" autocomplete="off" autocapitalize="off" spellcheck="false" required></div><button class="btn" type="submit" style="align-self:end">Confirmar y sincronizar</button></form>
+        </details>
         <div class="row sectiongap hidden" id="cloudAccountActions"><button class="btn" id="cloudSyncNow">Sincronizar ahora</button><button class="btn ghost" id="cloudLogout">Salir de la cuenta</button></div>
         <div class="historyBox sectiongap hidden" id="cloudConflict">
           <b>Se ha editado el mismo dato en dos dispositivos.</b><p class="small">Guardamos copias de ambas versiones. Elige qué versión conservar para los cambios que coinciden.</p>
@@ -813,8 +818,8 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 </div>
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios de hoy</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
-<script src="cloud-config.js?v=34"></script>
-<script src="cloud-sync.js?v=34"></script>
+<script src="cloud-config.js?v=35"></script>
+<script src="cloud-sync.js?v=35"></script>
 <script>
 (()=>{
 'use strict';
@@ -3650,7 +3655,7 @@ renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settin
 
 
 db.profile.appVersion=Math.max(db.profile.appVersion||0,34);gcStore();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=34', {updateViaCache:'none'}).catch(()=>{});
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=35', {updateViaCache:'none'}).catch(()=>{});
 renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
 function startCloudSync(){
   if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}
@@ -3665,11 +3670,12 @@ function startCloudSync(){
     byId('cloudBadge').textContent=info.state==='synced'?'✓ Sincronizado':info.state==='offline'?'Sin conexión':info.state==='syncing'?'Sincronizando…':'Datos locales';
     byId('cloudConflict').classList.toggle('hidden',info.state!=='conflict');
     const logged=!!info.email;
-    byId('cloudLoginForm').classList.toggle('hidden',logged);byId('cloudAccountActions').classList.toggle('hidden',!logged);
+    byId('cloudLoginForm').classList.toggle('hidden',logged);byId('cloudAccountActions').classList.toggle('hidden',!logged);byId('cloudConfirmation').classList.toggle('hidden',logged||info.state==='setup');
     [byId('cloudLogin'),byId('cloudSignup')].forEach(button=>button.disabled=info.state==='setup');
   }});
   byId('cloudLoginForm').addEventListener('submit',async ev=>{ev.preventDefault();const password=byId('cloudPassword').value;byId('cloudPassword').value='';try{await gcCloud.signIn(byId('cloudEmail').value.trim(),password)}catch(e){toast(e.message)}});
   byId('cloudSignup').onclick=async()=>{const form=byId('cloudLoginForm');if(!form.reportValidity())return;const password=byId('cloudPassword').value;byId('cloudPassword').value='';try{await gcCloud.signUp(byId('cloudEmail').value.trim(),password)}catch(e){toast(e.message)}};
+  byId('cloudConfirmForm').addEventListener('submit',async ev=>{ev.preventDefault();const link=byId('cloudConfirmLink').value;byId('cloudConfirmLink').value='';try{await gcCloud.confirmEmail(link)}catch(e){toast(e.message)}});
   byId('cloudSyncNow').onclick=()=>gcCloud.sync();byId('cloudLogout').onclick=()=>gcCloud.signOut();
   byId('cloudUseLocal').onclick=()=>gcCloud.resolve('local');byId('cloudUseRemote').onclick=()=>gcCloud.resolve('remote');
   byId('cloudRecovery').onclick=()=>{const backups=gcCloud.read('backups')||[],conflict=gcCloud.session?gcCloud.read('conflict_'+gcCloud.session.user.id):null;download('gym-coach-recuperacion.json',JSON.stringify({backups,conflict},null,2));};

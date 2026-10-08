@@ -120,8 +120,22 @@
     }
     async signUp(email,password){
       if(!this.enabled)throw Error('La sincronización necesita activar su servidor privado.');
-      await this.request('/auth/v1/signup',{auth:false,body:{email,password}});
+      const session=await this.request('/auth/v1/signup',{auth:false,body:{email,password}});
+      if(session?.access_token){
+        if(this.owner&&this.owner!==session.user?.id)throw Error('Este dispositivo contiene datos de otra cuenta. Usa otro perfil de navegador para esa cuenta.');
+        this.storeSession(session);await this.sync();return;
+      }
       this.status('signedout','Cuenta solicitada. Confirma el correo y después entra.');
+    }
+    async confirmEmail(link){
+      if(!this.enabled)throw Error('La sincronización necesita activar su servidor privado.');
+      let url;try{url=new URL(link.trim())}catch{throw Error('Pega el enlace de confirmación del correo de Gym Coach.');}
+      if(url.origin!==new URL(this.config.url).origin||url.pathname!=='/auth/v1/verify'||url.searchParams.get('type')!=='signup'||!url.searchParams.get('token'))throw Error('Ese enlace no corresponde a la confirmación de Gym Coach.');
+      try{
+        const session=await this.request('/auth/v1/verify',{auth:false,body:{token_hash:url.searchParams.get('token'),type:'signup'}});
+        if(this.owner&&this.owner!==session.user?.id)throw Error('Este dispositivo contiene datos de otra cuenta. Usa otro perfil de navegador para esa cuenta.');
+        this.storeSession(session);await this.sync();
+      }catch(e){this.status('error',e.message);throw e;}
     }
     async refresh(){
       const saved=this.read('session');if(saved?.user?.id===this.session?.user?.id)this.session=saved;

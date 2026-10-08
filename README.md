@@ -13,8 +13,9 @@ visible. Los borradores de series y de platos permanecen en su dispositivo.
 Activación, una sola vez por el administrador:
 
 1. Crear un proyecto Supabase y aplicar `supabase/schema.sql`.
-2. Activar email/password; configurar el Site URL y los redirects de confirmación
-   con `https://aifmoc.github.io/Gym-Coach/`.
+2. Activar email/password. Se puede configurar el Site URL y los redirects con
+   `https://aifmoc.github.io/Gym-Coach/`. La app también permite confirmar el correo
+   pegando el enlace de confirmación, sin depender del redirect del servidor.
 3. Rellenar `cloud-config.js` con la URL del proyecto y su **publishable key**
    (o una anon key heredada). Nunca usar una secret key ni service-role key.
 4. Incrementar la versión de los assets y del service worker al cambiar la
@@ -42,5 +43,9 @@ node tests/gym-coach-v33.test.cjs
 node --test tests/cloud-sync.test.cjs
 ```
 
-Los tests de sincronización usan una API simulada; validar login, RLS y RPC contra
-el proyecto Supabase real antes de comunicar que el servicio está activo.
+En v35 está conectado el proyecto privado `uqwpsogabzpbbfvifbmq` (región eu-west-1).
+La migración está aplicada y se comprobaron contra el servidor real el aislamiento
+de cuentas, la prohibición de cambiar el propietario, y el guardado con revisión.
+Los tests de cliente usan una API simulada. La cuenta de Gym Coach se crea desde
+Datos en el móvil que tiene los registros; es distinta de la cuenta administradora
+de Supabase y de la contraseña de la base de datos.
