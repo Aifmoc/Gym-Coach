@@ -211,7 +211,7 @@ body.keyboard-open .toast{bottom:18px}
 </style>
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v35</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v36</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
 <div class="wrap">
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="train">Entreno</button>
@@ -377,6 +377,7 @@ body.keyboard-open .toast{bottom:18px}
 
       <div class="card">
         <div class="row" style="justify-content:space-between"><h2 style="margin:0">Sesión de hoy</h2><button class="btn primary" id="copyTodayQuick">Copiar para análisis IA</button></div>
+        <div id="trainingDuration" class="good sectiongap hidden" role="status" aria-live="polite"></div>
         <div id="todayList" class="list sectiongap"></div>
       </div>
     </div>
@@ -818,8 +819,8 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 </div>
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios de hoy</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
-<script src="cloud-config.js?v=35"></script>
-<script src="cloud-sync.js?v=35"></script>
+<script src="cloud-config.js?v=36"></script>
+<script src="cloud-sync.js?v=36"></script>
 <script>
 (()=>{
 'use strict';
@@ -2400,6 +2401,7 @@ function todayText(withPrompt=false){
   ]:[];
   const body=[
     `Entreno ${dateLabel(today())}`,
+    trainingDurationLabel(s)?`Duración registrada: ${trainingDurationLabel(s)} (desde el primer dato hasta el último dato del entreno en Registro).`:'Duración registrada: no disponible (esta sesión no guardó las horas de registro).',
     s.readiness?`Previo: sueño ${s.readiness.sleep||'—'}/5, energía ${s.readiness.energy||'—'}/5, estrés ${s.readiness.stress||'—'}/5${s.readiness.weight?`, peso ${fmt(s.readiness.weight)} kg`:''}`:'',
     ...s.exercises.map(x=>{
       const scope=[x.location||'',x.machine?`machine=${x.machine}`:'',x.variant?`variant=${x.variant}`:'',x.workoutSlotId?`slot=${x.workoutSlotId}`:''].filter(Boolean).join(' | ');
@@ -2800,12 +2802,40 @@ function renderTodayPlan(){
 function comparableLogs(exid,variant){const e=exById(exid),key=e?makeVariantKey(e):null,v=normText(variant);return db.sessions.flatMap(ss=>ss.exercises.map((x,idx)=>({...x,date:ss.date,sessionId:ss.id,order:x.order||idx+1}))).filter(x=>x.exerciseId===exid&&(x.variantKey?x.variantKey===key:normText(x.variant)===v)).sort((a,b)=>b.date.localeCompare(a.date))}
 function loadExerciseContext(){const e=exerciseFromInput(),hint=byId('exerciseSearchHint');if(!e){if(hint)hint.innerHTML=byId('exerciseSelect').value.trim()?`<b>Nuevo:</b> “${byId('exerciseSelect').value.trim()}”. Elige el grupo; se añadirá al finalizar.`:'Empieza a escribir para buscar o crear.';byId('setup').value='';byId('fallback').value='';byId('increment').value=2.5;byId('loadUnit').value='unknown';byId('baseLoad').value='';setRest(120);refreshVariantKey();byId('lastComparable').innerHTML='Ejercicio nuevo: sin histórico comparable.';byId('todayGoal').textContent='Objetivo inicial: 2–3 series de 8–12 reps a RIR 1–2; ajusta según seguridad y primera serie.';updateNextSetSuggestion();renderPerformanceComparison();renderQuickPlan();return}if(hint)hint.textContent=`${e.name} · ${e.group}`;byId('exerciseGroup').value=e.group||'Otros';byId('setup').value=e.setup||'';byId('fallback').value=e.fallback||'';byId('increment').value=e.increment||2.5;setRest(e.rest||120);loadVariantMeta();const logs=comparableLogs(e.id,byId('variant').value),l=logs[0];byId('lastComparable').innerHTML=l?`<b>Último comparable · ${dateLabel(l.date)}</b><br>${l.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` @RIR${z.rir}`:''}${z.warmup?' [aprox]':''}${z.drop?' [drop]':''}${z.partial?' [parcial]':''}`).join(' · ')}${l.notes?`<br><span class="muted">${l.notes}</span>`:''}`:'Sin registro comparable todavía.';byId('todayGoal').textContent=goalFrom(l,e);updateNextSetSuggestion();renderPerformanceComparison()}
 
-function markTrainingEntry(ts=Date.now()){const ss=currentSession();if(!ss.startedAt)ss.startedAt=ts;ss.lastEntryAt=ts;gcWriteDb();return ss}
-function trainingDurationLabel(ss){if(!ss||!Number.isFinite(+ss.startedAt)||!Number.isFinite(+ss.lastEntryAt)||+ss.lastEntryAt<+ss.startedAt)return '';const mins=Math.max(0,Math.round((+ss.lastEntryAt-(+ss.startedAt))/60000));const h=Math.floor(mins/60),m=mins%60;return h?`${h} h ${m} min`:`${m} min`}
+function markTrainingEntry(ts=Date.now()){
+  if(!Number.isFinite(ts)||ts<=0)return;
+  const ss=currentSession();
+  ss.startedAt=Number.isFinite(ss.startedAt)&&ss.startedAt>0?Math.min(ss.startedAt,ts):ts;
+  ss.lastEntryAt=Number.isFinite(ss.lastEntryAt)&&ss.lastEntryAt>0?Math.max(ss.lastEntryAt,ts):ts;
+  gcWriteDb();renderTrainingDuration();return ss;
+}
+function trainingDurationLabel(ss){if(!ss||!Number.isFinite(ss.startedAt)||ss.startedAt<=0||!Number.isFinite(ss.lastEntryAt)||ss.lastEntryAt<ss.startedAt)return '';const mins=Math.max(0,Math.round((ss.lastEntryAt-ss.startedAt)/60000));const h=Math.floor(mins/60),m=mins%60;return h?`${h} h ${m} min`:`${m} min`}
+function renderTrainingDuration(){
+  const box=byId('trainingDuration');if(!box)return;
+  const duration=trainingDurationLabel(db.sessions.find(s=>s.date===today()));
+  box.classList.toggle('hidden',!duration);
+  box.innerHTML=duration?`<b>Duración registrada:</b> ${duration}<div class="small muted">Desde el primer dato hasta el último dato del entreno en Registro. Incluye los descansos; se actualiza al registrar datos.</div>`:'';
+}
+function bindTrainingTimeListeners(){
+  const root=byId('record');if(!root)return;
+  const recordData=event=>{
+    const el=event.target;
+    if(event.type==='click'){
+      if(el.closest('.rirbtn'))markTrainingEntry();
+      return;
+    }
+    // Opening the app, choosing an exercise and restoring a draft do not start time.
+    if(!el.matches('.reps,.weight,.setnote,#exerciseNotes,#painZone,#painScore'))return;
+    if(!String(el.value||'').trim())return;
+    if(el.type==='number'&&!Number.isFinite(el.valueAsNumber))return;
+    markTrainingEntry();
+  };
+  ['input','change','click'].forEach(ev=>root.addEventListener(ev,recordData));
+}
 function currentRestElapsed(){return restStarted?Math.max(0,Math.floor((Date.now()-restStarted)/1000)):null}
 function confirmCurrentSet(){const wraps=[...byId('sets').querySelectorAll('.setwrap')],target=wraps.find(w=>w.dataset.confirmed!=='1'&&(+w.querySelector('.reps').value||0)>0);if(!target){toast('Introduce una serie nueva');return}const prev=[...wraps].filter(w=>w.dataset.confirmed==='1').slice(-1)[0];if(prev&&restStarted)prev.dataset.restActual=String(currentRestElapsed());target.dataset.confirmed='1';target.classList.add('confirmedSet');target.dataset.confirmedAt=String(Date.now());markTrainingEntry(+target.dataset.confirmedAt);startRest();updateNextSetSuggestion();toast('Serie confirmada · descanso iniciado')}
-function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),savedAt:new Date().toISOString(),exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),coversWorkoutSlotId:gcReplacement?.slot||null,weeklyPendingId:gcReplacement?.pendingId||null,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();if(!_session.startedAt)_session.startedAt=log.loggedAt;_session.lastEntryAt=log.loggedAt;refreshNutritionDayType();consumeCoachTargetV22(e,log);gcCompletePending(log);gcReplacement=null;persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
-function renderToday(){const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}const duration=trainingDurationLabel(ss);el.innerHTML=(duration?`<div class="good"><b>Duración registrada:</b> ${duration}<div class="small muted">Desde la primera serie anotada hasta la última anotación del entreno.</div></div><div class="sectiongap"></div>`:'')+ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item exerciseComplete"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}<div class="row sectiongap" style="gap:8px"><button class="btn reopenEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Reabrir / añadir serie</button><button class="btn bad delEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Borrar</button></div></div>`}).join('');el.querySelectorAll('.reopenEx').forEach(b=>b.addEventListener('click',()=>reopenExercise(b.dataset.id)));el.querySelectorAll('.delEx').forEach(b=>b.addEventListener('click',()=>deleteExercise(b.dataset.id)));renderQuickPlan()}
+function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),savedAt:new Date().toISOString(),exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),coversWorkoutSlotId:gcReplacement?.slot||null,weeklyPendingId:gcReplacement?.pendingId||null,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();markTrainingEntry(log.loggedAt);refreshNutritionDayType();consumeCoachTargetV22(e,log);gcCompletePending(log);gcReplacement=null;persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
+function renderToday(){renderTrainingDuration();const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}el.innerHTML=ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item exerciseComplete"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}<div class="row sectiongap" style="gap:8px"><button class="btn reopenEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Reabrir / añadir serie</button><button class="btn bad delEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Borrar</button></div></div>`}).join('');el.querySelectorAll('.reopenEx').forEach(b=>b.addEventListener('click',()=>reopenExercise(b.dataset.id)));el.querySelectorAll('.delEx').forEach(b=>b.addEventListener('click',()=>deleteExercise(b.dataset.id)));renderQuickPlan()}
 function deleteExercise(logId){
   const ss=db.sessions.find(x=>x.date===today());if(!ss)return;
   const i=ss.exercises.findIndex(x=>x.id===logId);if(i<0)return;
@@ -3654,9 +3684,9 @@ const gcAll=renderAll;
 renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settings||{};gcFoods31();gcBeverages32();gcAll()};
 
 
-db.profile.appVersion=Math.max(db.profile.appVersion||0,34);gcStore();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=35', {updateViaCache:'none'}).catch(()=>{});
-renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
+db.profile.appVersion=Math.max(db.profile.appVersion||0,36);gcStore();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=36', {updateViaCache:'none'}).catch(()=>{});
+renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();bindTrainingTimeListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
 function startCloudSync(){
   if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}
   const labels={setup:'La sincronización todavía no está activada. Tus datos siguen guardados en este dispositivo.',signedout:'Entra con la misma cuenta en móvil y PC.',connecting:'Entrando…',syncing:'Sincronizando…',synced:'Datos sincronizados.',pending:'Cambios guardados; pendientes de sincronizar.',offline:'Sin conexión. Tus cambios se guardan aquí y se enviarán al volver.',conflict:'Hay un cambio coincidente en dos dispositivos. Elige qué versión conservar.',error:'No se ha podido sincronizar. Tus datos siguen guardados aquí.'};
@@ -3665,6 +3695,7 @@ function startCloudSync(){
     db=next;localStorage.setItem(APPKEY,JSON.stringify(db));
     if(hasUnsavedSeries()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))renderQuickPlan();
     else{renderAll();renderFoodMatrix();refreshNutritionDayType();}
+    renderTrainingDuration();
   },onStatus:info=>{
     byId('cloudStatus').textContent=[labels[info.state]||'',info.email,info.detail].filter(Boolean).join(' · ');
     byId('cloudBadge').textContent=info.state==='synced'?'✓ Sincronizado':info.state==='offline'?'Sin conexión':info.state==='syncing'?'Sincronizando…':'Datos locales';

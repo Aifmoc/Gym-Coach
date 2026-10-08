@@ -51,3 +51,17 @@ combinación de cambios independientes, rechazo de revisiones antiguas y renovac
 de sesión. Los tests del repositorio usan una API simulada. La cuenta se crea desde
 Datos en el móvil que tiene los registros; es distinta de la cuenta administradora
 de Supabase y de la contraseña de la base de datos.
+
+## Duración registrada (v36)
+
+El informe diario, con o sin prompt, incluye el tiempo entre el primer y el último
+dato del entreno en Registro. El primer cambio en reps, carga, RIR o notas
+inicia el registro; confirmar una serie o finalizar un ejercicio actualiza
+el final. Abrir la app, elegir un ejercicio, consultar el informe y sincronizar no
+añaden tiempo. Los descansos entre anotaciones están incluidos. Los tiempos se
+guardan al introducir datos, sobreviven a recargas y se sincronizan entre dispositivos.
+Las sesiones sin horas registradas indican «no disponible»; no se inventa su duración.
+
+```sh
+node --test tests/training-duration.test.cjs
+```
