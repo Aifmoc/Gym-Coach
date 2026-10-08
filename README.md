@@ -46,6 +46,8 @@ node --test tests/cloud-sync.test.cjs
 En v35 está conectado el proyecto privado `uqwpsogabzpbbfvifbmq` (región eu-west-1).
 La migración está aplicada y se comprobaron contra el servidor real el aislamiento
 de cuentas, la prohibición de cambiar el propietario, y el guardado con revisión.
-Los tests de cliente usan una API simulada. La cuenta de Gym Coach se crea desde
+Las pruebas reales con dos clientes comprobaron Auth, subida inicial, descarga,
+combinación de cambios independientes, rechazo de revisiones antiguas y renovación
+de sesión. Los tests del repositorio usan una API simulada. La cuenta se crea desde
 Datos en el móvil que tiene los registros; es distinta de la cuenta administradora
 de Supabase y de la contraseña de la base de datos.
