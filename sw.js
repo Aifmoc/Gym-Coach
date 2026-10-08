@@ -1,11 +1,12 @@
-/* Gym Coach v33. Replacement worker: scoped offline shell + existing rest messages. */
-const VERSION='v33-20261006';
+/* Gym Coach v34. Offline shell, sync client and rest messages. */
+const VERSION='v34-20261008';
 const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
 const CACHE=PREFIX+VERSION;
 const SHELL=new URL('index.html',self.registration.scope).href;
+const ASSETS=['cloud-config.js?v=34','cloud-sync.js?v=34'].map(path=>new URL(path,self.registration.scope).href);
 let restTimer=null;
 self.addEventListener('install',event=>{
-  event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.add(new Request(SHELL,{cache:'reload'}));await self.skipWaiting()})());
+  event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll([SHELL,...ASSETS].map(url=>new Request(url,{cache:'reload'})));await self.skipWaiting()})());
 });
 self.addEventListener('activate',event=>{
   event.waitUntil((async()=>{const keys=await caches.keys();await Promise.all(keys.filter(k=>k.startsWith(PREFIX)&&k!==CACHE).map(k=>caches.delete(k)));await self.clients.claim()})());
@@ -13,6 +14,9 @@ self.addEventListener('activate',event=>{
 self.addEventListener('fetch',event=>{
   const request=event.request,url=new URL(request.url);
   if(request.method!=='GET'||url.origin!==self.location.origin||!url.href.startsWith(self.registration.scope)||url.pathname.endsWith('/sw.js'))return;
+  if(ASSETS.includes(url.href)){
+    event.respondWith((async()=>{const cache=await caches.open(CACHE);const cached=await cache.match(request);if(cached)return cached;const response=await fetch(request);if(response.ok)await cache.put(request,response.clone());return response})());return;
+  }
   if(request.mode==='navigate')event.respondWith((async()=>{
     const cache=await caches.open(CACHE);
     try{const response=await fetch(request);if(response.ok)await cache.put(SHELL,response.clone());return response}

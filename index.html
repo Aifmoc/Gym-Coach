@@ -72,6 +72,12 @@ h2{font-size:16px;margin:0 0 10px}h3{font-size:14px;margin:12px 0 8px;color:var(
 }
 .quickExercise.current{border:2px solid var(--accent);background:#241d14}
 .quickExercise.done{border-color:rgba(74,222,128,.85);background:#102319;box-shadow:inset 0 0 0 1px rgba(74,222,128,.18)}
+.item.exerciseComplete{border:2px solid #86efac;border-left:8px solid #86efac;background:#14532d;color:#f0fdf4;box-shadow:0 0 0 1px rgba(134,239,172,.2)}
+.exerciseComplete>b,.exerciseComplete .itemtop b{color:#f0fdf4}
+.exerciseComplete .muted{color:#dcfce7}
+.exerciseComplete .pill{border-color:#86efac;color:#052e16;background:#86efac;font-weight:800;font-size:12px}
+.exerciseComplete .btn,.exerciseComplete select{border-color:#4ade80;background:#166534;color:#f0fdf4}
+.exerciseComplete .btn:disabled{opacity:.65}
 .quickExercise .qname{font-weight:850;font-size:15px}
 .quickExercise .qmeta{font-size:12px;color:var(--muted);margin-top:3px}
 .quickExercise .qstatus{float:right;font-size:11px;border:1px solid var(--line);border-radius:999px;padding:2px 7px}
@@ -158,6 +164,9 @@ body{overscroll-behavior-y:none}
 .v21Rir{display:inline-block;padding:1px 6px;border-radius:999px;background:rgba(226,118,44,.13);color:var(--accent2);font-size:11px;white-space:nowrap}
 .v21TargetLine{display:grid;grid-template-columns:22px 1fr;gap:6px;align-items:baseline;margin:2px 0}
 .v21TargetLine .n{color:var(--muted);font-size:11px;font-weight:800}
+.v21TargetLine.completed{background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.4);border-radius:8px;padding:6px 8px;color:var(--ok)}
+.v21TargetLine.completed .n,.v21TargetLine.completed .v21Rir{color:var(--ok)}
+.setCompletionStatus{display:block;color:var(--ok);font-size:11px;font-weight:700;margin-top:3px}
 .v21VolumeGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .v21Volume{background:#1a1611;border:1px solid var(--line);border-radius:12px;padding:9px}
 .v21Volume b{display:block;font-size:19px;font-family:'Oswald',system-ui,sans-serif}
@@ -202,7 +211,7 @@ body.keyboard-open .toast{bottom:18px}
 </style>
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v23</div></div><div class="badge"><span id="topWeight">— kg</span></div></div></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v34</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
 <div class="wrap">
   <div class="tabs" id="tabs">
     <button class="tab active" data-tab="train">Entreno</button>
@@ -293,7 +302,7 @@ body.keyboard-open .toast{bottom:18px}
         <div id="exerciseSearchHint" class="small muted">Elige un ejercicio del plan o escribe otro.</div>
         <div class="recordCompare">
           <div class="compareBox today">
-            <div class="compareLabel">Objetivo de hoy</div>
+            <div class="compareLabel">Objetivo por serie</div>
             <div class="compareMain" id="todayGoal">Selecciona un ejercicio.</div>
             <div class="compareSub">Peso × repeticiones sugeridos a partir del último registro comparable.</div>
           </div>
@@ -466,6 +475,11 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
         <div id="liveMacroSummary" class="goal sectiongap">Aún no has añadido nada hoy. Usa el desayuno o busca un alimento — todo se suma aquí automáticamente.</div>
         <div id="macroBars" class="sectiongap"></div>
         <span class="pill hidden" id="liveMacroPill">—</span>
+        <button class="btn primary sectiongap" id="copyNutritionDay">Copiar día para Nutrición</button>
+        <div id="nutritionCopyFallback" class="sectiongap hidden">
+          <label class="label" for="nutritionDayText">Selecciona y copia este resumen</label>
+          <textarea id="nutritionDayText" rows="10" readonly></textarea>
+        </div>
       </div>
 
       <div class="card hiddenLegacyNutrition">
@@ -533,7 +547,7 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
         </div>
         <div class="row sectiongap">
           <div class="field grow"><span class="label">Buscar alimento</span><input id="foodSearch" autocomplete="off" placeholder="arroz, pollo, plátano, gazpacho..."></div>
-          <div class="field" style="min-width:130px"><span class="label">Grupo</span><select id="foodGroupFilter"><option value="">Todos</option><option>Hidratos</option><option>Proteína</option><option>Verdura</option><option>Fruta</option><option>Lácteos</option><option>Grasas</option></select></div>
+          <div class="field" style="min-width:130px"><span class="label">Grupo</span><select id="foodGroupFilter"><option value="">Todos</option><option>Hidratos</option><option>Proteína</option><option>Verdura</option><option>Fruta</option><option>Lácteos</option><option>Grasas</option><option>Bebidas</option></select></div>
         </div>
         <div id="foodSearchResults" class="list sectiongap" style="max-height:340px;overflow-y:auto"></div>
       </div>
@@ -772,6 +786,23 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 
   <section class="panel" id="data">
     <div class="grid">
+      <div class="card" id="cloudCard">
+        <h2>Sincronización móvil ↔ PC</h2>
+        <p class="small" id="cloudStatus" role="status" aria-live="polite">Tus datos están guardados en este dispositivo.</p>
+        <div class="small muted">Actívala primero en el móvil que contiene tus registros. Después entra con la misma cuenta en el PC. Las series que estés escribiendo y los platos aún sin terminar permanecen en este dispositivo.</div>
+        <form id="cloudLoginForm" class="row sectiongap">
+          <div class="field grow"><label class="label" for="cloudEmail">Correo</label><input id="cloudEmail" type="email" autocomplete="username" required></div>
+          <div class="field grow"><label class="label" for="cloudPassword">Contraseña</label><input id="cloudPassword" type="password" autocomplete="current-password" minlength="8" required></div>
+          <button class="btn primary" id="cloudLogin" type="submit" style="align-self:end">Entrar</button>
+          <button class="btn" id="cloudSignup" type="button" style="align-self:end">Crear cuenta</button>
+        </form>
+        <div class="row sectiongap hidden" id="cloudAccountActions"><button class="btn" id="cloudSyncNow">Sincronizar ahora</button><button class="btn ghost" id="cloudLogout">Salir de la cuenta</button></div>
+        <div class="historyBox sectiongap hidden" id="cloudConflict">
+          <b>Se ha editado el mismo dato en dos dispositivos.</b><p class="small">Guardamos copias de ambas versiones. Elige qué versión conservar para los cambios que coinciden.</p>
+          <div class="row"><button class="btn" id="cloudUseLocal">Conservar la de este dispositivo</button><button class="btn" id="cloudUseRemote">Conservar la de la nube</button></div>
+        </div>
+        <button class="btn ghost sectiongap" id="cloudRecovery">Descargar copias de recuperación</button>
+      </div>
       <div class="card span6"><h2>Perfil y reglas</h2><div class="list" id="profileList"></div></div>
       <div class="card span6"><h2>Copia de seguridad</h2><div class="row"><button class="btn primary grow" id="exportJson">Exportar JSON</button><label class="btn grow" style="text-align:center">Importar JSON<input id="importJson" type="file" accept=".json" class="hidden"></label></div><button class="btn sectiongap" id="exportCsv">Exportar CSV entrenos</button><div class="small muted sectiongap">En Android puedes guardar el archivo exportado en Google Drive desde el selector de archivos. La versión FINAL funciona offline y exporta backups. La sincronización automática con Drive queda para una versión con OAuth/API.</div></div>
       <div class="card"><h2>Modelo de datos y unidades</h2><div class="small muted">Cada variante real se separa por ejercicio + gimnasio + máquina + variante. Nunca se mezclan automáticamente kg/lado, stack, mancuernas o cargas base.</div><div id="variantMap" class="tablewrap sectiongap"></div></div>
@@ -782,10 +813,14 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 </div>
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios de hoy</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
+<script src="cloud-config.js?v=34"></script>
+<script src="cloud-sync.js?v=34"></script>
 <script>
 (()=>{
 'use strict';
 const APPKEY='gymCoachDiegoV1';
+let gcCloud=null;
+function gcWriteDb(){localStorage.setItem(APPKEY,JSON.stringify(db));if(gcCloud)gcCloud.changed();}
 const today=()=>new Date().toISOString().slice(0,10);
 const fmt=n=>Number.isFinite(+n)?String(Math.round(+n*100)/100).replace('.',','):'—';
 const byId=id=>document.getElementById(id);
@@ -880,7 +915,7 @@ if(!db.profile.nutritionCurrent){
 }
 if(!db.meals || !db.meals.length || db.meals.some(m=>/pendiente cantidades|cantidades finales pendientes/i.test(m.detail||''))){
   db.meals=structuredClone(V3MEALS);
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 
@@ -894,7 +929,7 @@ if(!db.profile.appVersion || db.profile.appVersion<4){
   db.foods=structuredClone(V4FOODS);
   db.profile.appVersion=4;
   db.profile.nutritionCurrent='Fase actual provisional: entreno 2300 kcal ±100, 130–140 g proteína, 275–300 g carbohidratos, 60–70 g grasa. Descanso 2100 kcal ±100, 130–140 g proteína, 220–240 g carbohidratos, 65–75 g grasa. Ajustar tras baseline.';
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 if(!db.foods) db.foods=structuredClone(V4FOODS);
 
@@ -906,7 +941,7 @@ if(!db.profile.appVersion || db.profile.appVersion<5){
   const custom=(db.meals||[]).filter(m=>m.type==='Personalizada');
   db.meals=[...structuredClone(V5MEALS),...keep.filter(m=>m.type!=='Personalizada'),...custom];
   db.profile.appVersion=5;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 
@@ -919,7 +954,7 @@ if(!db.profile.appVersion || db.profile.appVersion<6){
   }
   db.builder=[];
   db.profile.appVersion=6;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 if(!db.builder) db.builder=[];
 
@@ -1005,7 +1040,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<14){
   db.dayFood=db.dayFood||{};        // registro de comidas por fecha: { 'YYYY-MM-DD': [ {name,qty,kcal,p,c,f,ts} ] }
   db.myPlates=db.myPlates||[];      // platos compuestos guardados por el usuario
   db.profile.foodDbVersion=14;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 if(!db.dayFood)db.dayFood={};
 if(!db.myPlates)db.myPlates=[];
@@ -1049,7 +1084,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<16){
     }
   });
   db.profile.foodDbVersion=16;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // Migración v18: pan por rebanada + steak tartar y carpaccio Mercadona
@@ -1065,7 +1100,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<18){
   ];
   nuevos.forEach(nf=>{const ex=db.foods.find(f=>f.name===nf.name);if(ex){Object.assign(ex,nf)}else{db.foods.push({...nf})}});
   db.profile.foodDbVersion=18;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // Migración v20: correcciones de macros + alimentos nuevos (valores del usuario, por 100 g salvo nota).
@@ -1152,7 +1187,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<20){
     if(ex)Object.assign(ex,obj); else db.foods.push(obj);
   });
   db.profile.foodDbVersion=20;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // Migración v25: nueva tanda de alimentos (valores por 100 g salvo nota; respeta userEdited)
@@ -1194,7 +1229,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<25){
     if(ex)Object.assign(ex,obj); else db.foods.push(obj);
   });
   db.profile.foodDbVersion=25;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // Migración v26: correcciones y alimentos frecuentes. Nunca pisa userEdited=true.
@@ -1241,7 +1276,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<26){
   const bat=db.foods.find(f=>normFoodName(f.name)==='batata');if(bat&&!bat.userEdited)bat.cat='Hidratos';
   ['Mozzarella','Cottage','Cottage (smoothie)','QuesPro Hacendado'].forEach(n=>{const f=db.foods.find(x=>normFoodName(x.name)===normFoodName(n));if(f&&!f.userEdited)f.cat='Lácteos'});
   db.profile.foodDbVersion=26;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // Migración v27: alimentos recurrentes + correcciones verificadas. Nunca pisa userEdited=true.
@@ -1266,7 +1301,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<27){
   upsertFoodV27({name:'Pistachos',cat:'Grasas',unit:'g',base:100,defaultQty:15,kcal:616,p:21.6,c:11,f:52.5,modo:'tal cual',note:'Hacendado tostado 0% sal añadida · por 100 g · editable si usas otra variedad',editable:true});
   upsertFoodV27({name:'Almendras',cat:'Grasas',unit:'g',base:100,defaultQty:15,kcal:642,p:25.2,c:5.9,f:54.8,modo:'tal cual',note:'almendra natural Hacendado · por 100 g · editable si usas otra variedad',editable:true});
   db.profile.foodDbVersion=27;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // Migración v28: fibra + azúcares. Campos por la misma base del alimento. No pisa alimentos editados manualmente.
@@ -1311,7 +1346,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<28){
   setQ('Pan normal (barra)',{fiber:2.7,sugar:1.5});
   db.profile.foodDbVersion=28;
   db.profile.nutritionQualityVersion=1;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 // v23: almacenamiento de objetivos manuales del entrenador. Mantiene APPKEY y todo el histórico existente.
@@ -1325,7 +1360,7 @@ if(!db.profile.appVersion || db.profile.appVersion<8){
   db.exercises.forEach(e=>{if(!e.increment)e.increment=(['Bíceps','Tríceps','Hombro','Core'].includes(e.group)?1:2.5)});
   db.shopping={store:'Mercadona',checked:{}};
   db.profile.appVersion=8;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 if(!db.shopping) db.shopping={store:'Mercadona',checked:{}};
 
@@ -1337,7 +1372,7 @@ if(!Number.isFinite(+db.nutritionTargets.fiber))db.nutritionTargets.fiber=30;
 if(!Number.isFinite(+db.nutritionTargets.addedSugarSoft))db.nutritionTargets.addedSugarSoft=30;
 if(!db.settings)db.settings={nutritionPhase:'current',bulkRate:0.20,defaultLocation:'Basic Fit Goya'};
 if(!db.importReviews)db.importReviews=[];
-if(!db.profile.appVersion||db.profile.appVersion<9){db.profile.appVersion=9;localStorage.setItem(APPKEY,JSON.stringify(db));}
+if(!db.profile.appVersion||db.profile.appVersion<9){db.profile.appVersion=9;gcWriteDb();}
 
 
 // Baseline oficial 25/08/2026
@@ -1353,7 +1388,7 @@ if(!db.profile.baselineOfficial || db.profile.baselineOfficial.date!=='2026-08-2
     rest:{kcal:2100,pMin:130,pMax:140,cMin:220,cMax:240,fMin:65,fMax:75},
     note:'Punto de partida provisional. Revisar con 7-14 días de media de peso, cintura, rendimiento y adherencia.'
   };
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 
@@ -1364,7 +1399,7 @@ if(!db.profile.breakfastTemplateVersion || db.profile.breakfastTemplateVersion<6
   if(bi>=0) db.meals[bi]={...db.meals[bi],...BREAKFAST_FINAL_V6};
   else db.meals.unshift(structuredClone(BREAKFAST_FINAL_V6));
   db.profile.breakfastTemplateVersion=6;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 
@@ -1373,7 +1408,7 @@ if(!db.exercises.some(e=>e.id==='hammer_rope')){
   db.exercises.push({id:'hammer_rope',name:'Curl martillo cuerda',group:'Bíceps',repMin:8,repMax:12,rest:90,setup:'Polea baja · cuerda · agarre neutro',fallback:'Curl martillo mancuernas',increment:1});
 }
 db.profile.trainingPlanVersion=7;
-localStorage.setItem(APPKEY,JSON.stringify(db));
+gcWriteDb();
 
 
 // FINAL v8 · sesión real 25/08/2026 precargada
@@ -1473,10 +1508,10 @@ localStorage.setItem(APPKEY,JSON.stringify(db));
     db.weights.push({date,weight:61.45,source:'lectura directa'});
   }
   db.profile.preloadedSession20260825=true;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
-function persist(){writeSnapshot('persist');localStorage.setItem(APPKEY,JSON.stringify(db));renderAll()}
+function persist(){writeSnapshot('persist');gcWriteDb();renderAll()}
 function dateLabel(s){if(!s)return'';const [y,m,d]=s.split('-');return `${d}/${m}/${y}`}
 function exById(id){return db.exercises.find(e=>e.id===id)}
 function e1rm(w,r){return w>0&&r>0?w*(1+r/30):0}
@@ -1880,7 +1915,7 @@ function candidatePortions(){
   const arr=[];
   wanted.forEach(name=>{
     const idx=(db.foods||[]).findIndex(f=>v22FoodNorm(f.name)===v22FoodNorm(name));if(idx<0)return;
-    const f=db.foods[idx];if(!Number.isFinite(+f.kcal)||(+f.kcal<=0))return;
+    const f=db.foods[idx];if(f.alcoholic||!Number.isFinite(+f.kcal)||(+f.kcal<=0))return;
     const base=+f.defaultQty||+f.base||1;
     const unitCount=['unidad','rebanada','tostada','pieza','loncha','onza','rodaja','huevo'].includes(f.unit);
     const mults=unitCount?[1,2]:[0.5,0.75,1,1.25,1.5];
@@ -2041,9 +2076,54 @@ function dayTotals(){
   const den=Math.max(1,t.kcal);t.fiberCoverage=Math.min(100,Math.round(t.fiberKnownKcal/den*100));t.sugarCoverage=Math.min(100,Math.round(t.sugarKnownKcal/den*100));t.addedSugarCoverage=Math.min(100,Math.round(t.addedSugarKnownKcal/den*100));return t;
 }
 function currentDayType(){return byId('dayType')?byId('dayType').value:'train'}
+function inferNutritionDayType(usePlan=false){
+  const manual=db.settings.nutritionDayTypes?.[today()];
+  if(['train','rest','travel'].includes(manual))return manual;
+  const saved=db.nutrition.find(x=>x.date===today())?.dayType;
+  if(!usePlan&&['train','rest','travel'].includes(saved))return saved;
+  if(db.sessions.some(s=>s.date===today()&&(s.exercises||[]).length))return 'train';
+  const pick=workoutPlanSelection();
+  return (!pick.rest&&TRAINING_PLAN_V21[pick.key])||combineSelectionForToday().length?'train':'rest';
+}
+function refreshNutritionDayType(){
+  byId('dayType').value=inferNutritionDayType(true);
+  const saved=db.nutrition.find(x=>x.date===today());if(saved)saved.dayType=currentDayType();
+  gcStore();renderNutritionTarget();renderFoodSearch();
+}
+function nutritionDayText(){
+  const type=currentDayType(),t=dayTotals(),g=nutritionGoal(type),log=todayFoodLog();
+  const macros=m=>`${Math.round(m.kcal)} kcal — P ${fmt(m.p)} g — C ${fmt(m.c)} g — G ${fmt(m.f)} g`;
+  const lines=[`NUTRICIÓN · ${dateLabel(today())} · ${type==='travel'?'Viaje / social':type==='rest'?'Descanso':'Entrenamiento'}`,`Llevo registrado: ${macros(t)}.`];
+  if(g.kcal){
+    lines.push(`Objetivo hoy: ${macros(g)} (kcal ±100; valores de la app).`);
+    const remaining={},excess=[];
+    [['kcal','kcal'],['p','g de proteína'],['c','g de hidratos'],['f','g de grasa']].forEach(([key,unit])=>{
+      remaining[key]=Math.max(0,g[key]-t[key]);
+      if(t[key]>g[key])excess.push(`${fmt(t[key]-g[key])} ${unit}`);
+    });
+    lines.push(`Restante hasta el objetivo central: ${macros(remaining)}.`);
+    if(excess.length)lines.push(`Por encima del objetivo central: ${excess.join(' · ')}.`);
+  }else lines.push('Hoy no hay objetivo calórico estricto (viaje / social).');
+  lines.push('', 'Comido / bebido hoy:');
+  if(!log.length)lines.push('- Sin alimentos registrados; el resumen puede estar incompleto.');
+  else log.forEach(e=>lines.push(`- ${e.name}${e.qty!==null&&e.qty!==undefined&&e.qty!==''?` (${e.qty})`:''}: ${macros(e)}.`));
+  lines.push('', 'Sugiere una cena con cantidades y macros aproximados para acercarme a los objetivos de hoy. Usa solo lo registrado; puede faltar algo por anotar. No propongas compensar ni saltarme la cena si he superado un objetivo.');
+  return lines.join('\n');
+}
+async function copyNutritionDay(){
+  const text=nutritionDayText(),area=byId('nutritionDayText'),fallback=byId('nutritionCopyFallback');
+  area.value=text;
+  try{
+    await navigator.clipboard.writeText(text);
+    fallback.classList.add('hidden');toast('Día copiado · pégalo en Nutrición');
+  }catch{
+    fallback.classList.remove('hidden');area.focus();area.select();
+    toast('Resumen preparado · selecciona y copia el texto');
+  }
+}
 function addFoodEntry(name,qty,macros){
   const log=todayFoodLog();
-  log.push({name,qty,kcal:Math.round(macros.kcal),p:+macros.p.toFixed(1),c:+macros.c.toFixed(1),f:+macros.f.toFixed(1),fiber:Number.isFinite(macros.fiber)?+macros.fiber.toFixed(1):null,sugar:Number.isFinite(macros.sugar)?+macros.sugar.toFixed(1):null,addedSugar:Number.isFinite(macros.addedSugar)?+macros.addedSugar.toFixed(1):null,fiberKnownKcal:macros.fiberKnownKcal||0,sugarKnownKcal:macros.sugarKnownKcal||0,addedSugarKnownKcal:macros.addedSugarKnownKcal||0,ts:Date.now()});
+  log.push({id:'food-'+crypto.randomUUID(),name,qty,kcal:Math.round(macros.kcal),p:+macros.p.toFixed(1),c:+macros.c.toFixed(1),f:+macros.f.toFixed(1),fiber:Number.isFinite(macros.fiber)?+macros.fiber.toFixed(1):null,sugar:Number.isFinite(macros.sugar)?+macros.sugar.toFixed(1):null,addedSugar:Number.isFinite(macros.addedSugar)?+macros.addedSugar.toFixed(1):null,fiberKnownKcal:macros.fiberKnownKcal||0,sugarKnownKcal:macros.sugarKnownKcal||0,addedSugarKnownKcal:macros.addedSugarKnownKcal||0,ts:Date.now()});
   syncDayNutritionFromLog();
   persist();
   renderDayFoodLog();renderNutritionTarget();const r=macroRemaining();if(byId('macroRemaining'))byId('macroRemaining').textContent=macroRemainingLabel(r);
@@ -2078,6 +2158,7 @@ function syncDayNutritionFromLog(){
 // ---- Ración inteligente: modula suavemente la ración típica según el hueco que queda ----
 function suggestedQty(food){
   const base=food.defaultQty||food.base||100;
+  if(food.cat==='Bebidas')return base;
   const g=nutritionGoal(currentDayType());
   if(!g||!g.kcal)return base; // sin objetivo estricto → ración típica
   const t=dayTotals();
@@ -2154,7 +2235,8 @@ function renderFoodSearch(){
     const sq=suggestedQty(f);
     const m=foodMacros(f,sq);
     const modo=f.modo?` · ${f.modo}`:'';
-    return `<div class="item"><div class="itemtop"><div><b>${f.name}</b> <span class="small muted">${f.cat||''}${modo}</span></div></div>
+    const portions=f.cat==='Bebidas'?`<div class="row sectiongap">${(f.portions||[]).map(([label,ml])=>`<button type="button" class="btn drinkPortion" data-name="${escapeAttr(f.name)}" data-ml="${ml}" style="min-height:34px;padding:4px 8px">${escapeHtml(label)} · ${ml} ml</button>`).join('')}</div>`:'';
+    return `<div class="item"><div class="itemtop"><div><b>${f.name}</b> <span class="small muted">${f.cat||''}${modo}</span></div></div>${portions}
       <div class="row sectiongap" style="align-items:center;gap:8px">
         <div class="field" style="width:110px;margin:0"><input type="number" class="foodQtyInput" data-name="${escapeAttr(f.name)}" value="${sq}" step="${f.unit==='unidad'?1:5}" min="0" style="min-height:40px"><span class="small muted">${f.unit}</span></div>
         <div class="small muted grow" data-macro-for="${escapeAttr(f.name)}">${Math.round(m.kcal)} kcal · P ${fmt(m.p)} · C ${fmt(m.c)} · G ${fmt(m.f)}${Number.isFinite(m.fiber)?` · Fi ${fmt(m.fiber)}`:''}${Number.isFinite(m.sugar)?` · Az ${fmt(m.sugar)}`:''}</div>
@@ -2166,6 +2248,10 @@ function renderFoodSearch(){
     const m=foodMacros(f,+inp.value||0);
     const lbl=box.querySelector(`[data-macro-for="${CSS.escape(inp.dataset.name)}"]`);
     if(lbl)lbl.textContent=`${Math.round(m.kcal)} kcal · P ${fmt(m.p)} · C ${fmt(m.c)} · G ${fmt(m.f)}${Number.isFinite(m.fiber)?` · Fi ${fmt(m.fiber)}`:''}${Number.isFinite(m.sugar)?` · Az ${fmt(m.sugar)}`:''}`;
+  }));
+  box.querySelectorAll('.drinkPortion').forEach(b=>b.addEventListener('click',()=>{
+    const inp=box.querySelector(`.foodQtyInput[data-name="${CSS.escape(b.dataset.name)}"]`);
+    if(inp){inp.value=b.dataset.ml;inp.dispatchEvent(new Event('input',{bubbles:true}))}
   }));
   box.querySelectorAll('.addFoodBtn').forEach(b=>b.addEventListener('click',()=>{
     const f=db.foods.find(x=>x.name===b.dataset.name);if(!f)return;
@@ -2289,8 +2375,8 @@ function prevSessionFor(exerciseId,beforeDate){
   return logs[0]||null;
 }
 function exerciseTrendText(x){
-  const prev=prevSessionFor(x.exerciseId,today());
-  if(!prev)return ' (primera vez registrado)';
+  const prev=gcComparableHistory(x).find(log=>log.date<today());
+  if(!prev)return ' (sin referencia previa válida del mismo slot/configuración)';
   const nowBest=bestSetOf(x.sets),prevBest=bestSetOf(prev.sets);
   if(!nowBest||!prevBest)return '';
   const de=e1rm(nowBest.weight,nowBest.reps)-e1rm(prevBest.weight,prevBest.reps);
@@ -2304,6 +2390,7 @@ function todayText(withPrompt=false){
     'Eres mi entrenador. Analiza esta sesión de hoy comparándola con mi progreso previo de ganancia muscular.',
     'Dime: (1) qué ejercicios progresaron o retrocedieron y por qué, (2) si hay señales de fatiga acumulada o necesidad de deload, (3) ajustes concretos de carga/reps para la próxima sesión de estos mismos ejercicios, (4) si el volumen y la selección tienen sentido para recomposición. Sé específico con números.',
     'Al final añade un bloque GC_TARGETS importable por Gym Coach. Usa exactamente el nombre del ejercicio y la ubicación que aparecen abajo; si aparece machine= o variant=, consérvalos. Formato: Ejercicio | Ubicación | slot=workoutSlotId | machine=... | variant=... | peso x reps@RIR. Conserva el slot indicado para cada ejercicio. No copies kilos entre máquinas/gimnasios distintos.',
+    'GC_TARGETS siempre parte de la última ejecución válida del mismo slot + ubicación + máquina + variante, incluida la de hoy. Aplica una progresión pequeña según sus reps y RIR. Las marcas anteriores y las comparaciones entre paréntesis son solo contexto: nunca sustituyas la última ejecución por una marca anterior mejor ni la descartes automáticamente por fatiga. Solo omite una ejecución si consta un motivo explícito de invalidez, como error de registro o cambio de configuración.',
     ''
   ]:[];
   const body=[
@@ -2326,7 +2413,7 @@ function renderShopping(){
     const key=`${store}:${x.name}`,checked=!!db.shopping.checked[key];
     return `<label class="item" style="display:block"><div class="row" style="align-items:flex-start"><input class="shopCheck" data-key="${key.replaceAll('"','&quot;')}" type="checkbox" ${checked?'checked':''} style="width:auto;min-height:auto;margin-top:4px"><div class="grow"><b>${x.name}</b> <span class="pill">${x.cat}</span><div class="small">${x.qty}</div><div class="small muted">${x.why}</div></div></div></label>`;
   }).join('');
-  document.querySelectorAll('.shopCheck').forEach(c=>c.addEventListener('change',()=>{db.shopping.checked[c.dataset.key]=c.checked;localStorage.setItem(APPKEY,JSON.stringify(db))}));
+  document.querySelectorAll('.shopCheck').forEach(c=>c.addEventListener('change',()=>{db.shopping.checked[c.dataset.key]=c.checked;gcWriteDb()}));
 }
 
 function renderProfile(){const p=db.profile;byId('profileList').innerHTML=Object.entries(p).map(([k,v])=>`<div class="item"><b>${k}</b><div class="small muted">${v}</div></div>`).join('');byId('legacy').textContent=db.legacy||''}
@@ -2362,7 +2449,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
     db.exercises.push({id:'triceps_uni',name:'Tríceps unilateral polea',group:'Tríceps',repMin:8,repMax:12,rest:90,setup:'codo estable; polea unilateral',fallback:'Tríceps polea V',increment:1});
   }
   db.profile.visibleVersion=9;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
 // Migración v13: mapa de cargas prefijado por ejercicio (Diego)
@@ -2391,7 +2478,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
   db.exerciseLoad=db.exerciseLoad||{};
   Object.entries(map).forEach(([id,cfg])=>{ db.exerciseLoad[id]={...cfg}; });
   db.profile.loadDefaultsVersion=13;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
 (function preloadSession20260826(){
@@ -2425,7 +2512,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
     lg('triceps_uni',6,[st(6,6.8,0),st(6,5.7,0),st(10,4.5,null)])
   ]};
   if(existing){existing.readiness=rd;existing.exercises=sess.exercises}else db.sessions.push(sess);
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
 
@@ -2440,7 +2527,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
     });
   }
   db.profile.trainingPlanVersion=10;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
 
@@ -2484,7 +2571,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
   ]};
 
   if(existing){existing.readiness=rd;existing.exercises=sess.exercises}else db.sessions.push(sess);
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
 (function preloadSession20260828(){
@@ -2519,7 +2606,7 @@ function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(uni
   ]};
 
   if(existing){existing.readiness=rd;existing.exercises=sess.exercises}else db.sessions.push(sess);
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 })();
 
 const WORKOUT_PLAN_LEGACY={
@@ -2629,7 +2716,7 @@ function setWorkoutOverride(value){
   db.settings.workoutOverrides=db.settings.workoutOverrides||{};
   if(value==='auto') delete db.settings.workoutOverrides[today()];
   else db.settings.workoutOverrides[today()]=value;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
   renderTodayPlan();
   renderQuickPlan();
 }
@@ -2650,7 +2737,7 @@ function toggleCombine(key){
   const cur=new Set(db.settings.combine[today()]||[]);
   if(cur.has(key))cur.delete(key);else cur.add(key);
   db.settings.combine[today()]=[...cur];
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
   renderTodayPlan();renderQuickPlan();
 }
 function renderCombineOptions(){
@@ -2708,12 +2795,12 @@ function renderTodayPlan(){
 function comparableLogs(exid,variant){const e=exById(exid),key=e?makeVariantKey(e):null,v=normText(variant);return db.sessions.flatMap(ss=>ss.exercises.map((x,idx)=>({...x,date:ss.date,sessionId:ss.id,order:x.order||idx+1}))).filter(x=>x.exerciseId===exid&&(x.variantKey?x.variantKey===key:normText(x.variant)===v)).sort((a,b)=>b.date.localeCompare(a.date))}
 function loadExerciseContext(){const e=exerciseFromInput(),hint=byId('exerciseSearchHint');if(!e){if(hint)hint.innerHTML=byId('exerciseSelect').value.trim()?`<b>Nuevo:</b> “${byId('exerciseSelect').value.trim()}”. Elige el grupo; se añadirá al finalizar.`:'Empieza a escribir para buscar o crear.';byId('setup').value='';byId('fallback').value='';byId('increment').value=2.5;byId('loadUnit').value='unknown';byId('baseLoad').value='';setRest(120);refreshVariantKey();byId('lastComparable').innerHTML='Ejercicio nuevo: sin histórico comparable.';byId('todayGoal').textContent='Objetivo inicial: 2–3 series de 8–12 reps a RIR 1–2; ajusta según seguridad y primera serie.';updateNextSetSuggestion();renderPerformanceComparison();renderQuickPlan();return}if(hint)hint.textContent=`${e.name} · ${e.group}`;byId('exerciseGroup').value=e.group||'Otros';byId('setup').value=e.setup||'';byId('fallback').value=e.fallback||'';byId('increment').value=e.increment||2.5;setRest(e.rest||120);loadVariantMeta();const logs=comparableLogs(e.id,byId('variant').value),l=logs[0];byId('lastComparable').innerHTML=l?`<b>Último comparable · ${dateLabel(l.date)}</b><br>${l.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` @RIR${z.rir}`:''}${z.warmup?' [aprox]':''}${z.drop?' [drop]':''}${z.partial?' [parcial]':''}`).join(' · ')}${l.notes?`<br><span class="muted">${l.notes}</span>`:''}`:'Sin registro comparable todavía.';byId('todayGoal').textContent=goalFrom(l,e);updateNextSetSuggestion();renderPerformanceComparison()}
 
-function markTrainingEntry(ts=Date.now()){const ss=currentSession();if(!ss.startedAt)ss.startedAt=ts;ss.lastEntryAt=ts;localStorage.setItem(APPKEY,JSON.stringify(db));return ss}
+function markTrainingEntry(ts=Date.now()){const ss=currentSession();if(!ss.startedAt)ss.startedAt=ts;ss.lastEntryAt=ts;gcWriteDb();return ss}
 function trainingDurationLabel(ss){if(!ss||!Number.isFinite(+ss.startedAt)||!Number.isFinite(+ss.lastEntryAt)||+ss.lastEntryAt<+ss.startedAt)return '';const mins=Math.max(0,Math.round((+ss.lastEntryAt-(+ss.startedAt))/60000));const h=Math.floor(mins/60),m=mins%60;return h?`${h} h ${m} min`:`${m} min`}
 function currentRestElapsed(){return restStarted?Math.max(0,Math.floor((Date.now()-restStarted)/1000)):null}
 function confirmCurrentSet(){const wraps=[...byId('sets').querySelectorAll('.setwrap')],target=wraps.find(w=>w.dataset.confirmed!=='1'&&(+w.querySelector('.reps').value||0)>0);if(!target){toast('Introduce una serie nueva');return}const prev=[...wraps].filter(w=>w.dataset.confirmed==='1').slice(-1)[0];if(prev&&restStarted)prev.dataset.restActual=String(currentRestElapsed());target.dataset.confirmed='1';target.classList.add('confirmedSet');target.dataset.confirmedAt=String(Date.now());markTrainingEntry(+target.dataset.confirmedAt);startRest();updateNextSetSuggestion();toast('Serie confirmada · descanso iniciado')}
-function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),coversWorkoutSlotId:gcReplacement?.slot||null,weeklyPendingId:gcReplacement?.pendingId||null,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();if(!_session.startedAt)_session.startedAt=log.loggedAt;_session.lastEntryAt=log.loggedAt;consumeCoachTargetV22(e,log);gcCompletePending(log);gcReplacement=null;persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
-function renderToday(){const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}const duration=trainingDurationLabel(ss);el.innerHTML=(duration?`<div class="good"><b>Duración registrada:</b> ${duration}<div class="small muted">Desde la primera serie anotada hasta la última anotación del entreno.</div></div><div class="sectiongap"></div>`:'')+ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}<div class="row sectiongap" style="gap:8px"><button class="btn reopenEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Reabrir / añadir serie</button><button class="btn bad delEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Borrar</button></div></div>`}).join('');el.querySelectorAll('.reopenEx').forEach(b=>b.addEventListener('click',()=>reopenExercise(b.dataset.id)));el.querySelectorAll('.delEx').forEach(b=>b.addEventListener('click',()=>deleteExercise(b.dataset.id)));renderQuickPlan()}
+function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),savedAt:new Date().toISOString(),exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),coversWorkoutSlotId:gcReplacement?.slot||null,weeklyPendingId:gcReplacement?.pendingId||null,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();if(!_session.startedAt)_session.startedAt=log.loggedAt;_session.lastEntryAt=log.loggedAt;refreshNutritionDayType();consumeCoachTargetV22(e,log);gcCompletePending(log);gcReplacement=null;persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
+function renderToday(){const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}const duration=trainingDurationLabel(ss);el.innerHTML=(duration?`<div class="good"><b>Duración registrada:</b> ${duration}<div class="small muted">Desde la primera serie anotada hasta la última anotación del entreno.</div></div><div class="sectiongap"></div>`:'')+ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item exerciseComplete"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}<div class="row sectiongap" style="gap:8px"><button class="btn reopenEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Reabrir / añadir serie</button><button class="btn bad delEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Borrar</button></div></div>`}).join('');el.querySelectorAll('.reopenEx').forEach(b=>b.addEventListener('click',()=>reopenExercise(b.dataset.id)));el.querySelectorAll('.delEx').forEach(b=>b.addEventListener('click',()=>deleteExercise(b.dataset.id)));renderQuickPlan()}
 function deleteExercise(logId){
   const ss=db.sessions.find(x=>x.date===today());if(!ss)return;
   const i=ss.exercises.findIndex(x=>x.id===logId);if(i<0)return;
@@ -2786,7 +2873,7 @@ function denseWeightBlocks(){const ws=[...db.weights].filter(x=>Number.isFinite(
 function waistTrend(){const ms=[...db.measures].filter(x=>Number.isFinite(+x.waist)).sort((a,b)=>a.date.localeCompare(b.date));if(ms.length<2)return null;const a=ms[ms.length-1],b=ms[ms.length-2],days=Math.max(1,daysBetween(a.date,b.date));return {weekly:(a.waist-b.waist)*7/days,a,b}}
 function nutritionAdherence14(){const ns=[...db.nutrition].filter(x=>x.kcal&&x.dayType!=='travel').sort((a,b)=>b.date.localeCompare(a.date)).slice(0,14);if(ns.length<7)return {ok:false,n:ns.length,score:null};const hits=ns.filter(x=>{const g=nutritionGoal(x.dayType||'train');return g.kcal&&Math.abs(x.kcal-g.kcal)<=g.kcal*.12}).length;return {ok:hits/ns.length>=.7,n:ns.length,score:hits/ns.length}}
 let pendingCalorieDelta=0;
-function evaluateCalorieAdjustment(){const phase=byId('nutritionPhase').value,blocks=denseWeightBlocks(),box=byId('calorieAdjustment');db.settings.nutritionPhase=phase;db.settings.bulkRate=+byId('bulkRate').value||.20;localStorage.setItem(APPKEY,JSON.stringify(db));pendingCalorieDelta=0;byId('applyCalorieAdjustment').classList.add('hidden');if(!blocks){box.innerHTML='<b>Sin cambio.</b> Necesito ≥4 pesajes en cada uno de dos bloques consecutivos de 7 días. No ajusto por ruido.';return}const delta=blocks.newAvg-blocks.oldAvg,w=waistTrend(),adh=nutritionAdherence14();let reason='';if(phase==='bulk'){const target=db.settings.bulkRate||.20;if(!adh.ok)reason=`Cambio ${delta>=0?'+':''}${fmt(delta)} kg/sem, pero la adherencia registrada aún no es suficiente (${adh.n} días). Mantener.`;else if(delta<Math.max(.05,target-.10)){pendingCalorieDelta=100;reason=`Subida ${fmt(delta)} kg/sem, por debajo del objetivo ~${fmt(target)}: +100 kcal/día.`}else if(delta>target+.15||(w&&w.weekly>.7)){pendingCalorieDelta=-100;reason=`Subida ${fmt(delta)} kg/sem${w?` y cintura ${w.weekly>=0?'+':''}${fmt(w.weekly)} cm/sem`:''}: −100 kcal/día.`}else reason=`Subida ${fmt(delta)} kg/sem: mantener.`}else if(phase==='cut'){if(!adh.ok)reason=`Cambio ${delta>=0?'+':''}${fmt(delta)} kg/sem, pero primero necesito mejor adherencia/registro.`;else if(delta>-.15){pendingCalorieDelta=-100;reason=`Pérdida insuficiente (${fmt(delta)} kg/sem): −100 kcal/día.`}else if(delta<-.60){pendingCalorieDelta=100;reason=`Pérdida rápida (${fmt(delta)} kg/sem): +100 kcal/día.`}else reason=`Ritmo de definición ${fmt(delta)} kg/sem: mantener.`}else{reason=Math.abs(delta)<=.25?`Peso prácticamente estable (${delta>=0?'+':''}${fmt(delta)} kg/sem): mantener.`:`Cambio ${delta>=0?'+':''}${fmt(delta)} kg/sem. En fase flexible no haría un ajuste automático con una sola comparación; reevalúa otra semana.`}box.innerHTML=`<b>Media 7d:</b> ${fmt(blocks.oldAvg)} → ${fmt(blocks.newAvg)} kg (${delta>=0?'+':''}${fmt(delta)} kg).${w?` <b>Cintura:</b> ${w.weekly>=0?'+':''}${fmt(w.weekly)} cm/sem.`:''}<div class="sectiongap">${reason}</div>`;if(pendingCalorieDelta)byId('applyCalorieAdjustment').classList.remove('hidden')}
+function evaluateCalorieAdjustment(){const phase=byId('nutritionPhase').value,blocks=denseWeightBlocks(),box=byId('calorieAdjustment');db.settings.nutritionPhase=phase;db.settings.bulkRate=+byId('bulkRate').value||.20;gcWriteDb();pendingCalorieDelta=0;byId('applyCalorieAdjustment').classList.add('hidden');if(!blocks){box.innerHTML='<b>Sin cambio.</b> Necesito ≥4 pesajes en cada uno de dos bloques consecutivos de 7 días. No ajusto por ruido.';return}const delta=blocks.newAvg-blocks.oldAvg,w=waistTrend(),adh=nutritionAdherence14();let reason='';if(phase==='bulk'){const target=db.settings.bulkRate||.20;if(!adh.ok)reason=`Cambio ${delta>=0?'+':''}${fmt(delta)} kg/sem, pero la adherencia registrada aún no es suficiente (${adh.n} días). Mantener.`;else if(delta<Math.max(.05,target-.10)){pendingCalorieDelta=100;reason=`Subida ${fmt(delta)} kg/sem, por debajo del objetivo ~${fmt(target)}: +100 kcal/día.`}else if(delta>target+.15||(w&&w.weekly>.7)){pendingCalorieDelta=-100;reason=`Subida ${fmt(delta)} kg/sem${w?` y cintura ${w.weekly>=0?'+':''}${fmt(w.weekly)} cm/sem`:''}: −100 kcal/día.`}else reason=`Subida ${fmt(delta)} kg/sem: mantener.`}else if(phase==='cut'){if(!adh.ok)reason=`Cambio ${delta>=0?'+':''}${fmt(delta)} kg/sem, pero primero necesito mejor adherencia/registro.`;else if(delta>-.15){pendingCalorieDelta=-100;reason=`Pérdida insuficiente (${fmt(delta)} kg/sem): −100 kcal/día.`}else if(delta<-.60){pendingCalorieDelta=100;reason=`Pérdida rápida (${fmt(delta)} kg/sem): +100 kcal/día.`}else reason=`Ritmo de definición ${fmt(delta)} kg/sem: mantener.`}else{reason=Math.abs(delta)<=.25?`Peso prácticamente estable (${delta>=0?'+':''}${fmt(delta)} kg/sem): mantener.`:`Cambio ${delta>=0?'+':''}${fmt(delta)} kg/sem. En fase flexible no haría un ajuste automático con una sola comparación; reevalúa otra semana.`}box.innerHTML=`<b>Media 7d:</b> ${fmt(blocks.oldAvg)} → ${fmt(blocks.newAvg)} kg (${delta>=0?'+':''}${fmt(delta)} kg).${w?` <b>Cintura:</b> ${w.weekly>=0?'+':''}${fmt(w.weekly)} cm/sem.`:''}<div class="sectiongap">${reason}</div>`;if(pendingCalorieDelta)byId('applyCalorieAdjustment').classList.remove('hidden')}
 function applyCalorieAdjustment(){if(!pendingCalorieDelta)return;db.nutritionTargets.trainKcal+=pendingCalorieDelta;db.nutritionTargets.restKcal+=pendingCalorieDelta;pendingCalorieDelta=0;persist();byId('applyCalorieAdjustment').classList.add('hidden');evaluateCalorieAdjustment();toast('Objetivos calóricos actualizados')}
 
 function renderVariantMap(){const box=byId('variantMap');if(!box)return;const rows=Object.values(db.variantMeta||{}).sort((a,b)=>(a.exerciseName||'').localeCompare(b.exerciseName||'','es'));if(!rows.length){box.innerHTML='<div class="muted">Todavía no hay variantes confirmadas. Se crean al finalizar ejercicios.</div>';return}box.innerHTML=`<table class="compactTable"><thead><tr><th>Ejercicio</th><th>Ubicación / máquina</th><th>Unidad</th><th>Base</th><th>Estado</th></tr></thead><tbody>${rows.map(m=>`<tr><td>${m.exerciseName||m.exerciseId}<div class="code muted">${m.variantKey}</div></td><td>${m.location||'—'} / ${m.machine||m.variant||'—'}</td><td>${m.loadUnit||'unknown'}</td><td>${Number.isFinite(+m.baseLoad)?fmt(m.baseLoad):'—'}</td><td class="${m.loadUnit==='unknown'?'tag-review':'tag-ok'}">${m.loadUnit==='unknown'?'revisar':'confirmado'}</td></tr>`).join('')}</tbody></table>`}
@@ -2794,7 +2881,7 @@ function parseNumEs(v){if(v===undefined||v===null||v==='')return null;const n=Nu
 function parseSetToken(tok){const raw=tok.trim();if(!raw)return null;let m=raw.match(/^(\d+(?:[.,]\d+)?)\s*[x×]\s*\((\d+(?:[.,]\d+)?)\s*\+\s*(\d+(?:[.,]\d+)?)s\)$/i);if(m)return {raw_text:raw,reps:parseNumEs(m[1]),weight:parseNumEs(m[2]),isometricSeconds:parseNumEs(m[3]),parse_confidence:'high',needs_review:true,reason:'isométrico compuesto'};m=raw.match(/^(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)$/i);if(m)return {raw_text:raw,reps:parseNumEs(m[1]),weight:parseNumEs(m[2]),parse_confidence:'high',needs_review:false};m=raw.match(/^[x×]\s*(\d+(?:[.,]\d+)?)$/i);if(m)return {raw_text:raw,reps:null,weight:parseNumEs(m[1]),parse_confidence:'high',needs_review:true,reason:'repeticiones ausentes'};return {raw_text:raw,reps:null,weight:null,parse_confidence:'low',needs_review:true,reason:'formato no reconocido'}}
 function parseSetExpression(expr){const raw=expr.trim(),parts=raw.split(/\s*(?:→|->)\s*/);if(parts.length>1)return parts.map((p,i)=>({...parseSetToken(p),drop:i>0,drop_group:raw}));if(!raw.includes('(')&&/\d\s*[x×]\s*\d.*\+.*\d\s*[x×]\s*\d/.test(raw))return raw.split(/\s*\+\s*/).map((p,i)=>({...parseSetToken(p),drop:i>0,drop_group:raw}));return [parseSetToken(raw)]}
 function parseExerciseSegment(seg){const raw=seg.trim();if(!raw)return null;const mt=raw.match(/\s(?=(?:\d+(?:[.,]\d+)?|)[x×])/);const idx=mt?mt.index:raw.length,name=raw.slice(0,idx).trim()||'Ejercicio sin nombre',rest=raw.slice(idx).trim(),tokens=rest.split(/\s+(?=(?:\d+(?:[.,]\d+)?|)[x×])/).filter(Boolean),sets=[];tokens.forEach(t=>sets.push(...parseSetExpression(t)));return {raw_text:raw,exercise_name_raw:name,sets,parse_confidence:sets.length?'medium':'low',needs_review:true,reason:'mapear alias + variant_key + load_unit antes de importar'}}
-function previewLegacyImport(){const text=byId('legacyImportInput').value.trim(),box=byId('legacyImportPreview');if(!text){box.innerHTML='<div class="muted">Pega alguna línea.</div>';return}const parsed=text.split(/\n+/).filter(Boolean).map(line=>{const parts=line.split('·').map(x=>x.trim()).filter(Boolean),dateRaw=parts.shift()||'';return {raw_text:line,date_raw:dateRaw,segments:parts.map(parseExerciseSegment).filter(Boolean)}});db.importReviews=parsed;localStorage.setItem(APPKEY,JSON.stringify(db));box.innerHTML=parsed.map(ln=>`<div class="item"><b>${ln.date_raw||'Fecha pendiente'}</b><div class="small muted code">${ln.raw_text}</div>${ln.segments.map(sg=>`<div class="review sectiongap"><b>${sg.exercise_name_raw}</b> <span class="pill">needs_review</span><div class="small">${sg.sets.length?sg.sets.map(z=>`${z.raw_text}${z.needs_review?' ⚠':''}`).join(' · '):'Sin series parseables'}</div><div class="small muted">${sg.reason}</div></div>`).join('')}</div>`).join('')}
+function previewLegacyImport(){const text=byId('legacyImportInput').value.trim(),box=byId('legacyImportPreview');if(!text){box.innerHTML='<div class="muted">Pega alguna línea.</div>';return}const parsed=text.split(/\n+/).filter(Boolean).map(line=>{const parts=line.split('·').map(x=>x.trim()).filter(Boolean),dateRaw=parts.shift()||'';return {raw_text:line,date_raw:dateRaw,segments:parts.map(parseExerciseSegment).filter(Boolean)}});db.importReviews=parsed;gcWriteDb();box.innerHTML=parsed.map(ln=>`<div class="item"><b>${ln.date_raw||'Fecha pendiente'}</b><div class="small muted code">${ln.raw_text}</div>${ln.segments.map(sg=>`<div class="review sectiongap"><b>${sg.exercise_name_raw}</b> <span class="pill">needs_review</span><div class="small">${sg.sets.length?sg.sets.map(z=>`${z.raw_text}${z.needs_review?' ⚠':''}`).join(' · '):'Sin series parseables'}</div><div class="small muted">${sg.reason}</div></div>`).join('')}</div>`).join('')}
 function renderImportPreview(){if(byId('legacyImportPreview')&&db.importReviews?.length&&!byId('legacyImportPreview').innerHTML)byId('legacyImportPreview').innerHTML='<div class="muted small">Hay una previsualización guardada. Pulsa “Previsualizar” para regenerarla.</div>'}
 
 function buildCheckin(){const ws=[...db.weights].sort((a,b)=>a.date.localeCompare(b.date)),a7=avg(ws.slice(-7).map(x=>x.weight)),prev7=avg(ws.slice(-14,-7).map(x=>x.weight));const m=[...db.measures].sort((a,b)=>b.date.localeCompare(a.date))[0],recentSessions=[...db.sessions].sort((a,b)=>b.date.localeCompare(a.date)).filter(ss=>{const d=new Date(ss.date+'T12:00:00');return(Date.now()-d.getTime())<=8*864e5}),nut=[...db.nutrition].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,7),pk=avg(nut.map(x=>x.kcal).filter(Number.isFinite)),pp=avg(nut.map(x=>x.protein).filter(Number.isFinite)),pains=recentSessions.flatMap(ss=>ss.exercises.filter(x=>x.painScore).map(x=>`${exById(x.exerciseId)?.name}: ${x.painZone||'molestia'} ${x.painScore}/10`)),rr=readinessRecommendation(db.readiness.find(x=>x.date===today()));byId('checkinText').value=[`CHECK-IN SEMANAL`,a7?`Peso medio 7 días: ${fmt(a7)} kg${prev7?` (${a7-prev7>=0?'+':''}${fmt(a7-prev7)} vs semana anterior)`:''}`:'Peso medio: pendiente',m?`Última cintura: ${fmt(m.waist)} cm (${dateLabel(m.date)})`:'Cintura: pendiente',`Entrenos últimos 8 días: ${recentSessions.length}`,pk?`Kcal medias: ${fmt(pk)}`:'Kcal medias: sin datos',pp?`Proteína media: ${fmt(pp)} g`:'Proteína media: sin datos',`Objetivos: entreno ${db.nutritionTargets.trainKcal} / descanso ${db.nutritionTargets.restKcal} kcal`,pains.length?`Molestias: ${pains.join(' | ')}`:'Molestias: ninguna registrada',`Readiness: ${rr.text}`,`Notas: ${byId('weeklyNotes').value.trim()||'—'}`].join('\n')}
@@ -2883,7 +2970,7 @@ const V9_FOOD_GROUPS={
   'AOVE':'Grasas','Pistachos':'Grasas','Nueces':'Grasas','Chía':'Grasas','Coco rallado':'Grasas','Aguacate':'Grasas','Hummus':'Grasas','Preparado de coco':'Grasas',
   'Chocolate con leche':'Extras','Salsa de soja':'Extras','Gelatina proteica':'Extras'
 };
-function v9FoodGroup(f){return V9_FOOD_GROUPS[f.name]||'Extras'}
+function v9FoodGroup(f){return f.cat||V9_FOOD_GROUPS[f.name]||'Extras'}
 function v9Ref(f){return f.unit==='unidad'?(+f.base||1):100}
 function v9RefLabel(f){
   if(f.unit==='unidad')return `${fmt(v9Ref(f))} ud`;
@@ -2938,7 +3025,7 @@ function editMatrixFood(i){
   const factor=(+f.base||1)/ref;
   f.name=name.trim();f.kcal=kcal*factor;f.p=p*factor;f.c=c*factor;f.f=fat*factor;f.fiber=fiberRaw===''?null:(+fiberRaw||0)*factor;f.sugar=sugarRaw===''?null:(+sugarRaw||0)*factor;f.addedSugar=addedRaw===''?null:(+addedRaw||0)*factor;f.userEdited=true;
   f.note=(prompt('Nota / peso (seco, crudo, etiqueta...)',f.note||'')??f.note);
-  localStorage.setItem(APPKEY,JSON.stringify(db));renderFoodMatrix();renderFoods();renderBuilder();renderFoodSearch();
+  gcWriteDb();renderFoodMatrix();renderFoods();renderBuilder();renderFoodSearch();
 }
 
 
@@ -2989,7 +3076,7 @@ function autosaveDraftSoon(){
     try{
       const d=collectActiveDraft();
       if(d)localStorage.setItem(DRAFT_KEY,JSON.stringify(d));
-      localStorage.setItem(APPKEY,JSON.stringify(db));
+      gcWriteDb();
       setAutosaveStatus('<b>Guardado.</b>');
     }catch(e){setAutosaveStatus('<b>No se pudo guardar.</b>','warn')}
   },120);
@@ -3065,7 +3152,7 @@ if(!db.profile.foodDbVersion || db.profile.foodDbVersion<30){
     modo:'tal cual',note:'Mercadona · 1 unidad = 100 g · etiqueta: 76 kcal · P 3,7 · C 10,5 · G 2,1',editable:true
   },['Soja arándanos','Soja arándanos mirtillos','Yogur soja arándanos']);
   db.profile.foodDbVersion=30;
-  localStorage.setItem(APPKEY,JSON.stringify(db));
+  gcWriteDb();
 }
 
 
@@ -3129,17 +3216,23 @@ function v21RirHtml(label){return `<span class="v21Rir">RIR ${label}</span>`}
 function v21Unit(){return v9UnitLabel()}
 function v21FormatPlanSet(st){return `${st[0]}–${st[1]} reps · RIR ${st[2]}`}
 function comparableLogs(exid,variant){
-  const e=exById(exid),key=e?makeVariantKey(e):null,loc=normText(byId('location')?.value||db.settings.defaultLocation||''),mach=normText(byId('machine')?.value||''),v=normText(variant);
-  return db.sessions.flatMap(ss=>(ss.exercises||[]).map((x,idx)=>({...x,date:ss.date,sessionId:ss.id,order:x.order||idx+1}))).filter(x=>{
-    if(x.exerciseId!==exid)return false;
-    if(x.variantKey)return x.variantKey===key;
-    return normText(x.location||'')===loc && normText(x.machine||'')===mach && normText(x.variant||'')===v;
-  }).sort((a,b)=>b.date.localeCompare(a.date));
+  return gcComparableHistory({exerciseId:exid,workoutSlotId:gcCurrentSlot(exid),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:variant||''});
+}
+function gcHistoryLogs(){
+  return db.sessions.flatMap((ss,sessionIndex)=>(ss.exercises||[]).map((x,logIndex)=>({...x,date:ss.date,sessionId:ss.id,order:x.order||logIndex+1,sessionIndex,logIndex})))
+    .filter(x=>x.date<=today()&&x.valid!==false&&!x.invalid&&v21WorkSets(x).length)
+    .sort((a,b)=>b.date.localeCompare(a.date)||(b.savedAt||'').localeCompare(a.savedAt||'')||b.sessionIndex-a.sessionIndex||b.logIndex-a.logIndex);
+}
+function gcComparableHistory(scope){
+  if(!scope.workoutSlotId)return [];
+  const key=[scope.exerciseId,normKey(scope.location),normKey(scope.machine),normKey(scope.variant)].join('|');
+  return gcHistoryLogs().filter(x=>x.exerciseId===scope.exerciseId&&x.workoutSlotId===scope.workoutSlotId&&
+    (x.variantKey?x.variantKey===key:normKey(x.location)===normKey(scope.location)&&normKey(x.machine)===normKey(scope.machine)&&normKey(x.variant)===normKey(scope.variant)));
 }
 function v21FindExact(e){
-  const exact=comparableLogs(e.id,byId('variant')?.value||'').filter(x=>x.date<today());
+  const exact=comparableLogs(e.id,byId('variant')?.value||'');
   if(exact.length)return {log:exact[0],exact:true};
-  const any=v9ExerciseLogsAnyVariant(e.id);return any.length?{log:any[0],exact:false}:{log:null,exact:false};
+  const any=gcHistoryLogs().filter(x=>x.exerciseId===e.id);return any.length?{log:any[0],exact:false}:{log:null,exact:false};
 }
 function v21WorkSets(log){return (log?.sets||[]).filter(s=>!s.warmup&&!s.drop&&!s.partial&&s.reps>0&&s.weight>0)}
 function v21SeriesTarget(e,prevSet,target){
@@ -3189,7 +3282,7 @@ function importCoachTargetsV22(){
     db.coachTargets.filter(same).forEach(t=>{t.status='replaced';t.replacedAt=new Date().toISOString()});
     db.coachTargets.push({id:'ct'+Date.now()+Math.random().toString(36).slice(2,7),exerciseId:ex.id,exerciseName:ex.name,location,machine,variant,workoutSlotId,sets,createdAt:new Date().toISOString(),status:'pending'});added++;
   });
-  localStorage.setItem(APPKEY,JSON.stringify(db));renderCoachTargetsV22();renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22();
+  gcWriteDb();renderCoachTargetsV22();renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22();
   if(status)status.innerHTML=`<b>${added} objetivo${added===1?'':'s'} importado${added===1?'':'s'}.</b>${errors.length?` <span style="color:var(--warn)">${errors.join(' · ')}</span>`:' Listos para la próxima sesión compatible.'}`;
   if(added)toast(`${added} objetivo${added===1?'':'s'} del entrenador guardado${added===1?'':'s'}`);
 }
@@ -3221,12 +3314,26 @@ function refreshSetTargetHintsV22(){
     if(t.kind==='coach')hint.innerHTML=`<span class="coachBadge">COACH</span> &nbsp;Objetivo S${slot}: ${v22CoachSetHtml(t.set)}`;
     else hint.innerHTML=`Objetivo S${slot}: ${fmt(t.set.repMin)}–${fmt(t.set.repMax)} reps · <span class="v21Rir">RIR ${t.set.rirLabel}</span> · carga según histórico`;
   });
+  refreshRecordedTargets();
+}
+function refreshRecordedTargets(){
+  // Completion is recording a set, independently of whether its target was achieved.
+  // Keep empty work rows in the mapping; warmups, partials and drops have no target slot.
+  const wraps=[...byId('sets')?.querySelectorAll('.setwrap')||[]].filter(w=>!w.querySelector('.warmup')?.checked&&!w.querySelector('.partial')?.checked&&!w.querySelector('.drop')?.checked);
+  [...byId('todayGoal')?.querySelectorAll('.v21TargetLine')||[]].forEach((line,i)=>{
+    const w=wraps[i],reps=w?.querySelector('.reps')?.value||'',weight=w?.querySelector('.weight')?.value??'',rir=w?.dataset.rir;
+    const done=!!w&&Number.isFinite(+reps)&&+reps>0&&weight!==''&&Number.isFinite(+weight)&&+weight>=0&&rir!==undefined&&rir!==''&&Number.isFinite(+rir);
+    line.classList.toggle('completed',done);
+    let status=line.querySelector('.setCompletionStatus');
+    if(done&&!status){status=document.createElement('span');status.className='setCompletionStatus';line.lastElementChild.appendChild(status)}
+    if(status){if(done)status.textContent='✓ Serie registrada';else status.remove()}
+  });
 }
 function consumeCoachTargetV22(e,log){
   if(!e||!log)return;const c=coachTargetForV22(e);if(!c)return;
   c.status='done';c.completedAt=new Date().toISOString();c.completedLogId=log.id;c.completedVariantKey=log.variantKey||'';
 }
-function deleteCoachTargetV22(id){const t=(db.coachTargets||[]).find(x=>x.id===id);if(!t)return;t.status='deleted';t.deletedAt=new Date().toISOString();localStorage.setItem(APPKEY,JSON.stringify(db));renderCoachTargetsV22();renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22()}
+function deleteCoachTargetV22(id){const t=(db.coachTargets||[]).find(x=>x.id===id);if(!t)return;t.status='deleted';t.deletedAt=new Date().toISOString();gcWriteDb();renderCoachTargetsV22();renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22()}
 function renderCoachTargetsV22(){
   const box=byId('coachTargetList');if(!box)return;const showDone=!(db.settings?.hideCompletedCoachTargets);const rows=[...(db.coachTargets||[])].filter(t=>t.status==='pending'||(showDone&&t.status==='done')).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
   if(!rows.length){box.innerHTML='<div class="muted small">No hay objetivos del entrenador pendientes. Los objetivos automáticos de la rutina siguen funcionando.</div>';return}
@@ -3240,7 +3347,7 @@ function renderPerformanceComparison(){
   if(!e){todayBox.textContent='Selecciona un ejercicio.';lastBox.textContent='Aún sin referencia.';lastDate.textContent='—';refreshSetTargetHintsV22();return}
   const it=plannedItem(e.id),targets=it?.sets||[],coach=coachTargetForV22(e);
   const prev=v21FindExact(e),log=prev.log,prevSets=v21WorkSets(log);
-  if(log){lastBox.innerHTML=prevSets.map((z,i)=>`<span>${i+1}) ${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}</span>`).join(' · ');lastDate.textContent=`${dateLabel(log.date)}${prev.exact?' · misma máquina/variante':' · otra máquina/variante · solo contexto'}`}
+  if(log){lastBox.innerHTML=prevSets.map((z,i)=>`<span>${i+1}) ${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}</span>`).join(' · ');lastDate.textContent=`${dateLabel(log.date)}${prev.exact?' · mismo slot y configuración':' · otro slot/configuración · solo contexto'}`}
   else{lastBox.textContent='Primera referencia limpia.';lastDate.textContent='Sin registro anterior'}
   if(coach){
     const lines=coach.sets.map((st,i)=>`<div class="v21TargetLine"><span class="n">${i+1}</span><div>${v22CoachSetHtml(st)}</div></div>`);
@@ -3249,9 +3356,10 @@ function renderPerformanceComparison(){
   }
   if(!targets.length){todayBox.textContent='Sin esquema fijo: 2–3 series dentro del rango del ejercicio, guiadas por técnica y RIR.';refreshSetTargetHintsV22();return}
   const lines=targets.map((t,i)=>{const body=prev.exact?v21SeriesTarget(e,prevSets[i]||null,t):`${t[0]}–${t[1]} reps · ${v21RirHtml(t[2])} · calibra carga en esta máquina`;return `<div class="v21TargetLine"><span class="n">${i+1}</span><div>${body}</div></div>`});
-  const pf=prefatigueNote(e);todayBox.innerHTML=lines.join('')+(!prev.exact&&log?'<div class="small muted sectiongap">No copio kilos de otra máquina/gimnasio.</div>':'')+(pf?`<div class="sectiongap" style="color:var(--warn);font-weight:600">${pf}</div>`:'');refreshSetTargetHintsV22();
+  const pf=prefatigueNote(e);todayBox.innerHTML=lines.join('')+(!prev.exact&&log?'<div class="small muted sectiongap">Sin referencia de este slot/configuración: calibra la carga.</div>':'')+(pf?`<div class="sectiongap" style="color:var(--warn);font-weight:600">${pf}</div>`:'');refreshSetTargetHintsV22();
 }
 function updateNextSetSuggestion(){
+  refreshRecordedTargets();
   const box=byId('nextSetGoal');if(!box)return;const e=exerciseFromInput();if(!e){box.innerHTML='<b>Siguiente serie:</b>&nbsp; selecciona un ejercicio.';return}
   const entered=workSetsEntered(),idx=entered.length,last=entered[entered.length-1]||null,next=v22CoachTargetAt(e,idx),prevTarget=idx>0?v22CoachTargetAt(e,idx-1):null;
   const assessment=last&&prevTarget?v22GoalAssessment(last,prevTarget.set):'';
@@ -3281,7 +3389,7 @@ function renderTodayPlan(){
   const p=v21Plan();if(!p){byId('todayPlanTitle').textContent=pick.manual?'Hoy · descanso elegido':'Hoy · descanso / actividad normal';byId('todayPlanSubtitle').textContent='Sin sesión base';byId('todayPlanDuration').textContent='—';byId('todayPlanAdvice').innerHTML='<b>Objetivo:</b> recuperar; actividad normal y nutrición sin compensaciones.';byId('todayPlanExercises').innerHTML='<div class="muted">Elige una sesión si quieres entrenar hoy.</div>';renderQuickPlan();return}
   const rr=readinessRecommendation(db.readiness.find(x=>x.date===today())||currentSession().readiness),ds=deloadSignal();
   byId('todayPlanTitle').textContent=`Hoy · ${p.name}${pick.manual?' · manual':''}`;byId('todayPlanSubtitle').textContent=p.subtitle;byId('todayPlanDuration').textContent=p.duration;byId('todayPlanAdvice').innerHTML=`<b>Objetivo:</b> ${p.goal}<div class="small muted sectiongap">${rr.text}${ds.level!=='normal'?' '+ds.text:''}</div>`;
-  byId('todayPlanExercises').innerHTML=v21CombinedItems().map(it=>{const e=exById(it.id);return `<div class="item"><div class="itemtop"><div><b>${e?.name||it.label}</b><div class="small muted">${it.sets.map(v21FormatPlanSet).join(' · ')} · descanso ${it.rest}</div></div><button class="btn planLoad" data-slot="${it.workoutSlotId}" data-id="${it.id}" style="min-height:34px;padding:5px 9px">Registrar</button></div></div>`}).join('');
+  byId('todayPlanExercises').innerHTML=v21CombinedItems().map(it=>{const e=exById(it.id);return `<div class="item ${gcCovered(it.workoutSlotId)?'exerciseComplete':''}"><div class="itemtop"><div><b>${e?.name||it.label}</b><div class="small muted">${it.sets.map(v21FormatPlanSet).join(' · ')} · descanso ${it.rest}</div></div><button class="btn planLoad" data-slot="${it.workoutSlotId}" data-id="${it.id}" style="min-height:34px;padding:5px 9px">Registrar</button></div></div>`}).join('');
   document.querySelectorAll('.planLoad').forEach(b=>b.addEventListener('click',()=>{const it=v21CombinedItems().find(it=>it.workoutSlotId===b.dataset.slot);if(it)gcLoad(it);else chooseExerciseFromPlan(b.dataset.id)}));renderQuickPlan();
 }
 function v21WeeklyVolume(){const out={};Object.values(TRAINING_PLAN_V21).forEach(p=>p.items.forEach(it=>{out[it.volume]=(out[it.volume]||0)+it.sets.length}));return out}
@@ -3297,8 +3405,8 @@ function renderWeekV21(){
 // Registro móvil estable: escribir reps/kg no recalcula DOM visible.
 function addSetRow(opts={}){const n=byId('sets').querySelectorAll('.setrow').length+1,wrap=document.createElement('div');wrap.className='setwrap';wrap.innerHTML=`<div class="setrow"><div class="setnum">${n}${opts.drop?'↳':''}</div><div class="setinput repsField"><span class="miniLabel">Reps</span><input class="reps" inputmode="decimal" type="number" step="0.5" enterkeyhint="next" placeholder="reps" value="${opts.reps??''}"></div><div class="setinput weightField"><span class="miniLabel weightLabel">Carga</span><input class="weight" inputmode="decimal" type="number" step="0.1" enterkeyhint="done" placeholder="kg" value="${opts.weight??''}"></div><div class="rirgrid"><button type="button" class="rirbtn" data-rir="0">0</button><button type="button" class="rirbtn" data-rir="1">1</button><button type="button" class="rirbtn" data-rir="2">2</button><button type="button" class="rirbtn" data-rir="3">3+</button></div><button type="button" class="btn bad del">×</button></div><div class="setmeta"><label class="check"><input class="warmup" type="checkbox" ${opts.warmup?'checked':''}> aproximación</label><label class="check"><input class="partial" type="checkbox" ${opts.partial?'checked':''}> parcial</label><label class="check"><input class="drop" type="checkbox" ${opts.drop?'checked':''}> drop vinculado</label><input class="setnote" placeholder="nota serie" style="min-height:34px;max-width:260px"></div><div class="setTargetHint small mutedTarget"></div>`;
   wrap.querySelectorAll('.rirbtn').forEach(b=>b.addEventListener('click',()=>{wrap.dataset.rir=b.dataset.rir;wrap.querySelectorAll('.rirbtn').forEach(x=>x.classList.toggle('sel',x===b));updateNextSetSuggestion()}));
-  // Escribir reps/kg no toca el DOM visible; recalculamos al salir del campo.
-  wrap.querySelectorAll('.reps,.weight').forEach(el=>{el.addEventListener('change',updateNextSetSuggestion);el.addEventListener('blur',updateNextSetSuggestion)});
+  // Al escribir solo cambia el estado de los objetivos; los inputs no se reconstruyen.
+  wrap.querySelectorAll('.reps,.weight').forEach(el=>{el.addEventListener('input',refreshRecordedTargets);el.addEventListener('change',updateNextSetSuggestion);el.addEventListener('blur',updateNextSetSuggestion)});
   wrap.querySelectorAll('.warmup,.partial,.drop').forEach(el=>el.addEventListener('change',()=>{updateNextSetSuggestion();refreshSetTargetHintsV22()}));
   wrap.querySelector('.del').addEventListener('click',()=>{wrap.remove();renumberSets();updateNextSetSuggestion();refreshSetTargetHintsV22()});byId('sets').appendChild(wrap);updateSetWeightLabels();refreshSetTargetHintsV22();
 }
@@ -3325,16 +3433,16 @@ function syncRestV21(){if(restStarted&&restEndsAt){tick();if(document.visibility
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')syncRestV21();else releaseWakeLockV21()});window.addEventListener('pageshow',syncRestV21);window.addEventListener('focus',syncRestV21);
 
 // App metadata
-if(!db.profile.appVersion||db.profile.appVersion<21){db.profile.appVersion=21;localStorage.setItem(APPKEY,JSON.stringify(db))}
-const hamV21=db.exercises.find(e=>e.id==='hamcurl');if(hamV21&&!/rodillo pies 3/i.test(hamV21.setup||'')){hamV21.setup='Basic Fit Goya: rodillo pies 3 · ajuste derecha 2 · respaldo punto 1, posición más sacada. Separar sentado/tumbado y gimnasio como variante.';localStorage.setItem(APPKEY,JSON.stringify(db))}
+if(!db.profile.appVersion||db.profile.appVersion<21){db.profile.appVersion=21;gcWriteDb()}
+const hamV21=db.exercises.find(e=>e.id==='hamcurl');if(hamV21&&!/rodillo pies 3/i.test(hamV21.setup||'')){hamV21.setup='Basic Fit Goya: rodillo pies 3 · ajuste derecha 2 · respaldo punto 1, posición más sacada. Separar sentado/tumbado y gimnasio como variante.';gcWriteDb()}
 // =============== END v21 OVERRIDES ===============
 
 
 // tabs
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));
-scoreButtons();clearSetRows();byId('sessionDate').textContent=dateLabel(today());byId('nutDate').value=today();byId('measureDate').value=today();if(today()==='2026-08-25'){if(!byId('nutWeight').value)byId('nutWeight').value='61.45';if(!byId('waist').value)byId('waist').value='74';if(!byId('chest').value)byId('chest').value='82';if(!byId('arm').value)byId('arm').value='30.5';if(!byId('thigh').value)byId('thigh').value='44';if(byId('glute')&&!byId('glute').value)byId('glute').value='85';}if(byId('dayType'))byId('dayType').value='train';if(byId('location'))byId('location').value=db.settings.defaultLocation||'Basic Fit Goya';if(byId('nutritionPhase'))byId('nutritionPhase').value=db.settings.nutritionPhase||'current';if(byId('bulkRate'))byId('bulkRate').value=db.settings.bulkRate||0.20;
+scoreButtons();clearSetRows();byId('sessionDate').textContent=dateLabel(today());byId('nutDate').value=today();byId('measureDate').value=today();if(today()==='2026-08-25'){if(!byId('nutWeight').value)byId('nutWeight').value='61.45';if(!byId('waist').value)byId('waist').value='74';if(!byId('chest').value)byId('chest').value='82';if(!byId('arm').value)byId('arm').value='30.5';if(!byId('thigh').value)byId('thigh').value='44';if(byId('glute')&&!byId('glute').value)byId('glute').value='85';}if(byId('dayType'))byId('dayType').value=inferNutritionDayType();if(byId('location'))byId('location').value=db.settings.defaultLocation||'Basic Fit Goya';if(byId('nutritionPhase'))byId('nutritionPhase').value=db.settings.nutritionPhase||'current';if(byId('bulkRate'))byId('bulkRate').value=db.settings.bulkRate||0.20;
 byId('addSet').addEventListener('click',()=>addSetRow());byId('addDrop').addEventListener('click',()=>addSetRow({drop:true}));if(byId('saveExercise'))byId('saveExercise').addEventListener('click',saveExercise);if(byId('quickSave'))byId('quickSave').addEventListener('click',confirmCurrentSet);if(byId('quickFinish'))byId('quickFinish').addEventListener('click',saveExercise);if(byId('jumpExercises'))byId('jumpExercises').addEventListener('click',()=>byId('quickPlanCard')?.scrollIntoView({behavior:'smooth',block:'start'}));byId('saveReadiness').addEventListener('click',saveReadiness);if(byId('editReadiness'))byId('editReadiness').addEventListener('click',()=>{byId('readinessForm').classList.remove('hidden');byId('editReadiness').classList.add('hidden')});if(byId('prePainScore'))byId('prePainScore').addEventListener('input',renderReadinessAdvice);document.querySelectorAll('[data-score] button').forEach(b=>b.addEventListener('click',renderReadinessAdvice));byId('saveNutrition').addEventListener('click',saveNutrition);
-if(byId('dayType')) byId('dayType').addEventListener('change',()=>{renderNutritionTarget();renderFoodSearch();const r=macroRemaining();if(byId('macroRemaining'))byId('macroRemaining').textContent=macroRemainingLabel(r)});
+if(byId('dayType')) byId('dayType').addEventListener('change',()=>{db.settings.nutritionDayTypes=db.settings.nutritionDayTypes||{};db.settings.nutritionDayTypes[today()]=currentDayType();const saved=db.nutrition.find(x=>x.date===today());if(saved)saved.dayType=currentDayType();gcStore();renderNutritionTarget();renderFoodSearch();const r=macroRemaining();if(byId('macroRemaining'))byId('macroRemaining').textContent=macroRemainingLabel(r)});
 
 // Nuevo flujo de dieta
 if(byId('addBreakfast'))byId('addBreakfast').addEventListener('click',addBreakfast);
@@ -3381,15 +3489,15 @@ if(byId('resetWorkoutDay')) byId('resetWorkoutDay').addEventListener('click',()=
 if(byId('evaluateCalories'))byId('evaluateCalories').addEventListener('click',evaluateCalorieAdjustment);
 if(byId('applyCalorieAdjustment'))byId('applyCalorieAdjustment').addEventListener('click',applyCalorieAdjustment);
 if(byId('previewLegacyImport'))byId('previewLegacyImport').addEventListener('click',previewLegacyImport);
-if(byId('clearLegacyPreview'))byId('clearLegacyPreview').addEventListener('click',()=>{db.importReviews=[];byId('legacyImportInput').value='';byId('legacyImportPreview').innerHTML='';localStorage.setItem(APPKEY,JSON.stringify(db))});
+if(byId('clearLegacyPreview'))byId('clearLegacyPreview').addEventListener('click',()=>{db.importReviews=[];byId('legacyImportInput').value='';byId('legacyImportPreview').innerHTML='';gcWriteDb()});
 
-if(byId('increment')) byId('increment').addEventListener('input',()=>{const e=exerciseFromInput();if(e){e.increment=+byId('increment').value||e.increment||2.5;localStorage.setItem(APPKEY,JSON.stringify(db));loadExerciseContext()}});
+if(byId('increment')) byId('increment').addEventListener('input',()=>{const e=exerciseFromInput();if(e){e.increment=+byId('increment').value||e.increment||2.5;gcWriteDb();loadExerciseContext()}});
 if(byId('suggestMacros')) byId('suggestMacros').addEventListener('click',suggestMacroCombos);
 if(byId('importCoachTargets'))byId('importCoachTargets').addEventListener('click',importCoachTargetsV22);
 if(byId('clearCoachTargetInput'))byId('clearCoachTargetInput').addEventListener('click',()=>{byId('coachTargetInput').value='';byId('coachTargetImportStatus').textContent='Texto limpiado; los objetivos ya importados no se borran.'});
-if(byId('clearCompletedCoachTargets'))byId('clearCompletedCoachTargets').addEventListener('click',()=>{db.settings=db.settings||{};db.settings.hideCompletedCoachTargets=!db.settings.hideCompletedCoachTargets;localStorage.setItem(APPKEY,JSON.stringify(db));renderCoachTargetsV22();byId('clearCompletedCoachTargets').textContent=db.settings.hideCompletedCoachTargets?'Mostrar cumplidos':'Ocultar cumplidos'});
-document.querySelectorAll('.shopStore').forEach(b=>b.addEventListener('click',()=>{db.shopping.store=b.dataset.store;localStorage.setItem(APPKEY,JSON.stringify(db));renderShopping()}));
-if(byId('shopReset')) byId('shopReset').addEventListener('click',()=>{db.shopping.checked={};localStorage.setItem(APPKEY,JSON.stringify(db));renderShopping()});
+if(byId('clearCompletedCoachTargets'))byId('clearCompletedCoachTargets').addEventListener('click',()=>{db.settings=db.settings||{};db.settings.hideCompletedCoachTargets=!db.settings.hideCompletedCoachTargets;gcWriteDb();renderCoachTargetsV22();byId('clearCompletedCoachTargets').textContent=db.settings.hideCompletedCoachTargets?'Mostrar cumplidos':'Ocultar cumplidos'});
+document.querySelectorAll('.shopStore').forEach(b=>b.addEventListener('click',()=>{db.shopping.store=b.dataset.store;gcWriteDb();renderShopping()}));
+if(byId('shopReset')) byId('shopReset').addEventListener('click',()=>{db.shopping.checked={};gcWriteDb();renderShopping()});
 ['kcal','protein','carbs','fat'].forEach(id=>{if(byId(id))byId(id).addEventListener('input',()=>{renderNutritionTarget();const r=macroRemaining();if(byId('macroRemaining'))byId('macroRemaining').textContent=macroRemainingLabel(r);})});
 byId('saveMeasures').addEventListener('click',saveMeasures);if(byId('toggleMeasures'))byId('toggleMeasures').addEventListener('click',()=>{const b=byId('measuresBox');if(b)b.classList.toggle('hidden')});const _debouncedExCtx=debounce(loadExerciseContext,300);byId('exerciseSelect').addEventListener('input',()=>{renderExerciseSuggest();_debouncedExCtx()});byId('exerciseSelect').addEventListener('focus',function(){this.select();renderExerciseSuggest()});byId('exerciseSelect').addEventListener('blur',hideExerciseSuggest);byId('exerciseSelect').addEventListener('change',()=>{loadExerciseContext();refreshVariantKey()});byId('exerciseGroup').addEventListener('change',()=>{if(!exerciseFromInput())loadExerciseContext()});byId('variant').addEventListener('change',()=>{loadExerciseContext();renderPerformanceComparison()});byId('progressExercise').addEventListener('change',renderExerciseProgress);byId('progressVariant').addEventListener('input',renderExerciseProgress);
 document.querySelectorAll('.restPreset').forEach(b=>b.addEventListener('click',()=>setRest(+b.dataset.sec)));byId('timerReset').addEventListener('click',()=>setRest(restSec));if(byId('testVibration'))byId('testVibration').addEventListener('click',()=>{ensureAudio();triggerRestAlert(true)});if(byId('vibrationEnabled'))byId('vibrationEnabled').addEventListener('change',()=>updateVibrationStatus());if(byId('enableNotify'))byId('enableNotify').addEventListener('click',async()=>{ensureAudio();const r=await requestNotifyPermission();if(r==='granted'){updateVibrationStatus('Avisos de sistema activados · best effort en segundo plano');toast('Avisos activados. Android puede retrasarlos si duerme la PWA.')}else if(r==='denied'){toast('Permiso denegado. Actívalo en ajustes del navegador.')}else if(r==='unsupported'){toast('Este navegador no soporta notificaciones.')}else{toast('Permiso no concedido.')}});byId('timerToggle').addEventListener('click',toggleRestV21);
@@ -3414,7 +3522,7 @@ function gcBaseItems(){const pick=workoutPlanSelection();return [pick.rest?null:
 function gcCurrentSlot(id){if(gcSelectedSlot&&gcSelectedSlot.endsWith(':'+id))return gcSelectedSlot;const list=gcBaseItems().filter(it=>it.id===id);return list.length===1?list[0].workoutSlotId:`extra:${id}`}
 function gcImportSlot(id){const day=db.settings.coachImportDay;if(day!=='current')return gcSlot(day,id);const list=gcBaseItems().filter(it=>it.id===id);if(list.length===1)return list[0].workoutSlotId;const all=Object.keys(TRAINING_PLAN_V21).filter(k=>TRAINING_PLAN_V21[k].items.some(it=>it.id===id));return all.length===1?gcSlot(all[0],id):all.length===0?`extra:${id}`:null}
 function gcWeek(date=today()){const d=new Date(date+'T12:00:00');d.setDate(d.getDate()-((d.getDay()+6)%7));return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
-function gcStore(){localStorage.setItem(APPKEY,JSON.stringify(db))}
+function gcStore(){gcWriteDb()}
 function gcCovered(slot){return db.sessions.filter(s=>gcWeek(s.date)===gcWeek()).some(s=>(s.exercises||[]).some(x=>x.coversWorkoutSlotId===slot||x.workoutSlotId===slot))}
 function gcCompletePending(log){db.weeklyPending.filter(p=>p.week===gcWeek()&&(p.workoutSlotId===log.workoutSlotId||p.workoutSlotId===log.coversWorkoutSlotId)).forEach(p=>{p.status='covered';p.completedLogId=log.id})}
 function gcReconcilePending(){let changed=false;db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='covered').forEach(p=>{if(!gcCovered(p.workoutSlotId)){p.status='pending';delete p.completedLogId;changed=true}});if(changed)gcStore()}
@@ -3433,7 +3541,7 @@ const gcScope=v22CoachScope;
 v22CoachScope=function(t){return [gcScope(t),t.workoutSlotId?`slot=${t.workoutSlotId}`:'sin slot (requiere asignación)'].join(' · ')};
 const gcTargets=renderCoachTargetsV22;
 renderCoachTargetsV22=function(){gcTargets();const box=byId('coachTargetList');if(!box)return;const legacy=(db.coachTargets||[]).filter(t=>t.status==='pending'&&!t.workoutSlotId);legacy.forEach(t=>{const wrap=document.createElement('div');wrap.className='item';const label=document.createElement('div');label.textContent=`Asignar día: ${t.exerciseName}`;const sel=document.createElement('select');sel.innerHTML='<option value="">Elige el día original</option>'+Object.entries(TRAINING_PLAN_V21).filter(([k,p])=>p.items.some(it=>it.id===t.exerciseId)).map(([k,p])=>`<option value="${gcSlot(k,t.exerciseId)}">${escapeHtml(p.name)}</option>`).join('')+`<option value="extra:${t.exerciseId}">Fuera de rutina</option>`;sel.onchange=()=>{if(sel.value){t.workoutSlotId=sel.value;gcStore();renderCoachTargetsV22();renderPerformanceComparison()}};wrap.append(label,sel);box.append(wrap)})};
-renderQuickPlan=function(){gcReconcilePending();const box=byId('quickPlanExercises');if(!box)return;const items=v21CombinedItems();box.innerHTML='';items.forEach(it=>{const row=document.createElement('div');row.className='item';const covered=gcCovered(it.workoutSlotId),e=exById(it.id);row.innerHTML=`<b>${escapeHtml(e?.name||it.label)}</b> <span class="pill">${covered?'✓ cubierto':'pendiente'}</span><div class="small muted">${escapeHtml(it.workoutSlotId)} · ${it.sets.map(s=>`${s[0]}–${s[1]}@${s[2]}`).join(' · ')}</div>`;const load=document.createElement('button');load.className='btn';load.textContent='Registrar';load.onclick=()=>gcLoad(it);const pending=document.createElement('button');pending.className='btn';pending.textContent='Pendiente semanal';pending.disabled=covered;pending.onclick=()=>gcMarkPending(it);const sel=document.createElement('select');sel.setAttribute('aria-label','Sustituir ejercicio');sel.innerHTML='<option value="">Sustituir por…</option>'+db.exercises.filter(e=>e.id!==it.id).map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');sel.onchange=()=>{if(sel.value)gcLoad({id:sel.value,workoutSlotId:`extra:${sel.value}`},{slot:it.workoutSlotId})};row.append(load,pending,sel);box.append(row)});const header=document.createElement('div');header.className='small sectiongap';header.textContent='Pendientes de esta semana (lunes–domingo). Las sustituciones cubren el slot al finalizar y guardar.';box.append(header);db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='pending'&&!gcCovered(p.workoutSlotId)).forEach(p=>{const row=document.createElement('div');row.className='item';const title=document.createElement('div');title.textContent=`${exById(p.exerciseId)?.name||p.exerciseId} · origen ${p.sourceDate} · ${p.workoutSlotId}`;const add=document.createElement('button');add.className='btn';add.textContent=p.addedDate===today()?'Añadido a hoy':'Añadir a hoy';add.disabled=p.addedDate===today();add.onclick=()=>{p.addedDate=today();gcStore();renderTodayPlan();renderQuickPlan()};const discard=document.createElement('button');discard.className='btn';discard.textContent='Descartar';discard.onclick=()=>{p.status='discarded';gcStore();renderTodayPlan();renderQuickPlan()};row.append(title,add,discard);box.append(row)})};
+renderQuickPlan=function(){gcReconcilePending();const box=byId('quickPlanExercises');if(!box)return;const items=v21CombinedItems();box.innerHTML='';items.forEach(it=>{const row=document.createElement('div');const covered=gcCovered(it.workoutSlotId),e=exById(it.id);row.className=`item ${covered?'exerciseComplete':''}`;row.dataset.slot=it.workoutSlotId;row.innerHTML=`<b>${escapeHtml(e?.name||it.label)}</b> <span class="pill">${covered?'✓ COMPLETADO':'pendiente'}</span><div class="small muted">${escapeHtml(it.workoutSlotId)} · ${it.sets.map(s=>`${s[0]}–${s[1]}@${s[2]}`).join(' · ')}</div>`;const load=document.createElement('button');load.className='btn';load.textContent='Registrar';load.onclick=()=>gcLoad(it);const pending=document.createElement('button');pending.className='btn';pending.textContent='Pendiente semanal';pending.disabled=covered;pending.onclick=()=>gcMarkPending(it);const sel=document.createElement('select');sel.setAttribute('aria-label','Sustituir ejercicio');sel.innerHTML='<option value="">Sustituir por…</option>'+db.exercises.filter(e=>e.id!==it.id).map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');sel.onchange=()=>{if(sel.value)gcLoad({id:sel.value,workoutSlotId:`extra:${sel.value}`},{slot:it.workoutSlotId})};row.append(load,pending,sel);box.append(row)});const header=document.createElement('div');header.className='small sectiongap';header.textContent='Pendientes de esta semana (lunes–domingo). Las sustituciones cubren el slot al finalizar y guardar.';box.append(header);db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='pending'&&!gcCovered(p.workoutSlotId)).forEach(p=>{const row=document.createElement('div');row.className='item';const title=document.createElement('div');title.textContent=`${exById(p.exerciseId)?.name||p.exerciseId} · origen ${p.sourceDate} · ${p.workoutSlotId}`;const add=document.createElement('button');add.className='btn';add.textContent=p.addedDate===today()?'Añadido a hoy':'Añadir a hoy';add.disabled=p.addedDate===today();add.onclick=()=>{p.addedDate=today();gcStore();renderTodayPlan();renderQuickPlan()};const discard=document.createElement('button');discard.className='btn';discard.textContent='Descartar';discard.onclick=()=>{p.status='discarded';gcStore();renderTodayPlan();renderQuickPlan()};row.append(title,add,discard);box.append(row)})};
 const gcImportUI=document.createElement('label');gcImportUI.className='small';gcImportUI.textContent='Día de destino para líneas sin slot: ';
 const gcDaySelect=document.createElement('select');gcDaySelect.innerHTML='<option value="current">Rutina de hoy (si es inequívoco)</option>'+Object.entries(TRAINING_PLAN_V21).map(([k,p])=>`<option value="${k}">${escapeHtml(p.name)}</option>`).join('');gcDaySelect.value=db.settings.coachImportDay;gcDaySelect.onchange=()=>{db.settings.coachImportDay=gcDaySelect.value;gcStore()};gcImportUI.append(gcDaySelect);byId('coachTargetInput')?.before(gcImportUI);
 db.profile.appVersion=Math.max(db.profile.appVersion||0,29);
@@ -3496,16 +3604,82 @@ function gcFoods31(){
   db.profile.foodDbVersion=31;gcStore();
 }
 gcFoods31();
+// v32: add beverages without changing existing food indices or user edits.
+function gcBeverages32(){
+  if((db.profile.beverageDbVersion||0)>=32)return;
+  const glass=[['Vaso',250],['Lata',330],['Botella',500]];
+  const wine=[['Copa',150],['Copa pequeña',100],['Botella',750]];
+  const beer=[['Caña',200],['Tercio / lata',330],['Jarra',500]];
+  const coke='https://www.coca-cola.com/es/es/brands/coca-cola/';
+  const aquarius='https://www.coca-cola.com/es/es/brands/descubre-aquarius/productos';
+  const rows=[
+    {name:'Vino blanco',kcal:80,p:0.1,c:2,f:0,defaultQty:150,portions:wine,alcoholic:true,estimated:true,note:'Estimación editable · cambia con la graduación y el azúcar residual; kcal incluyen alcohol'},
+    {name:'Vino tinto',kcal:85,p:0.1,c:2.6,f:0,defaultQty:150,portions:wine,alcoholic:true,estimated:true,note:'Estimación editable · cambia con la graduación y el azúcar residual; kcal incluyen alcohol'},
+    {name:'Vino rosado',kcal:83,p:0.1,c:2.5,f:0,defaultQty:150,portions:wine,alcoholic:true,estimated:true,note:'Estimación editable · cambia con la graduación y el azúcar residual; kcal incluyen alcohol'},
+    {name:'Cerveza normal',kcal:43,p:0.5,c:3.5,f:0,defaultQty:330,portions:beer,alcoholic:true,estimated:true,note:'Estimación editable · lager habitual; cambia con la marca y graduación; kcal incluyen alcohol'},
+    {name:'Cerveza 0,0',kcal:24,p:0.2,c:5.5,f:0,defaultQty:330,portions:beer,estimated:true,note:'Estimación editable · revisar etiqueta de la marca'},
+    {name:'Coca-Cola original',kcal:42,p:0,c:10.6,f:0,sugar:10.6,addedSugar:10.6,sourceUrl:coke+'coca-cola-sabor-original',note:'Etiqueta oficial España · azúcar añadido'},
+    {name:'Coca-Cola Zero',kcal:0.2,p:0,c:0,f:0,sugar:0,addedSugar:0,sourceUrl:coke+'coca-cola-zero',note:'Etiqueta oficial España · sin azúcar'},
+    {name:'Aquarius normal limón',kcal:18,p:0,c:4.4,f:0,sugar:4.4,addedSugar:4.4,sourceUrl:aquarius,note:'Etiqueta oficial España · sabor limón'},
+    {name:'Aquarius normal naranja',kcal:19,p:0,c:4.5,f:0,sugar:4.5,addedSugar:4.5,sourceUrl:aquarius,note:'Etiqueta oficial España · sabor naranja'},
+    {name:'Aquarius Zero limón',kcal:1,p:0,c:0,f:0,sugar:0,addedSugar:0,sourceUrl:aquarius,note:'Etiqueta oficial España · sin azúcar'},
+    {name:'Aquarius Zero naranja',kcal:1,p:0,c:0,f:0,sugar:0,addedSugar:0,sourceUrl:aquarius,note:'Etiqueta oficial España · sin azúcar'},
+    {name:'Nestea normal limón',kcal:19,p:0,c:4.5,f:0,sugar:4.5,addedSugar:null,estimated:true,sourceUrl:'https://a.storyblok.com/f/43212/x/b516a39a2d/nestea-limon-ficha-nutricional-n.pdf',note:'Referencia de ficha anterior · revisar etiqueta actual; azúcar añadido no cuantificado'},
+    {name:'Nestea Zero limón',kcal:1,p:0,c:0,f:0,sugar:0,addedSugar:0,estimated:true,sourceUrl:'https://a.storyblok.com/f/43212/x/116aa38821/nestea-al-limon-sin-azucares.pdf',note:'Referencia de ficha anterior sin azúcares · revisar etiqueta actual'},
+    {name:'Zumo de naranja 100%',kcal:45,p:0.7,c:10,f:0.2,sugar:8.5,addedSugar:0,defaultQty:250,estimated:true,note:'Estimación editable · zumo 100%, sin azúcar añadido; no néctar'},
+    {name:'Zumo de piña 100%',kcal:50,p:0.3,c:12,f:0.1,sugar:10,addedSugar:0,defaultQty:250,estimated:true,note:'Estimación editable · zumo 100%, sin azúcar añadido; no néctar'},
+    {name:'Zumo de manzana 100%',kcal:46,p:0.1,c:11.3,f:0.1,sugar:10,addedSugar:0,defaultQty:250,estimated:true,note:'Estimación editable · zumo 100%, sin azúcar añadido; no néctar'}
+  ];
+  rows.forEach(row=>{
+    const existing=db.foods.find(f=>v22FoodNorm(f.name)===v22FoodNorm(row.name));
+    if(existing?.userEdited)return;
+    const food={cat:'Bebidas',unit:'ml',base:100,defaultQty:330,portions:glass,editable:true,fiber:null,sugar:null,addedSugar:null,...row};
+    food.modo=`${row.note} · por 100 ml`;food.note=food.modo;
+    if(existing)Object.assign(existing,food);else db.foods.push(food);
+  });
+  db.profile.beverageDbVersion=32;db.profile.appVersion=Math.max(db.profile.appVersion||0,32);gcStore();
+}
+gcBeverages32();
+byId('copyNutritionDay').addEventListener('click',copyNutritionDay);
 const gcOverride=setWorkoutOverride;
-setWorkoutOverride=function(value){if(hasUnsavedSeries()){toast('Finaliza el ejercicio actual antes de cambiar la rutina');return}gcSelectedSlot=null;gcReplacement=null;gcOverride(value);renderPerformanceComparison();updateNextSetSuggestion()};
+setWorkoutOverride=function(value){if(hasUnsavedSeries()){toast('Finaliza el ejercicio actual antes de cambiar la rutina');return}gcSelectedSlot=null;gcReplacement=null;gcOverride(value);refreshNutritionDayType();renderPerformanceComparison();updateNextSetSuggestion()};
 const gcCombine=toggleCombine;
-toggleCombine=function(key){if(hasUnsavedSeries()){toast('Finaliza el ejercicio antes de combinar rutinas');return}gcSelectedSlot=null;gcReplacement=null;gcCombine(key);renderPerformanceComparison()};
+toggleCombine=function(key){if(hasUnsavedSeries()){toast('Finaliza el ejercicio antes de combinar rutinas');return}gcSelectedSlot=null;gcReplacement=null;gcCombine(key);refreshNutritionDayType();renderPerformanceComparison()};
 const gcAll=renderAll;
-renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settings||{};gcFoods31();gcAll()};
+renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settings||{};gcFoods31();gcBeverages32();gcAll()};
 
 
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=31', {updateViaCache:'none'}).catch(()=>{});
+db.profile.appVersion=Math.max(db.profile.appVersion||0,34);gcStore();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=34', {updateViaCache:'none'}).catch(()=>{});
 renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
+function startCloudSync(){
+  if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}
+  const labels={setup:'La sincronización todavía no está activada. Tus datos siguen guardados en este dispositivo.',signedout:'Entra con la misma cuenta en móvil y PC.',connecting:'Entrando…',syncing:'Sincronizando…',synced:'Datos sincronizados.',pending:'Cambios guardados; pendientes de sincronizar.',offline:'Sin conexión. Tus cambios se guardan aquí y se enviarán al volver.',conflict:'Hay un cambio coincidente en dos dispositivos. Elige qué versión conservar.',error:'No se ha podido sincronizar. Tus datos siguen guardados aquí.'};
+  gcCloud=new window.GymCloud.Sync({config:window.GC_CLOUD_CONFIG,getData:()=>db,onApply:next=>{
+    // Store first; avoid overwriting active series or a focused form's inputs.
+    db=next;localStorage.setItem(APPKEY,JSON.stringify(db));
+    if(hasUnsavedSeries()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))renderQuickPlan();
+    else{renderAll();renderFoodMatrix();refreshNutritionDayType();}
+  },onStatus:info=>{
+    byId('cloudStatus').textContent=[labels[info.state]||'',info.email,info.detail].filter(Boolean).join(' · ');
+    byId('cloudBadge').textContent=info.state==='synced'?'✓ Sincronizado':info.state==='offline'?'Sin conexión':info.state==='syncing'?'Sincronizando…':'Datos locales';
+    byId('cloudConflict').classList.toggle('hidden',info.state!=='conflict');
+    const logged=!!info.email;
+    byId('cloudLoginForm').classList.toggle('hidden',logged);byId('cloudAccountActions').classList.toggle('hidden',!logged);
+    [byId('cloudLogin'),byId('cloudSignup')].forEach(button=>button.disabled=info.state==='setup');
+  }});
+  byId('cloudLoginForm').addEventListener('submit',async ev=>{ev.preventDefault();const password=byId('cloudPassword').value;byId('cloudPassword').value='';try{await gcCloud.signIn(byId('cloudEmail').value.trim(),password)}catch(e){toast(e.message)}});
+  byId('cloudSignup').onclick=async()=>{const form=byId('cloudLoginForm');if(!form.reportValidity())return;const password=byId('cloudPassword').value;byId('cloudPassword').value='';try{await gcCloud.signUp(byId('cloudEmail').value.trim(),password)}catch(e){toast(e.message)}};
+  byId('cloudSyncNow').onclick=()=>gcCloud.sync();byId('cloudLogout').onclick=()=>gcCloud.signOut();
+  byId('cloudUseLocal').onclick=()=>gcCloud.resolve('local');byId('cloudUseRemote').onclick=()=>gcCloud.resolve('remote');
+  byId('cloudRecovery').onclick=()=>{const backups=gcCloud.read('backups')||[],conflict=gcCloud.session?gcCloud.read('conflict_'+gcCloud.session.user.id):null;download('gym-coach-recuperacion.json',JSON.stringify({backups,conflict},null,2));};
+  window.addEventListener('online',()=>gcCloud.sync());window.addEventListener('focus',()=>gcCloud.sync());
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')gcCloud.sync();});
+  window.addEventListener('storage',ev=>{if(ev.key===APPKEY){try{const fresh=JSON.parse(ev.newValue);if(fresh?.profile){db=fresh;if(!hasUnsavedSeries())renderAll();}}catch{}}if(ev.key===gcCloud.prefix+'_session'){gcCloud.session=gcCloud.read('session');gcCloud.status(gcCloud.session?'pending':'signedout');}});
+  setInterval(()=>{if(document.visibilityState==='visible')gcCloud.sync();},30000);
+  gcCloud.sync();
+}
+startCloudSync();
 })();
 </script>
 </body>
