@@ -104,3 +104,5 @@ body.keyboard-open .inlineActions37 .btn{flex:1;font-size:14px}
 #todayList .code{display:none}
 
 .foodMatrix th,.matrixTotal{background:#171a1e}.foodMatrix td{border-color:var(--line)}
+
+#exerciseSelect{scroll-margin-top:185px}

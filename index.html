@@ -3767,7 +3767,7 @@ function gcInitUx37(){
   const jump=(button,target)=>{byId(button).onclick=()=>{target.scrollIntoView({behavior:'smooth',block:'start'});if(button==='jumpFood37')byId('foodSearch').focus();};};
   jump('jumpFood37',food);jump('jumpBreakfast37',breakfast);jump('jumpPlates37',plates);
   for(const id of ['useV36More','useV36Data'])byId(id).addEventListener('click',()=>{try{localStorage.setItem('gymCoachUiVersion','36')}catch(e){}});
-  const activate36=activateTab;activateTab=function(name){activate36(name);gcNav37(name);gcRenderOverview37();};
+  const activate36=activateTab;activateTab=function(name){const previous=document.querySelector('.panel.active')?.id;activate36(name);gcNav37(name);gcRenderOverview37();if(previous!==name&&typeof window==='object')window.scrollTo({top:0,behavior:'instant'});};
   const render36=renderAll;renderAll=function(){render36();gcRenderOverview37();gcRenderRemaining37();};
   const nutrition36=renderNutritionTarget;renderNutritionTarget=function(){nutrition36();gcRenderRemaining37();};
   const duration36=renderTrainingDuration;renderTrainingDuration=function(){duration36();gcRenderOverview37();};
