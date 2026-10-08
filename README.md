@@ -87,3 +87,30 @@ node --test tests/*.test.cjs
 
 La rama `version-36` apunta al commit `3d8ff712c736e1985dffde77170c5fa213ce9e95`
 como referencia independiente para una reversión completa del despliegue.
+
+## v38: informe diario y objetivos sin copiar y pegar
+
+La app lee gym_coach_reports con la sesión de Supabase que ya usa para
+sincronizar. Los informes aparecen en Hoy, por fecha. La automatización autorizada
+analiza el diario, guarda el texto y objetivos estructurados, y la app los recoge
+al abrirse, volver al primer plano o actualizar informes. No se necesita una clave
+de IA en el cliente ni dejar el navegador abierto.
+
+Aplicar una sola vez supabase/reports.sql. RLS permite leer únicamente informes
+propios; el navegador no tiene permisos de escritura. La automatización usa el
+conector Supabase autorizado. Nunca guardar contraseñas ni claves privadas en el
+repositorio ni en sus instrucciones. La entrega escribe una tabla separada y
+no reescribe sesiones, comidas ni preferencias.
+
+Los objetivos solo se aplican al mismo ejercicio, slot, ubicación, máquina,
+variante, unidad y carga base, mientras su referencia coincida exactamente con
+la última ejecución válida. Una sesión nueva, una edición, una invalidación o una
+eliminación deja sin efecto el objetivo anterior. Se conserva el generador local
+sin prescripción compatible. Un objetivo manual más reciente mantiene prioridad.
+Las copias de informes sin conexión son por cuenta y se ocultan al cerrar sesión.
+
+El run sigue [el contrato de entrega](supabase/coaching-run.md). Depende de que
+se hayan sincronizado los datos y de que el run termine correctamente. La v36
+conserva su comportamiento y sigue disponible.
+
+Validación adicional: node --test tests/coach-automation.test.cjs.

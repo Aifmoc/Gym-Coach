@@ -210,10 +210,10 @@ body.keyboard-open .toast{bottom:18px}
 @media(max-width:620px){.setTargetHint{margin-left:41px;font-size:11px}.coachTargetInput{min-height:190px}}
 
 </style>
-<link rel="stylesheet" href="design37.css?v=37">
+<link rel="stylesheet" href="design37.css?v=38">
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v37</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v38</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
 <div class="wrap">
   <nav class="tabs" id="tabs" aria-label="Navegación principal">
     <button class="tab active" data-tab="train">Hoy</button>
@@ -228,6 +228,13 @@ body.keyboard-open .toast{bottom:18px}
         <div class="heroHeading37"><div><span class="eyebrow37">Tu sesión</span><h2 id="heroTitle37">Hoy</h2></div><button class="btn primary" id="startWorkout37">Empezar entreno</button></div>
         <div class="sessionMetrics37" id="sessionOverview37"></div>
         <div class="sessionNext37" id="sessionNext37"></div>
+      </div>
+      <div class="card span12" id="automaticReportCard">
+        <div class="row" style="justify-content:space-between"><h2>Informe del entrenador</h2><button class="btn ghost" id="refreshAutoReport">Actualizar informes</button></div>
+        <p class="small muted" id="automaticReportStatus" role="status" aria-live="polite">Entra en tu cuenta para recibir el informe y los objetivos.</p>
+        <label class="field sectiongap"><span class="label">Informe guardado</span><select id="automaticReportDate" aria-label="Fecha del informe"><option value="">Sin informes todavía</option></select></label>
+        <div id="automaticReportText" class="autoReportText38 sectiongap"></div>
+        <details id="automaticReportTargets" class="sectiongap hidden"><summary>Próximos objetivos · se aplican solos en Registro</summary><div id="automaticReportTargetList" class="sectiongap"></div></details>
       </div>
       <div class="card span4" id="readinessCard">
         <div class="row" style="justify-content:space-between;align-items:center">
@@ -805,7 +812,7 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 
   <section class="panel" id="data">
     <div class="grid">
-      <div class="card versionChoice37"><h2>Diseño v37</h2><div class="muted">Si prefieres el diseño anterior, vuelve a v36. Tus entrenos, alimentos y sesión de cuenta se conservan.</div><div class="row"><a class="btn" href="./v36/" id="useV36Data">Volver a v36</a></div></div>
+      <div class="card versionChoice37"><h2>Diseño v38</h2><div class="muted">Si prefieres el diseño anterior, vuelve a v36. Tus entrenos, alimentos y sesión de cuenta se conservan.</div><div class="row"><a class="btn" href="./v36/" id="useV36Data">Volver a v36</a></div></div>
       <div class="card" id="cloudCard">
         <h2>Sincronización móvil ↔ PC</h2>
         <p class="small" id="cloudStatus" role="status" aria-live="polite">Tus datos están guardados en este dispositivo.</p>
@@ -838,8 +845,9 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 </div>
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios</button><button class="btn primary" id="quickSave">Confirmar serie</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
-<script src="cloud-config.js?v=37"></script>
-<script src="cloud-sync.js?v=37"></script>
+<script src="cloud-config.js?v=38"></script>
+<script src="cloud-sync.js?v=38"></script>
+<script src="coach-automation.js?v=38"></script>
 <script>
 (()=>{
 'use strict';
@@ -3775,9 +3783,73 @@ function gcInitUx37(){
 }
 
 gcInitUx37();
-db.profile.appVersion=Math.max(db.profile.appVersion||0,37);gcStore();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=37', {updateViaCache:'none'}).catch(()=>{});
+db.profile.appVersion=Math.max(db.profile.appVersion||0,38);gcStore();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=38', {updateViaCache:'none'}).catch(()=>{});
 renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();bindTrainingTimeListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
+// Private coaching is fetched separately, never merged into the editable journal.
+let gcAutomaticCoach=null;
+function gcAutoReportSources38(date){
+  const row=(db.nutrition||[]).find(n=>n.date===date),nutrition=row?{...row}:null;
+  if(nutrition?.fromLog)for(const key of ['kcal','protein','carbs','fat','fiber','sugar','addedSugar','fiberCoverage','sugarCoverage','addedSugarCoverage'])delete nutrition[key];
+  return {dayFood:db.dayFood?.[date]||[],nutrition,nutritionTargets:db.nutritionTargets||{}};
+}
+function gcRenderAutoReports38(){
+  if(!gcAutomaticCoach)return;
+  const api=window.GymCoachAutomation,rows=gcAutomaticCoach.rows,select=byId('automaticReportDate'),previous=select.value;
+  select.replaceChildren();
+  if(!rows.length){const option=document.createElement('option');option.textContent='Sin informes todavía';option.value='';select.append(option);}
+  else rows.forEach(row=>{const option=document.createElement('option');option.value=row.report_date;option.textContent=dateLabel(row.report_date);select.append(option);});
+  if(rows.some(r=>r.report_date===previous))select.value=previous;
+  const row=rows.find(r=>r.report_date===select.value),uid=gcCloud?.session?.user?.id;
+  let status=!uid?'Entra en tu cuenta para recibir tus informes.':'El informe se prepara en el run diario de la noche. Guarda y sincroniza tus registros.';
+  if(row){
+    const current=(db.sessions||[]).find(s=>s.date===row.report_date)||null;
+    const stale=api.stable(row.source_session)!==api.stable(current)||api.stable(row.source_nutrition)!==api.stable(gcAutoReportSources38(row.report_date));
+    const at=new Date(row.generated_at).toLocaleString('es-ES',{timeZone:'Europe/Madrid'});
+    status=`Guardado ${at}. ${stale?'Hay cambios posteriores: se actualizará en el próximo run.':'Objetivos disponibles automáticamente para la misma configuración.'}`;
+  }
+  if(gcAutomaticCoach.state==='error')status+=' No se han podido actualizar los informes; puedes consultar la copia guardada.';
+  if(gcAutomaticCoach.state==='offline')status+=' Sin conexión: mostrando la copia guardada.';
+  if(gcAutomaticCoach.state==='auth')status+=' Vuelve a entrar en tu cuenta para actualizar.';
+  byId('automaticReportStatus').textContent=status;
+  byId('automaticReportText').textContent=row?.report||'';
+  const list=byId('automaticReportTargetList');list.replaceChildren();
+  for(const target of row?.targets||[]){
+    const active=api.targetFor([row],target,gcComparableHistory(target));
+    const item=document.createElement('div');item.className='item';
+    const title=document.createElement('b');title.textContent=target.exerciseName||target.exerciseId;
+    const context=document.createElement('div');context.className='small muted';context.textContent=[v22CoachScope(target),active?'✓ Se aplica solo':'Referencia actualizada · ya no se aplica'].filter(Boolean).join(' · ');
+    const sets=document.createElement('div');sets.className='small';sets.textContent=(target.sets||[]).map((x,i)=>`S${i+1}: ${fmt(x.weight)} × ${x.repMin===x.repMax?x.repMin:x.repMin+'–'+x.repMax} · RIR ${x.rirMin===x.rirMax?x.rirMin:x.rirMin+'–'+x.rirMax}`).join(' / ');
+    item.append(title,context,sets);list.append(item);
+  }
+  byId('automaticReportTargets').classList.toggle('hidden',!row?.targets?.length);
+}
+function gcStartAutomaticCoach38(){
+  const api=window.GymCoachAutomation;if(!api)return;
+  gcAutomaticCoach=new api.Client({getCloud:()=>gcCloud,onChange:()=>{gcRenderAutoReports38();renderPerformanceComparison();updateNextSetSuggestion();}});
+  const manual=coachTargetForV22;
+  coachTargetForV22=function(e){
+    if(!e)return null;
+    gcAutomaticCoach.reconcile();
+    const scope={exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:byId('variant')?.value||''};
+    scope.loadUnit=byId('loadUnit')?.value||'unknown';const base=byId('baseLoad')?.value;scope.baseLoad=base!==''&&base!==undefined?+base:null;
+    const history=gcComparableHistory(scope),automatic=api.targetFor(gcAutomaticCoach.rows,scope,history);let chosen=manual(e);
+    // An old imported prescription must also yield to a more recent valid execution.
+    const latest=history[0],recorded=latest?.loggedAt||latest?.savedAt;
+    if(chosen&&latest&&(String(chosen.createdAt||'').slice(0,10)<latest.date||(recorded&&Date.parse(chosen.createdAt)<+recorded)))chosen=null;
+    if(automatic&&(!chosen||automatic.createdAt>chosen.createdAt))return automatic;
+    return chosen;
+  };
+  byId('automaticReportDate').onchange=gcRenderAutoReports38;
+  byId('refreshAutoReport').onclick=()=>gcAutomaticCoach.refresh(true);
+  const render=renderAll;renderAll=function(){render();gcAutomaticCoach.reconcile();gcRenderAutoReports38();};
+  const status=gcCloud?.onStatus;if(gcCloud)gcCloud.onStatus=function(info){status(info);gcAutomaticCoach.reconcile();if(info.state==='synced')gcAutomaticCoach.refresh();};
+  window.addEventListener('focus',()=>gcAutomaticCoach.refresh());window.addEventListener('online',()=>gcAutomaticCoach.refresh(true));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')gcAutomaticCoach.refresh();});
+  setInterval(()=>{if(document.visibilityState==='visible')gcAutomaticCoach.refresh();},60000);
+  gcAutomaticCoach.refresh();
+}
+
 function startCloudSync(){
   if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}
   const labels={setup:'La sincronización todavía no está activada. Tus datos siguen guardados en este dispositivo.',signedout:'Entra con la misma cuenta en móvil y PC.',connecting:'Entrando…',syncing:'Sincronizando…',synced:'Datos sincronizados.',pending:'Cambios guardados; pendientes de sincronizar.',offline:'Sin conexión. Tus cambios se guardan aquí y se enviarán al volver.',conflict:'Hay un cambio coincidente en dos dispositivos. Elige qué versión conservar.',error:'No se ha podido sincronizar. Tus datos siguen guardados aquí.'};
@@ -3808,6 +3880,7 @@ function startCloudSync(){
   gcCloud.sync();
 }
 startCloudSync();
+gcStartAutomaticCoach38();
 })();
 </script>
 </body>

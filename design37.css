@@ -106,3 +106,6 @@ body.keyboard-open .inlineActions37 .btn{flex:1;font-size:14px}
 .foodMatrix th,.matrixTotal{background:#171a1e}.foodMatrix td{border-color:var(--line)}
 
 #exerciseSelect{scroll-margin-top:185px}
+
+/* Private daily coaching keeps text readable on phones. */
+.autoReportText38{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65;font-size:15px;max-height:70vh;overflow:auto}#automaticReportCard{grid-column:1/-1}#automaticReportDate{max-width:320px}
