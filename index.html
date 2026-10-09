@@ -210,10 +210,10 @@ body.keyboard-open .toast{bottom:18px}
 @media(max-width:620px){.setTargetHint{margin-left:41px;font-size:11px}.coachTargetInput{min-height:190px}}
 
 </style>
-<link rel="stylesheet" href="design37.css?v=38">
+<link rel="stylesheet" href="design37.css?v=39">
 </head>
 <body>
-<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v38</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
+<div class="top"><div class="topin"><div><div class="brand">Gym Coach</div><div class="phase">Fase actual: mantenimiento / recomp flexible · Gym Coach v39</div></div><div class="badge"><span id="topWeight">— kg</span> · <span id="cloudBadge">Datos locales</span></div></div></div>
 <div class="wrap">
   <nav class="tabs" id="tabs" aria-label="Navegación principal">
     <button class="tab active" data-tab="train">Hoy</button>
@@ -231,10 +231,10 @@ body.keyboard-open .toast{bottom:18px}
       </div>
       <div class="card span12" id="automaticReportCard">
         <div class="row" style="justify-content:space-between"><h2>Informe del entrenador</h2><button class="btn ghost" id="refreshAutoReport">Actualizar informes</button></div>
-        <p class="small muted" id="automaticReportStatus" role="status" aria-live="polite">Entra en tu cuenta para recibir el informe y los objetivos.</p>
+        <p class="small muted" id="automaticReportStatus" role="status" aria-live="polite">Entra en tu cuenta para consultar tus informes guardados.</p>
         <label class="field sectiongap"><span class="label">Informe guardado</span><select id="automaticReportDate" aria-label="Fecha del informe"><option value="">Sin informes todavía</option></select></label>
         <div id="automaticReportText" class="autoReportText38 sectiongap"></div>
-        <details id="automaticReportTargets" class="sectiongap hidden"><summary>Próximos objetivos · se aplican solos en Registro</summary><div id="automaticReportTargetList" class="sectiongap"></div></details>
+        <details id="automaticReportTargets" class="sectiongap hidden"><summary>Objetivos de este informe · referencia histórica</summary><div id="automaticReportTargetList" class="sectiongap"></div></details>
       </div>
       <div class="card span4" id="readinessCard">
         <div class="row" style="justify-content:space-between;align-items:center">
@@ -812,7 +812,7 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 
   <section class="panel" id="data">
     <div class="grid">
-      <div class="card versionChoice37"><h2>Diseño v38</h2><div class="muted">Si prefieres el diseño anterior, vuelve a v36. Tus entrenos, alimentos y sesión de cuenta se conservan.</div><div class="row"><a class="btn" href="./v36/" id="useV36Data">Volver a v36</a></div></div>
+      <div class="card versionChoice37"><h2>Diseño v39</h2><div class="muted">Si prefieres el diseño anterior, vuelve a v36. Tus entrenos, alimentos y sesión de cuenta se conservan.</div><div class="row"><a class="btn" href="./v36/" id="useV36Data">Volver a v36</a></div></div>
       <div class="card" id="cloudCard">
         <h2>Sincronización móvil ↔ PC</h2>
         <p class="small" id="cloudStatus" role="status" aria-live="polite">Tus datos están guardados en este dispositivo.</p>
@@ -845,9 +845,9 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 </div>
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios</button><button class="btn primary" id="quickSave">Confirmar serie</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
-<script src="cloud-config.js?v=38"></script>
-<script src="cloud-sync.js?v=38"></script>
-<script src="coach-automation.js?v=38"></script>
+<script src="cloud-config.js?v=39"></script>
+<script src="cloud-sync.js?v=39"></script>
+<script src="coach-automation.js?v=39"></script>
 <script>
 (()=>{
 'use strict';
@@ -2459,7 +2459,7 @@ function download(name,text,type='application/json'){const a=document.createElem
 function normKey(v){return (v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'default'}
 function makeVariantKey(e){if(!e)return '—';return [e.id,normKey(byId('location')?.value||db.settings.defaultLocation||''),normKey(byId('machine')?.value||''),normKey(byId('variant')?.value||'')].join('|')}
 function refreshVariantKey(){const e=exerciseFromInput(),k=e?makeVariantKey(e):'—';if(byId('variantKeyView'))byId('variantKeyView').textContent=k;return k}
-function loadVariantMeta(){const e=exerciseFromInput();if(!e){refreshVariantKey();return}const k=refreshVariantKey(),m=db.variantMeta[k];if(m){byId('loadUnit').value=m.loadUnit||'unknown';byId('baseLoad').value=Number.isFinite(+m.baseLoad)?m.baseLoad:'';if(m.setup&&!byId('setup').value)byId('setup').value=m.setup}else{byId('loadUnit').value='unknown';byId('baseLoad').value=''}}
+function loadVariantMeta(){const e=exerciseFromInput();if(!e){refreshVariantKey();return}const k=refreshVariantKey(),m=db.variantMeta[k];if(m){byId('loadUnit').value=m.loadUnit||'unknown';byId('baseLoad').value=m.baseLoad!=null&&m.baseLoad!==''&&Number.isFinite(+m.baseLoad)?m.baseLoad:'';if(m.setup&&!byId('setup').value)byId('setup').value=m.setup}else{byId('loadUnit').value='unknown';byId('baseLoad').value=''}}
 function saveVariantMeta(e){const key=refreshVariantKey(),loadUnit=byId('loadUnit')?.value||'unknown',baseLoad=byId('baseLoad')?.value===''?null:+byId('baseLoad').value;db.variantMeta[key]={variantKey:key,exerciseId:e.id,exerciseName:e.name,location:byId('location')?.value.trim()||'',machine:byId('machine')?.value.trim()||'',variant:byId('variant')?.value.trim()||'',loadUnit,baseLoad,setup:byId('setup')?.value.trim()||'',confidence:loadUnit==='unknown'?'needs_review':'user_confirmed',updatedAt:new Date().toISOString()};return db.variantMeta[key]}
 function rawSetText(z,unit,base){let t=`${fmt(z.reps)}×${fmt(z.weight)}`;if(unit==='added_kg'&&Number.isFinite(+base))t+=` (base ${fmt(base)})`;if(z.drop)t+=' [drop]';if(z.partial)t+=' [parcial]';if(z.warmup)t+=' [aprox]';return t}
 
@@ -2861,7 +2861,7 @@ function bindTrainingTimeListeners(){
 }
 function currentRestElapsed(){return restStarted?Math.max(0,Math.floor((Date.now()-restStarted)/1000)):null}
 function confirmCurrentSet(){const wraps=[...byId('sets').querySelectorAll('.setwrap')],target=wraps.find(w=>w.dataset.confirmed!=='1'&&(+w.querySelector('.reps').value||0)>0);if(!target){toast('Introduce una serie nueva');return}const prev=[...wraps].filter(w=>w.dataset.confirmed==='1').slice(-1)[0];if(prev&&restStarted)prev.dataset.restActual=String(currentRestElapsed());target.dataset.confirmed='1';target.classList.add('confirmedSet');target.dataset.confirmedAt=String(Date.now());markTrainingEntry(+target.dataset.confirmedAt);startRest();updateNextSetSuggestion();toast('Serie confirmada · descanso iniciado')}
-function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),savedAt:new Date().toISOString(),exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),coversWorkoutSlotId:gcReplacement?.slot||null,weeklyPendingId:gcReplacement?.pendingId||null,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();markTrainingEntry(log.loggedAt);refreshNutritionDayType();consumeCoachTargetV22(e,log);gcCompletePending(log);gcReplacement=null;persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
+function saveExercise(){const {exercise:e,isNew}=ensureExerciseFromInput();if(!e){toast('Escribe un ejercicio');return}const meta=saveVariantMeta(e),loadUnit=meta.loadUnit||'unknown',baseLoad=meta.baseLoad,wraps=[...byId('sets').querySelectorAll('.setwrap')],confirmed=wraps.filter(w=>w.dataset.confirmed==='1');if(confirmed.length&&restStarted){const last=confirmed[confirmed.length-1];if(!last.dataset.restActual)last.dataset.restActual=String(currentRestElapsed())}const sets=wraps.map(w=>{const z={reps:+w.querySelector('.reps').value||0,weight:+w.querySelector('.weight').value||0,rir:w.dataset.rir!==undefined&&w.dataset.rir!==''?+w.dataset.rir:null,warmup:w.querySelector('.warmup').checked,partial:w.querySelector('.partial').checked,drop:w.querySelector('.drop').checked,note:w.querySelector('.setnote').value.trim(),restActual:w.dataset.restActual?+w.dataset.restActual:null,loadUnit,baseLoad,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};z.rawText=rawSetText(z,loadUnit,baseLoad);return z}).filter(z=>z.reps>0);if(!sets.length){toast('Añade al menos una serie');return}e.group=byId('exerciseGroup').value||e.group||'Otros';e.setup=byId('setup').value.trim();e.fallback=byId('fallback').value.trim();e.increment=+byId('increment').value||e.increment||2.5;const log={id:'x'+Date.now(),savedAt:new Date().toISOString(),exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),coversWorkoutSlotId:gcReplacement?.slot||null,weeklyPendingId:gcReplacement?.pendingId||null,variant:byId('variant').value.trim(),location:byId('location').value.trim(),machine:byId('machine').value.trim(),variantKey:meta.variantKey,loadUnit,baseLoad,setup:e.setup,order:currentSession().exercises.length+1,sets,notes:byId('exerciseNotes').value.trim(),painZone:byId('painZone').value.trim(),painScore:+byId('painScore').value||0,restTarget:e.rest,parseConfidence:'user_entered',needsReview:loadUnit==='unknown'};const _coach=coachTargetForV22(e);const _session=currentSession();_session.exercises.push(log);log.loggedAt=Date.now();markTrainingEntry(log.loggedAt);refreshNutritionDayType();consumeCoachTargetV22(e,log,_coach);gcCompletePending(log);gcReplacement=null;persist();byId('exerciseSelect').value=e.name;byId('exerciseNotes').value='';byId('painZone').value='';byId('painScore').value='';clearSetRows();restStarted=null;restEndsAt=0;pausedAt=null;storeRestEndV21();cancelRestNotification();releaseWakeLockV21();updateTimer(0);toast(isNew?'Nuevo ejercicio añadido':'Ejercicio finalizado')}
 function renderToday(){renderTrainingDuration();const ss=db.sessions.find(x=>x.date===today()),el=byId('todayList');if(!ss||!ss.exercises.length){el.innerHTML='<div class="muted">Aún no hay ejercicios finalizados hoy.</div>';renderQuickPlan();return}el.innerHTML=ss.exercises.map(x=>{const e=exById(x.exerciseId);return `<div class="item exerciseComplete"><div class="itemtop"><b>${e?.name||'?'}</b><div><span class="pill">${x.variant||'sin variante'}</span>${x.loadUnit==='unknown'?' <span class="pill tag-review">unidad pendiente</span>':''}</div></div><div class="small sectiongap">${x.sets.map(z=>`${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}${z.drop?' ↳drop':''}${z.partial?' parcial':''}${Number.isFinite(z.restActual)?` · descanso ${z.restActual}s`:''}`).join(' · ')}</div><div class="small muted code sectiongap">${x.variantKey||''}</div>${x.painScore?`<div class="small" style="color:var(--bad)">${x.painZone||'molestia'} ${x.painScore}/10</div>`:''}<div class="row sectiongap" style="gap:8px"><button class="btn reopenEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Reabrir / añadir serie</button><button class="btn bad delEx" data-id="${x.id}" style="min-height:36px;padding:5px 11px">Borrar</button></div></div>`}).join('');el.querySelectorAll('.reopenEx').forEach(b=>b.addEventListener('click',()=>reopenExercise(b.dataset.id)));el.querySelectorAll('.delEx').forEach(b=>b.addEventListener('click',()=>deleteExercise(b.dataset.id)));renderQuickPlan()}
 function deleteExercise(logId){
   const ss=db.sessions.find(x=>x.date===today());if(!ss)return;
@@ -3281,15 +3281,52 @@ function comparableLogs(exid,variant){
   return gcComparableHistory({exerciseId:exid,workoutSlotId:gcCurrentSlot(exid),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:variant||''});
 }
 function gcHistoryLogs(){
-  return db.sessions.flatMap((ss,sessionIndex)=>(ss.exercises||[]).map((x,logIndex)=>({...x,date:ss.date,sessionId:ss.id,order:x.order||logIndex+1,sessionIndex,logIndex})))
+  return db.sessions.flatMap((ss,sessionIndex)=>(ss.exercises||[]).map((x,logIndex)=>({...x,workoutSlotId:gcLegacyLogSlot39(x,ss.date,ss),slotInferred:!x.workoutSlotId,date:ss.date,sessionId:ss.id,order:x.order||logIndex+1,sessionIndex,logIndex})))
     .filter(x=>x.date<=today()&&x.valid!==false&&!x.invalid&&v21WorkSets(x).length)
     .sort((a,b)=>b.date.localeCompare(a.date)||(b.savedAt||'').localeCompare(a.savedAt||'')||b.sessionIndex-a.sessionIndex||b.logIndex-a.logIndex);
 }
+// Resolve old records in memory; never rewrite historical loads or configurations.
+function gcConfiguration39(x){
+  const machine=normKey(x.machine),variant=normKey(x.variant);
+  // The main form calls this field “Variante / máquina”. Older imports stored
+  // these exact labels in machine; preserve known inside/outside distinctions.
+  const cable={polea_fuera:'fuera',polea_dentro:'dentro',polea_dentr:'dentro'};
+  if(cable[machine]&&variant==='default')return ['cable',cable[machine]].join('|');
+  if(machine==='default'&&['fuera','dentro'].includes(variant))return ['cable',variant].join('|');
+  return [machine,variant].join('|');
+}
+function gcSameConfiguration39(a,b){
+  if(normKey(a.location)!==normKey(b.location)||gcConfiguration39(a)!==gcConfiguration39(b))return false;
+  const known=u=>u&&u!=='unknown';
+  if(known(a.loadUnit)&&known(b.loadUnit)&&a.loadUnit!==b.loadUnit)return false;
+  const base=x=>x.baseLoad==null||x.baseLoad===''?null:+x.baseLoad;
+  return base(a)===base(b);
+}
+function gcLegacyLogSlot39(log,date,session){
+  if(log.workoutSlotId)return log.workoutSlotId;
+  const candidates=Object.keys(TRAINING_PLAN_V21).filter(k=>TRAINING_PLAN_V21[k].items.some(it=>it.id===log.exerciseId));
+  if(!candidates.length)return `extra:${log.exerciseId}`;
+  const configured=db.settings.workoutOverrides?.[date];
+  const days=[configured==='rest'?null:configured||new Date(date+'T12:00:00').getDay(),...(db.settings.combine?.[date]||[])];
+  const selected=candidates.filter(k=>days.map(String).includes(k));
+  if(selected.length===1)return gcSlot(selected[0],log.exerciseId);
+  // A moved session may predate overrides. Only a uniquely identifiable session
+  // (at least two routine exercises) can resolve an otherwise repeated exercise.
+  const ids=new Set((session?.exercises||[]).map(x=>x.exerciseId));
+  const scores=Object.entries(TRAINING_PLAN_V21).map(([k,p])=>({k,n:p.items.filter(it=>ids.has(it.id)).length})).sort((a,b)=>b.n-a.n);
+  if(scores[0]?.n>=2&&scores[0].n>scores[1]?.n)return candidates.includes(scores[0].k)?gcSlot(scores[0].k,log.exerciseId):`extra:${log.exerciseId}`;
+  return candidates.length===1?gcSlot(candidates[0],log.exerciseId):null;
+}
+function gcTargetSlot39(t){
+  if(t.workoutSlotId)return t.workoutSlotId;
+  const latest=gcHistoryLogs().find(x=>x.exerciseId===t.exerciseId&&gcSameConfiguration39(x,t)&&x.date<=String(t.createdAt||'').slice(0,10));
+  if(latest?.workoutSlotId)return latest.workoutSlotId;
+  const candidates=Object.keys(TRAINING_PLAN_V21).filter(k=>TRAINING_PLAN_V21[k].items.some(it=>it.id===t.exerciseId));
+  return candidates.length===1?gcSlot(candidates[0],t.exerciseId):candidates.length===0?`extra:${t.exerciseId}`:null;
+}
 function gcComparableHistory(scope){
   if(!scope.workoutSlotId)return [];
-  const key=[scope.exerciseId,normKey(scope.location),normKey(scope.machine),normKey(scope.variant)].join('|');
-  return gcHistoryLogs().filter(x=>x.exerciseId===scope.exerciseId&&x.workoutSlotId===scope.workoutSlotId&&
-    (x.variantKey?x.variantKey===key:normKey(x.location)===normKey(scope.location)&&normKey(x.machine)===normKey(scope.machine)&&normKey(x.variant)===normKey(scope.variant)));
+  return gcHistoryLogs().filter(x=>x.exerciseId===scope.exerciseId&&x.workoutSlotId===scope.workoutSlotId&&gcSameConfiguration39(x,scope));
 }
 function v21FindExact(e){
   const exact=comparableLogs(e.id,byId('variant')?.value||'');
@@ -3391,8 +3428,8 @@ function refreshRecordedTargets(){
     if(status){if(done)status.textContent='✓ Serie registrada';else status.remove()}
   });
 }
-function consumeCoachTargetV22(e,log){
-  if(!e||!log)return;const c=coachTargetForV22(e);if(!c)return;
+function consumeCoachTargetV22(e,log,c=coachTargetForV22(e)){
+  if(!e||!log)return;if(!c)return;
   c.status='done';c.completedAt=new Date().toISOString();c.completedLogId=log.id;c.completedVariantKey=log.variantKey||'';
 }
 function deleteCoachTargetV22(id){const t=(db.coachTargets||[]).find(x=>x.id===id);if(!t)return;t.status='deleted';t.deletedAt=new Date().toISOString();gcWriteDb();renderCoachTargetsV22();renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22()}
@@ -3547,7 +3584,7 @@ if(byId('machineBusy')) byId('machineBusy').addEventListener('click',showSubstit
 if(byId('loadUnit')) byId('loadUnit').addEventListener('change',()=>{updateSetWeightLabels();refreshVariantKey()});
 if(byId('todayWorkoutSelect')) byId('todayWorkoutSelect').addEventListener('change',e=>setWorkoutOverride(e.target.value));
 if(byId('resetWorkoutDay')) byId('resetWorkoutDay').addEventListener('click',()=>{if(byId('todayWorkoutSelect'))byId('todayWorkoutSelect').value='auto';setWorkoutOverride('auto')});
-['variant','location','machine'].forEach(id=>{if(byId(id))byId(id).addEventListener('input',()=>{refreshVariantKey();const e=exerciseFromInput();if(e){const m=db.variantMeta[makeVariantKey(e)];if(m){byId('loadUnit').value=m.loadUnit||'unknown';byId('baseLoad').value=Number.isFinite(+m.baseLoad)?m.baseLoad:''}}renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22()})});
+['variant','location','machine'].forEach(id=>{if(byId(id))byId(id).addEventListener('input',()=>{refreshVariantKey();const e=exerciseFromInput();if(e){const m=db.variantMeta[makeVariantKey(e)];if(m){byId('loadUnit').value=m.loadUnit||'unknown';byId('baseLoad').value=m.baseLoad!=null&&m.baseLoad!==''&&Number.isFinite(+m.baseLoad)?m.baseLoad:''}}renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22()})});
 if(byId('evaluateCalories'))byId('evaluateCalories').addEventListener('click',evaluateCalorieAdjustment);
 if(byId('applyCalorieAdjustment'))byId('applyCalorieAdjustment').addEventListener('click',applyCalorieAdjustment);
 if(byId('previewLegacyImport'))byId('previewLegacyImport').addEventListener('click',previewLegacyImport);
@@ -3593,16 +3630,35 @@ const gcOldCombined=v21CombinedItems;
 v21CombinedItems=function(){const items=gcBaseItems();db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='pending'&&p.addedDate===today()&&!gcCovered(p.workoutSlotId)).forEach(p=>{if(!items.some(it=>it.workoutSlotId===p.workoutSlotId)){const it=Object.values(TRAINING_PLAN_V21).flatMap(p=>p.items).find(it=>it.id===p.exerciseId);if(it)items.push({...it,workoutSlotId:p.workoutSlotId})}});return items};
 plannedItem=function(id){const items=v21CombinedItems().filter(it=>it.id===id);return items.find(it=>it.workoutSlotId===gcCurrentSlot(id))||items[0]||null};
 const gcChoose=chooseExerciseFromPlan;
-function gcLoad(it,replacement=null){if(hasUnsavedSeries()){toast('Finaliza las series actuales antes de cambiar de slot');return}gcSelectedSlot=it.workoutSlotId;gcReplacement=replacement;gcChoose(it.id)}
+function gcLoad(it,replacement=null){
+  if(hasUnsavedSeries()){toast('Finaliza las series actuales antes de cambiar de slot');return}
+  gcSelectedSlot=it.workoutSlotId;gcReplacement=replacement;
+  const location=byId('location').value||db.settings.defaultLocation||'';
+  const previous=gcHistoryLogs().find(x=>x.exerciseId===it.id&&x.workoutSlotId===it.workoutSlotId&&normKey(x.location)===normKey(location));
+  byId('machine').value=previous?.machine||'';byId('variant').value=previous?.variant||'';
+  gcChoose(it.id);
+}
 chooseExerciseFromPlan=function(id){const it=v21CombinedItems().find(it=>it.id===id);if(it)gcLoad(it);else{gcSelectedSlot=null;gcReplacement=null;gcChoose(id)}};
-coachTargetForV22=function(e){if(!e)return null;const slot=gcCurrentSlot(e.id),loc=v22CoachNorm(byId('location')?.value||db.settings.defaultLocation||''),mach=v22CoachNorm(byId('machine')?.value||''),variant=v22CoachNorm(byId('variant')?.value||'');return [...(db.coachTargets||[])].filter(t=>t.status==='pending'&&t.exerciseId===e.id&&t.workoutSlotId===slot&&v22CoachNorm(t.location)===loc&&v22CoachNorm(t.machine||'')===mach&&v22CoachNorm(t.variant||'')===variant).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))[0]||null};
+coachTargetForV22=function(e){
+  if(!e)return null;
+  const scope={exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:byId('variant')?.value||'',loadUnit:byId('loadUnit')?.value||'unknown',baseLoad:byId('baseLoad')?.value||null};
+  const latest=gcComparableHistory(scope)[0];
+  return [...(db.coachTargets||[])].filter(t=>{
+    if(t.status!=='pending'||t.exerciseId!==e.id||gcTargetSlot39(t)!==scope.workoutSlotId||!gcSameConfiguration39(t,scope))return false;
+    const recorded=latest?.loggedAt||Date.parse(latest?.savedAt||'');
+    // Older goals remain visible in the list; the next prescription uses the
+    // latest comparable execution instead of silently returning to an old mark.
+    return !latest||String(t.createdAt||'').slice(0,10)>latest.date||
+      (String(t.createdAt||'').slice(0,10)===latest.date&&(!recorded||Date.parse(t.createdAt)>=recorded));
+  }).sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''))[0]||null;
+};
 function gcMismatch(e){const ts=(db.coachTargets||[]).filter(t=>t.exerciseId===e.id);if(!ts.length)return 'Sin objetivo del entrenador importado para este ejercicio.';const loc=v22CoachNorm(byId('location')?.value||db.settings.defaultLocation||''),mach=v22CoachNorm(byId('machine')?.value||''),variant=v22CoachNorm(byId('variant')?.value||'');return [...new Set(ts.map(t=>{const why=[];if(!t.workoutSlotId)why.push('objetivo antiguo sin slot: asigna su día');else if(t.workoutSlotId!==gcCurrentSlot(e.id))why.push('otro slot/día de rutina');if(v22CoachNorm(t.location)!==loc)why.push('otra ubicación');if(v22CoachNorm(t.machine||'')!==mach)why.push('máquina diferente (incluido campo vacío)');if(v22CoachNorm(t.variant||'')!==variant)why.push('variante diferente (incluido campo vacío)');if(t.status!=='pending')why.push(t.status==='done'?'objetivo consumido':`objetivo ${t.status}`);return why.join(', ')}))].filter(Boolean).join(' · ')}
 const gcCompare=renderPerformanceComparison;
-renderPerformanceComparison=function(){gcCompare();const e=exerciseFromInput(),box=byId('coachContext37');if(box)box.textContent=e&&!coachTargetForV22(e)?`Objetivo del entrenador: ${gcMismatch(e)}`:''};
+renderPerformanceComparison=function(){gcCompare();const e=exerciseFromInput(),box=byId('coachContext37');if(box)box.textContent=e&&!coachTargetForV22(e)?(v21FindExact(e).exact?`Objetivo calculado desde la última ejecución comparable · ${dateLabel(v21FindExact(e).log.date)}.`:`Objetivo del entrenador: ${gcMismatch(e)}`):''};
 const gcScope=v22CoachScope;
 v22CoachScope=function(t){return gcScope(t)};
 const gcTargets=renderCoachTargetsV22;
-renderCoachTargetsV22=function(){gcTargets();const box=byId('coachTargetList');if(!box)return;const legacy=(db.coachTargets||[]).filter(t=>t.status==='pending'&&!t.workoutSlotId);legacy.forEach(t=>{const wrap=document.createElement('div');wrap.className='item';const label=document.createElement('div');label.textContent=`Asignar día: ${t.exerciseName}`;const sel=document.createElement('select');sel.innerHTML='<option value="">Elige el día original</option>'+Object.entries(TRAINING_PLAN_V21).filter(([k,p])=>p.items.some(it=>it.id===t.exerciseId)).map(([k,p])=>`<option value="${gcSlot(k,t.exerciseId)}">${escapeHtml(p.name)}</option>`).join('')+`<option value="extra:${t.exerciseId}">Fuera de rutina</option>`;sel.onchange=()=>{if(sel.value){t.workoutSlotId=sel.value;gcStore();renderCoachTargetsV22();renderPerformanceComparison()}};wrap.append(label,sel);box.append(wrap)})};
+renderCoachTargetsV22=function(){gcTargets();const box=byId('coachTargetList');if(!box)return;const legacy=(db.coachTargets||[]).filter(t=>t.status==='pending'&&!gcTargetSlot39(t));legacy.forEach(t=>{const wrap=document.createElement('div');wrap.className='item';const label=document.createElement('div');label.textContent=`Asignar día: ${t.exerciseName}`;const sel=document.createElement('select');sel.innerHTML='<option value="">Elige el día original</option>'+Object.entries(TRAINING_PLAN_V21).filter(([k,p])=>p.items.some(it=>it.id===t.exerciseId)).map(([k,p])=>`<option value="${gcSlot(k,t.exerciseId)}">${escapeHtml(p.name)}</option>`).join('')+`<option value="extra:${t.exerciseId}">Fuera de rutina</option>`;sel.onchange=()=>{if(sel.value){t.workoutSlotId=sel.value;gcStore();renderCoachTargetsV22();renderPerformanceComparison()}};wrap.append(label,sel);box.append(wrap)})};
 renderQuickPlan=function(){gcReconcilePending();const box=byId('quickPlanExercises');if(!box)return;const items=v21CombinedItems();box.innerHTML='';items.forEach(it=>{const row=document.createElement('div');const covered=gcCovered(it.workoutSlotId),e=exById(it.id);row.className=`item ${covered?'exerciseComplete':''}`;row.dataset.slot=it.workoutSlotId;row.innerHTML=`<b>${escapeHtml(e?.name||it.label)}</b> <span class="pill">${covered?'✓ COMPLETADO':'pendiente'}</span><div class="small muted">${it.sets.length} series · ${it.sets.map(s=>`${s[0]}–${s[1]} reps · RIR ${s[2]}`).join(' / ')}</div>`;const load=document.createElement('button');load.className='btn';load.textContent='Registrar';load.onclick=()=>gcLoad(it);const pending=document.createElement('button');pending.className='btn';pending.textContent='Pendiente semanal';pending.disabled=covered;pending.onclick=()=>gcMarkPending(it);const sel=document.createElement('select');sel.setAttribute('aria-label','Sustituir ejercicio');sel.innerHTML='<option value="">Sustituir por…</option>'+db.exercises.filter(e=>e.id!==it.id).map(e=>`<option value="${escapeHtml(e.id)}">${escapeHtml(e.name)}</option>`).join('');sel.onchange=()=>{if(sel.value)gcLoad({id:sel.value,workoutSlotId:`extra:${sel.value}`},{slot:it.workoutSlotId})};const options=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Alternativas y pendientes';options.append(summary,pending,sel);row.append(load,options);box.append(row)});const header=document.createElement('div');header.className='small sectiongap';header.textContent='Pendientes de esta semana (lunes–domingo). Las sustituciones cuentan para el ejercicio del plan al finalizar y guardar.';box.append(header);db.weeklyPending.filter(p=>p.week===gcWeek()&&p.status==='pending'&&!gcCovered(p.workoutSlotId)).forEach(p=>{const row=document.createElement('div');row.className='item';const title=document.createElement('div');title.textContent=`${exById(p.exerciseId)?.name||p.exerciseId} · pendiente del ${dateLabel(p.sourceDate)}`;const add=document.createElement('button');add.className='btn';add.textContent=p.addedDate===today()?'Añadido a hoy':'Añadir a hoy';add.disabled=p.addedDate===today();add.onclick=()=>{p.addedDate=today();gcStore();renderTodayPlan();renderQuickPlan()};const discard=document.createElement('button');discard.className='btn';discard.textContent='Descartar';discard.onclick=()=>{p.status='discarded';gcStore();renderTodayPlan();renderQuickPlan()};row.append(title,add,discard);box.append(row)})};
 const gcImportUI=document.createElement('label');gcImportUI.className='small';gcImportUI.textContent='Día de destino para líneas sin slot: ';
 const gcDaySelect=document.createElement('select');gcDaySelect.innerHTML='<option value="current">Rutina de hoy (si es inequívoco)</option>'+Object.entries(TRAINING_PLAN_V21).map(([k,p])=>`<option value="${k}">${escapeHtml(p.name)}</option>`).join('');gcDaySelect.value=db.settings.coachImportDay;gcDaySelect.onchange=()=>{db.settings.coachImportDay=gcDaySelect.value;gcStore()};gcImportUI.append(gcDaySelect);byId('coachTargetInput')?.before(gcImportUI);
@@ -3783,8 +3839,8 @@ function gcInitUx37(){
 }
 
 gcInitUx37();
-db.profile.appVersion=Math.max(db.profile.appVersion||0,38);gcStore();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=38', {updateViaCache:'none'}).catch(()=>{});
+db.profile.appVersion=Math.max(db.profile.appVersion||0,39);gcStore();
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=39', {updateViaCache:'none'}).catch(()=>{});
 renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();bindTrainingTimeListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
 // Private coaching is fetched separately, never merged into the editable journal.
 let gcAutomaticCoach=null;
@@ -3801,12 +3857,12 @@ function gcRenderAutoReports38(){
   else rows.forEach(row=>{const option=document.createElement('option');option.value=row.report_date;option.textContent=dateLabel(row.report_date);select.append(option);});
   if(rows.some(r=>r.report_date===previous))select.value=previous;
   const row=rows.find(r=>r.report_date===select.value),uid=gcCloud?.session?.user?.id;
-  let status=!uid?'Entra en tu cuenta para recibir tus informes.':'El informe se prepara en el run diario de la noche. Guarda y sincroniza tus registros.';
+  let status=!uid?'Entra en tu cuenta para consultar tus informes guardados.':'Informes guardados. Los objetivos se calculan en la app a partir de tu última ejecución comparable.';
   if(row){
     const current=(db.sessions||[]).find(s=>s.date===row.report_date)||null;
     const stale=api.stable(row.source_session)!==api.stable(current)||api.stable(row.source_nutrition)!==api.stable(gcAutoReportSources38(row.report_date));
     const at=new Date(row.generated_at).toLocaleString('es-ES',{timeZone:'Europe/Madrid'});
-    status=`Guardado ${at}. ${stale?'Hay cambios posteriores: se actualizará en el próximo run.':'Objetivos disponibles automáticamente para la misma configuración.'}`;
+    status=`Guardado ${at}. ${stale?'Hay registros posteriores: este informe es histórico.':'Informe histórico; los objetivos actuales aparecen en Registro.'}`;
   }
   if(gcAutomaticCoach.state==='error')status+=' No se han podido actualizar los informes; puedes consultar la copia guardada.';
   if(gcAutomaticCoach.state==='offline')status+=' Sin conexión: mostrando la copia guardada.';
@@ -3818,7 +3874,7 @@ function gcRenderAutoReports38(){
     const active=api.targetFor([row],target,gcComparableHistory(target));
     const item=document.createElement('div');item.className='item';
     const title=document.createElement('b');title.textContent=target.exerciseName||target.exerciseId;
-    const context=document.createElement('div');context.className='small muted';context.textContent=[v22CoachScope(target),active?'✓ Se aplica solo':'Referencia actualizada · ya no se aplica'].filter(Boolean).join(' · ');
+    const context=document.createElement('div');context.className='small muted';context.textContent=[v22CoachScope(target),active?'Referencia del informe':'Referencia histórica'].filter(Boolean).join(' · ');
     const sets=document.createElement('div');sets.className='small';sets.textContent=(target.sets||[]).map((x,i)=>`S${i+1}: ${fmt(x.weight)} × ${x.repMin===x.repMax?x.repMin:x.repMin+'–'+x.repMax} · RIR ${x.rirMin===x.rirMax?x.rirMin:x.rirMin+'–'+x.rirMax}`).join(' / ');
     item.append(title,context,sets);list.append(item);
   }
@@ -3827,41 +3883,32 @@ function gcRenderAutoReports38(){
 function gcStartAutomaticCoach38(){
   const api=window.GymCoachAutomation;if(!api)return;
   gcAutomaticCoach=new api.Client({getCloud:()=>gcCloud,onChange:()=>{gcRenderAutoReports38();renderPerformanceComparison();updateNextSetSuggestion();}});
-  const manual=coachTargetForV22;
-  coachTargetForV22=function(e){
-    if(!e)return null;
-    gcAutomaticCoach.reconcile();
-    const scope={exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:byId('variant')?.value||''};
-    scope.loadUnit=byId('loadUnit')?.value||'unknown';const base=byId('baseLoad')?.value;scope.baseLoad=base!==''&&base!==undefined?+base:null;
-    const history=gcComparableHistory(scope),automatic=api.targetFor(gcAutomaticCoach.rows,scope,history);let chosen=manual(e);
-    // An old imported prescription must also yield to a more recent valid execution.
-    const latest=history[0],recorded=latest?.loggedAt||latest?.savedAt;
-    if(chosen&&latest&&(String(chosen.createdAt||'').slice(0,10)<latest.date||(recorded&&Date.parse(chosen.createdAt)<+recorded)))chosen=null;
-    if(automatic&&(!chosen||automatic.createdAt>chosen.createdAt))return automatic;
-    return chosen;
-  };
   byId('automaticReportDate').onchange=gcRenderAutoReports38;
   byId('refreshAutoReport').onclick=()=>gcAutomaticCoach.refresh(true);
   const render=renderAll;renderAll=function(){render();gcAutomaticCoach.reconcile();gcRenderAutoReports38();};
-  const status=gcCloud?.onStatus;if(gcCloud)gcCloud.onStatus=function(info){status(info);gcAutomaticCoach.reconcile();if(info.state==='synced')gcAutomaticCoach.refresh();};
+  const status=gcCloud?.onStatus;if(gcCloud)gcCloud.onStatus=function(info){status(info);gcAutomaticCoach.reconcile();};
   window.addEventListener('focus',()=>gcAutomaticCoach.refresh());window.addEventListener('online',()=>gcAutomaticCoach.refresh(true));
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')gcAutomaticCoach.refresh();});
-  setInterval(()=>{if(document.visibilityState==='visible')gcAutomaticCoach.refresh();},60000);
   gcAutomaticCoach.refresh();
 }
 
+let gcCloudViewPending39=false;
+function gcFlushCloudView39(){
+  if(!gcCloudViewPending39||hasUnsavedSeries()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))return;
+  gcCloudViewPending39=false;renderAll();renderFoodMatrix();refreshNutritionDayType();
+}
 function startCloudSync(){
   if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}
   const labels={setup:'La sincronización todavía no está activada. Tus datos siguen guardados en este dispositivo.',signedout:'Entra con la misma cuenta en móvil y PC.',connecting:'Entrando…',syncing:'Sincronizando…',synced:'Datos sincronizados.',pending:'Cambios guardados; pendientes de sincronizar.',offline:'Sin conexión. Tus cambios se guardan aquí y se enviarán al volver.',conflict:'Hay un cambio coincidente en dos dispositivos. Elige qué versión conservar.',error:'No se ha podido sincronizar. Tus datos siguen guardados aquí.'};
   gcCloud=new window.GymCloud.Sync({config:window.GC_CLOUD_CONFIG,getData:()=>db,onApply:next=>{
     // Store first; avoid overwriting active series or a focused form's inputs.
+    const changed=!window.GymCloud.equal(window.GymCloud.pack(db),window.GymCloud.pack(next));
     db=next;localStorage.setItem(APPKEY,JSON.stringify(db));
-    if(hasUnsavedSeries()||/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||''))renderQuickPlan();
-    else{renderAll();renderFoodMatrix();refreshNutritionDayType();}
+    if(changed){gcCloudViewPending39=true;renderToday();renderTodayPlan();gcFlushCloudView39();}
     renderTrainingDuration();
   },onStatus:info=>{
     byId('cloudStatus').textContent=[labels[info.state]||'',info.email,info.detail].filter(Boolean).join(' · ');
-    byId('cloudBadge').textContent=info.state==='synced'?'✓ Sincronizado':info.state==='offline'?'Sin conexión':info.state==='syncing'?'Sincronizando…':'Datos locales';
+    byId('cloudBadge').textContent=({synced:'✓ Sincronizado',offline:'Sin conexión',syncing:'Sincronizando…',conflict:'⚠ Conflicto de datos',error:'⚠ Sincronización pendiente',signedout:'Cuenta desconectada',pending:'Pendiente de sincronizar'})[info.state]||'Datos locales';
     byId('cloudConflict').classList.toggle('hidden',info.state!=='conflict');
     const logged=!!info.email;
     byId('cloudLoginForm').classList.toggle('hidden',logged);byId('cloudAccountActions').classList.toggle('hidden',!logged);byId('cloudConfirmation').classList.toggle('hidden',logged||info.state==='setup');
@@ -3877,6 +3924,7 @@ function startCloudSync(){
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')gcCloud.sync();});
   window.addEventListener('storage',ev=>{if(ev.key===APPKEY){try{const fresh=JSON.parse(ev.newValue);if(fresh?.profile){db=fresh;if(!hasUnsavedSeries())renderAll();}}catch{}}if(ev.key===gcCloud.prefix+'_session'){gcCloud.session=gcCloud.read('session');gcCloud.status(gcCloud.session?'pending':'signedout');}});
   setInterval(()=>{if(document.visibilityState==='visible')gcCloud.sync();},30000);
+  document.addEventListener('focusout',()=>setTimeout(gcFlushCloudView39,0));
   gcCloud.sync();
 }
 startCloudSync();
@@ -3885,3 +3933,4 @@ gcStartAutomaticCoach38();
 </script>
 </body>
 </html>
+

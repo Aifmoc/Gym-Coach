@@ -19,6 +19,8 @@ jobs:
     steps:
       - name: Checkout app
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Test objectives and synchronization
+        run: node --test tests/*.test.cjs
       - name: Prepare static app
         run: |
           mkdir -p _site
@@ -31,3 +33,4 @@ jobs:
       - name: Publish app
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346
+

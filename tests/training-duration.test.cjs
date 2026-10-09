@@ -30,7 +30,7 @@ function harness(){
     toast:noop,startRest:noop,updateNextSetSuggestion:noop,restStarted:null,restEndsAt:0,pausedAt:null,
     ensureExerciseFromInput:()=>({exercise,isNew:false}),saveVariantMeta:()=>({loadUnit:'total_kg',variantKey:'row|goya'}),
     rawSetText:()=>'',gcCurrentSlot:()=> 'routine:1:row',gcReplacement:null,
-    refreshNutritionDayType:noop,consumeCoachTargetV22:noop,gcCompletePending:noop,persist:()=>{saved=JSON.stringify(context.db);},
+    refreshNutritionDayType:noop,coachTargetForV22:()=>null,consumeCoachTargetV22:noop,gcCompletePending:noop,persist:()=>{saved=JSON.stringify(context.db);},
     clearSetRows:noop,storeRestEndV21:noop,cancelRestNotification:noop,releaseWakeLockV21:noop,updateTimer:noop});
   for(const name of ['currentSession','markTrainingEntry','trainingDurationLabel','renderTrainingDuration','bindTrainingTimeListeners','todayText','currentRestElapsed','confirmCurrentSet','saveExercise'])vm.runInContext(definition(name),context);
   context.bindTrainingTimeListeners();

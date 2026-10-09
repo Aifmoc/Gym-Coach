@@ -116,3 +116,29 @@ test('Sign-out during a download does not apply another response afterwards',asy
   const request=a.sync.request.bind(a.sync);a.sync.request=async(path,opts)=>{const value=await request(path,opts);if(path.includes('/rest/v1/gym_coach_state'))await a.sync.signOut();return value;};
   api.row.document.settings.remote=true;await a.sync.sync();assert.equal(a.data.settings.remote,undefined);assert.equal(a.sync.session,null);a.stop();
 });
+function jsonbOrder(v){return Array.isArray(v)?v.map(jsonbOrder):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().reverse().map(k=>[k,jsonbOrder(v[k])])):v;}
+test('JSONB object key reordering never causes a false set or target conflict',()=>{
+  const base={sessions:[{date:'2026-10-09',exercises:[{id:'a',sets:[{reps:10,weight:75,rir:1}]}]}],coachTargets:[{id:'goal',sets:[{weight:75,repMin:10,repMax:11}],status:'pending'}]};
+  const local=copy(base);local.sessions[0].exercises[0].sets[0].reps=11;
+  const result=merge(base,local,jsonbOrder(base));
+  assert.deepEqual(result.conflicts,[]);assert.equal(result.value.sessions[0].exercises[0].sets[0].reps,11);
+  const different=jsonbOrder(base);different.sessions[0].exercises[0].sets[0].reps=12;
+  assert.equal(merge(base,local,different).conflicts.length,1);
+});
+test('Mobile and PC converge after cloud key reordering, with new goals and food preserved',async()=>{
+  const api=server(),mobile=client(api);mobile.data.sessions=[{date:'2026-10-09',id:'session',exercises:[{id:'log',sets:[{weight:73,reps:7,rir:1}]}]}];
+  await mobile.sync.signIn('test@example.test','password');
+  api.row.document=jsonbOrder(api.row.document);
+  const pc=client(api);await pc.sync.signIn('test@example.test','password');
+  mobile.data.sessions[0].exercises[0].sets[0].reps=8;
+  mobile.data.coachTargets=[{id:'goal',sets:[{weight:73,repMin:8,repMax:9}],status:'pending'}];
+  pc.data.dayFood['2026-10-09']=[{id:'food',kcal:200,p:20,c:10,f:2}];await pc.sync.sync();
+  api.row.document=jsonbOrder(api.row.document);await mobile.sync.sync();await pc.sync.sync();
+  assert.equal(mobile.sync.state,'synced');assert.equal(pc.sync.state,'synced');assert.deepEqual(pc.data,mobile.data);
+  assert.equal(pc.data.sessions[0].exercises[0].sets[0].reps,8);assert.equal(pc.data.coachTargets.length,1);assert.equal(pc.data.dayFood['2026-10-09'].length,1);
+  mobile.stop();pc.stop();
+});
+test('Different app versions merge as metadata without pausing workout synchronization',()=>{
+  const result=merge({profile:{appVersion:36}},{profile:{appVersion:38}},{profile:{appVersion:39}});
+  assert.deepEqual(result.conflicts,[]);assert.equal(result.value.profile.appVersion,39);
+});

@@ -5,7 +5,9 @@
 })(typeof globalThis!=='undefined'?globalThis:this,function(){
   'use strict';
   const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
-  const equal=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  // PostgreSQL jsonb changes object key order; array order still matters.
+  const canonical=v=>Array.isArray(v)?v.map(canonical):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,canonical(v[k])])):v;
+  const equal=(a,b)=>JSON.stringify(canonical(a))===JSON.stringify(canonical(b));
   const object=v=>!!v&&typeof v==='object'&&!Array.isArray(v);
   const computed=['kcal','protein','carbs','fat','fiber','sugar','addedSugar','fiberCoverage','sugarCoverage','addedSugarCoverage'];
   function arrayKey(path,rows){
@@ -16,6 +18,7 @@
     return null;
   }
   function merge(base,local,remote,path='',conflicts=[],preference='local'){
+    if(path==='profile.appVersion'&&Number.isFinite(local)&&Number.isFinite(remote))return {value:Math.max(local,remote),conflicts};
     if(equal(local,remote))return {value:clone(local),conflicts};
     if(equal(local,base))return {value:clone(remote),conflicts};
     if(equal(remote,base))return {value:clone(local),conflicts};
@@ -206,5 +209,6 @@
       if(old)await this.fetch(this.config.url.replace(/\/$/,'')+'/auth/v1/logout',{method:'POST',headers:{apikey:this.config.publishableKey,Authorization:'Bearer '+old.access_token}}).catch(()=>{});
     }
   }
-  return {Sync,merge,pack,unpack,validConfig};
+  return {Sync,merge,pack,unpack,validConfig,equal};
 });
+

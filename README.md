@@ -88,29 +88,30 @@ node --test tests/*.test.cjs
 La rama `version-36` apunta al commit `3d8ff712c736e1985dffde77170c5fa213ce9e95`
 como referencia independiente para una reversión completa del despliegue.
 
-## v38: informe diario y objetivos sin copiar y pegar
+## v39: objetivos recuperados y sincronización corregida
 
-La app lee gym_coach_reports con la sesión de Supabase que ya usa para
-sincronizar. Los informes aparecen en Hoy, por fecha. La automatización autorizada
-analiza el diario, guarda el texto y objetivos estructurados, y la app los recoge
-al abrirse, volver al primer plano o actualizar informes. No se necesita una clave
-de IA en el cliente ni dejar el navegador abierto.
+Sin runs diarios. Los informes de v38 quedan como archivo de lectura y no
+sustituyen las prescripciones de Registro. Se conserva el diseño aprobado de v37.
 
-Aplicar una sola vez supabase/reports.sql. RLS permite leer únicamente informes
-propios; el navegador no tiene permisos de escritura. La automatización usa el
-conector Supabase autorizado. Nunca guardar contraseñas ni claves privadas en el
-repositorio ni en sus instrucciones. La entrega escribe una tabla separada y
-no reescribe sesiones, comidas ni preferencias.
+Los registros antiguos sin slot se resuelven en memoria solo cuando la rutina
+es identificable por el día guardado, la sesión o un ejercicio único. Los casos
+ambiguos siguen requiriendo asignar día. Las etiquetas explícitas «Polea fuera»
+y «Fuera» comparten contexto; dentro/fuera, ubicaciones y unidades distintas
+permanecen separadas. No se reescriben cargas, series ni variantes históricas.
+Cada ejercicio carga su propia configuración, sin heredar la del anterior.
 
-Los objetivos solo se aplican al mismo ejercicio, slot, ubicación, máquina,
-variante, unidad y carga base, mientras su referencia coincida exactamente con
-la última ejecución válida. Una sesión nueva, una edición, una invalidación o una
-eliminación deja sin efecto el objetivo anterior. Se conserva el generador local
-sin prescripción compatible. Un objetivo manual más reciente mantiene prioridad.
-Las copias de informes sin conexión son por cuenta y se ocultan al cerrar sesión.
+Los objetivos importados posteriores a la última ejecución comparable se usan
+hasta finalizar el ejercicio. A partir de una ejecución nueva, la app calcula
+el siguiente objetivo desde esa referencia, aunque una sesión antigua fuese mejor.
+Un objetivo consumido se identifica antes de añadir la nueva ejecución. La carga
+base ausente permanece vacía y no se convierte en cero al recuperar configuración.
 
-El run sigue [el contrato de entrega](supabase/coaching-run.md). Depende de que
-se hayan sincronizado los datos y de que el run termine correctamente. La v36
-conserva su comportamiento y sigue disponible.
+La sincronización compara JSON por contenido: PostgreSQL jsonb puede reordenar
+campos sin que eso constituya un conflicto. Diferencias reales siguen pausando
+las escrituras y conservan ambas copias. Una descarga actualiza el resumen y
+aplaza los formularios activos hasta salir de ellos, conservando las series en
+curso. El cliente corregido también está disponible con el diseño v36.
 
-Validación adicional: node --test tests/coach-automation.test.cjs.
+Validación: regresiones de objetivos y de dos dispositivos con respuesta JSONB,
+consumo de objetivos, estados verdes y duración. Las pruebas no contienen datos
+personales. Publicación automática ejecuta las pruebas antes del despliegue.

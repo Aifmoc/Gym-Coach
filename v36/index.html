@@ -821,7 +821,7 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios de hoy</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
 <script src="cloud-config.js?v=36"></script>
-<script src="cloud-sync.js?v=36"></script>
+<script src="cloud-sync.js?v=39"></script>
 <script>
 (()=>{
 'use strict';
@@ -3686,7 +3686,7 @@ renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settin
 
 
 db.profile.appVersion=Math.max(db.profile.appVersion||0,36);gcStore();
-if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=36', {updateViaCache:'none'}).catch(()=>{});
+if('serviceWorker' in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js?v=36-sync39', {updateViaCache:'none'}).catch(()=>{});
 renderAll();renderFoodMatrix();renderPerformanceComparison();renderWeekV21();activateTab('train');bindAutosaveListeners();bindTrainingTimeListeners();restoreActiveDraft(false);updateReadinessCollapse();setupMobileViewportV21();syncRestV21();
 function startCloudSync(){
   if(!window.GymCloud){byId('cloudStatus').textContent='La sincronización no se ha cargado. Recarga cuando tengas conexión.';return;}

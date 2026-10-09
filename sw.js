@@ -1,9 +1,9 @@
-/* Gym Coach v38. Offline shell, sync client and rest messages. */
-const VERSION='v38-20261008-coach';
+/* Gym Coach v39. Offline shell, sync client and rest messages. */
+const VERSION='v39-20261009-targets-sync';
 const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
 const CACHE=PREFIX+VERSION;
 const SHELL=new URL('index.html',self.registration.scope).href;
-const ASSETS=['cloud-config.js?v=38','cloud-sync.js?v=38','design37.css?v=38','coach-automation.js?v=38'].map(path=>new URL(path,self.registration.scope).href);
+const ASSETS=['cloud-config.js?v=39','cloud-sync.js?v=39','design37.css?v=39','coach-automation.js?v=39'].map(path=>new URL(path,self.registration.scope).href);
 let restTimer=null;
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll([SHELL,...ASSETS].map(url=>new Request(url,{cache:'reload'})));await self.skipWaiting()})());
@@ -41,3 +41,4 @@ self.addEventListener('notificationclick',event=>{
   event.notification.close();
   event.waitUntil((async()=>{const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});const client=windows.find(c=>c.url.startsWith(self.registration.scope));if(client)return client.focus();return self.clients.openWindow(SHELL)})());
 });
+
