@@ -34,5 +34,5 @@ test('Archived reports cannot override the target selector, and null base loads 
  assert.doesNotMatch(source.slice(start,end),/coachTargetForV22\s*=/);
  assert.match(definition('loadVariantMeta'),/m\.baseLoad!=null/);
  assert.match(definition('saveExercise'),/const _coach=coachTargetForV22\(e\).*exercises\.push\(log\)/);
- assert.match(html,/Gym Coach v39/);
+ assert.match(html,/Gym Coach v40/);
 });

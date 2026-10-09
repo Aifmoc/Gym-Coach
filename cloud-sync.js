@@ -17,7 +17,16 @@
     if(['foods','meals','myPlates'].includes(leaf)&&rows.every(v=>object(v)&&v.name))return 'name';
     return null;
   }
+  // Readiness is edited in the dated register; session.readiness is its snapshot.
+  // Normalize all three revisions, including checkpoints written by older clients.
+  function readinessSnapshots(doc){
+    if(!object(doc)||!Array.isArray(doc.readiness)||!Array.isArray(doc.sessions))return doc;
+    const rows=new Map(doc.readiness.map(r=>[r.date,r]));
+    return {...doc,sessions:doc.sessions.map(s=>rows.has(s.date)?{...s,readiness:clone(rows.get(s.date))}:s)};
+  }
   function merge(base,local,remote,path='',conflicts=[],preference='local'){
+    if(!path){base=readinessSnapshots(base);local=readinessSnapshots(local);remote=readinessSnapshots(remote);}
+
     if(path==='profile.appVersion'&&Number.isFinite(local)&&Number.isFinite(remote))return {value:Math.max(local,remote),conflicts};
     if(equal(local,remote))return {value:clone(local),conflicts};
     if(equal(local,base))return {value:clone(remote),conflicts};
@@ -25,7 +34,7 @@
     // Two devices can create the same calendar day's session independently.
     if(base===undefined&&/^sessions\[[^\]]+\]\.id$/.test(path))return {value:clone(remote),conflicts};
     if(/^sessions\[[^\]]+\]\.(startedAt|lastEntryAt)$/.test(path)&&Number.isFinite(local)&&Number.isFinite(remote))return {value:path.endsWith('.startedAt')?Math.min(local,remote):Math.max(local,remote),conflicts};
-    if(object(local)&&object(remote)&&(base===undefined||object(base))){
+    if(object(local)&&object(remote)&&(base===undefined||object(base)||(base===null&&/^sessions\[[^\]]+\]\.readiness$/.test(path)))){
       const value={};
       for(const key of new Set([...Object.keys(base||{}),...Object.keys(remote),...Object.keys(local)])){
         // Never allow a JSON document to alter the object prototype.
@@ -99,7 +108,7 @@
     read(key){try{return JSON.parse(this.storage.getItem(this.prefix+'_'+key)||'null')}catch{return null;}}
     write(key,value){this.storage.setItem(this.prefix+'_'+key,JSON.stringify(value));}
     status(state,detail=''){this.state=state;this.onStatus({state,detail,email:this.session?.user?.email||''});}
-    changed(){if(this.session&&equal(pack(this.getData()),this.read('base_'+this.session.user.id)?.document))return;this.pending=true;if(this.conflict)return;clearTimeout(this.timer);if(this.session)this.timer=setTimeout(()=>this.sync(),this.delay);}
+    changed(){if(this.session&&equal(pack(this.getData()),this.read('base_'+this.session.user.id)?.document))return;this.pending=true;if(this.conflict)return;this.status(this.session?'pending':this.state);clearTimeout(this.timer);if(this.session)this.timer=setTimeout(()=>this.sync(),this.delay);}
     async request(path,{body,method=body?'POST':'GET',auth=true}={}){
       const headers={apikey:this.config.publishableKey,'Content-Type':'application/json'};
       if(auth&&this.session?.access_token)headers.Authorization='Bearer '+this.session.access_token;
@@ -152,8 +161,8 @@
     }
     checkpoint(doc,revision){this.write('base_'+this.session.user.id,{document:clone(doc),revision});this.owner=this.session.user.id;this.write('owner',this.owner);}
     apply(doc){this.onApply(unpack(doc,this.getData()));}
-    async sync(){
-      if(!this.enabled||!this.session||this.conflict)return;
+    async sync({recheck=false}={}){
+      if(!this.enabled||!this.session||(this.conflict&&!recheck))return;
       if(this.busy){this.pending=true;return;}
       if(!this.online()){this.status('offline');return;}
       this.busy=true;this.pending=false;this.status('syncing');
@@ -176,6 +185,7 @@
             this.write('conflict_'+uid,{at:new Date().toISOString(),local,remote,paths:result.conflicts});
             this.status('conflict',result.conflicts.join(', '));return;
           }
+          if(this.conflict){this.conflict=null;this.write('conflict_'+uid,null);}
           if(remote&&equal(result.value,remoteDoc)){
             this.checkpoint(result.value,remote.revision);this.apply(result.value);this.status('synced');return;
           }

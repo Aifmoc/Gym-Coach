@@ -115,3 +115,17 @@ curso. El cliente corregido también está disponible con el diseño v36.
 Validación: regresiones de objetivos y de dos dispositivos con respuesta JSONB,
 consumo de objetivos, estados verdes y duración. Las pruebas no contienen datos
 personales. Publicación automática ejecuta las pruebas antes del despliegue.
+
+## v40: selección de ejercicios y conflictos visibles
+
+Buscar un ejercicio, escribir un nombre inequívoco o tocarlo en la rutina carga
+su propio slot y configuración. Un ejercicio de otra jornada conserva su esquema
+de series; Registro permite elegir su rutina explícitamente. Los borradores en
+curso conservan la configuración elegida al recargar.
+
+La sincronización actualiza los resúmenes incluso durante un borrador activo.
+«Sincronizar ahora» vuelve a comprobar un conflicto pendiente y muestra los
+valores del dispositivo y de la nube si persiste. El estado previo se edita en
+el registro por fecha; su copia dentro de la sesión se reconstruye desde ese
+registro antes de comparar revisiones antiguas. Una copia desactualizada no
+bloquea la cuenta; las diferencias reales conservan la elección y recuperación.

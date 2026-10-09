@@ -821,7 +821,7 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
 <div class="bottom" id="recordBottom"><div class="bottomin"><button class="btn" id="jumpExercises">Ejercicios de hoy</button><button class="btn ok" id="quickFinish">Finalizar ejercicio</button></div></div>
 <div class="toast" id="toast"></div>
 <script src="cloud-config.js?v=36"></script>
-<script src="cloud-sync.js?v=39"></script>
+<script src="cloud-sync.js?v=40"></script>
 <script>
 (()=>{
 'use strict';
@@ -3708,7 +3708,7 @@ function startCloudSync(){
   byId('cloudLoginForm').addEventListener('submit',async ev=>{ev.preventDefault();const password=byId('cloudPassword').value;byId('cloudPassword').value='';try{await gcCloud.signIn(byId('cloudEmail').value.trim(),password)}catch(e){toast(e.message)}});
   byId('cloudSignup').onclick=async()=>{const form=byId('cloudLoginForm');if(!form.reportValidity())return;const password=byId('cloudPassword').value;byId('cloudPassword').value='';try{await gcCloud.signUp(byId('cloudEmail').value.trim(),password)}catch(e){toast(e.message)}};
   byId('cloudConfirmForm').addEventListener('submit',async ev=>{ev.preventDefault();const link=byId('cloudConfirmLink').value;byId('cloudConfirmLink').value='';try{await gcCloud.confirmEmail(link)}catch(e){toast(e.message)}});
-  byId('cloudSyncNow').onclick=()=>gcCloud.sync();byId('cloudLogout').onclick=()=>gcCloud.signOut();
+  byId('cloudSyncNow').onclick=()=>gcCloud.sync({recheck:true});byId('cloudLogout').onclick=()=>gcCloud.signOut();
   byId('cloudUseLocal').onclick=()=>gcCloud.resolve('local');byId('cloudUseRemote').onclick=()=>gcCloud.resolve('remote');
   byId('cloudRecovery').onclick=()=>{const backups=gcCloud.read('backups')||[],conflict=gcCloud.session?gcCloud.read('conflict_'+gcCloud.session.user.id):null;download('gym-coach-recuperacion.json',JSON.stringify({backups,conflict},null,2));};
   window.addEventListener('online',()=>gcCloud.sync());window.addEventListener('focus',()=>gcCloud.sync());

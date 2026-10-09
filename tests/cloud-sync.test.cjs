@@ -142,3 +142,42 @@ test('Different app versions merge as metadata without pausing workout synchroni
   const result=merge({profile:{appVersion:36}},{profile:{appVersion:38}},{profile:{appVersion:39}});
   assert.deepEqual(result.conflicts,[]);assert.equal(result.value.profile.appVersion,39);
 });
+
+test('A stale session readiness snapshot does not block a valid dated register',()=>{
+  const date='2026-10-09',rd={date,sleep:3,energy:4,weight:70};
+  const base={readiness:[rd],sessions:[{date,readiness:null,exercises:[]}]};
+  const local=copy(base),remote=copy(base);
+  local.sessions[0].readiness={...rd,weight:69};
+  remote.sessions[0].readiness=rd;
+  remote.sessions[0].exercises=[{id:'mobile',sets:[{weight:40,reps:12}]}];
+  const original=JSON.stringify(local),result=merge(base,local,remote);
+  assert.deepEqual(result.conflicts,[]);assert.deepEqual(result.value.sessions[0].readiness,rd);
+  assert.equal(result.value.sessions[0].exercises[0].id,'mobile');assert.equal(JSON.stringify(local),original);
+});
+test('Independent readiness fields merge after an empty snapshot, but real differences still conflict',()=>{
+  const date='2026-10-09',rd={date,sleep:3,energy:3,stress:2};
+  const base={readiness:[rd],sessions:[{date,readiness:null,exercises:[]}]},local=copy(base),remote=copy(base);
+  local.readiness[0].energy=4;remote.readiness[0].stress=1;
+  const result=merge(base,local,remote);assert.deepEqual(result.conflicts,[]);
+  assert.equal(result.value.sessions[0].readiness.energy,4);assert.equal(result.value.sessions[0].readiness.stress,1);
+  remote.readiness[0].energy=2;assert.ok(merge(base,local,remote).conflicts.includes('readiness[2026-10-09].energy'));
+});
+test('Legacy snapshots without a dated register retain data and merge individual fields from null',()=>{
+  const date='2026-10-09',base={sessions:[{date,readiness:null}]};
+  const result=merge(base,{sessions:[{date,readiness:{sleep:3,energy:4}}]},{sessions:[{date,readiness:{sleep:3,stress:1}}]});
+  assert.deepEqual(result.conflicts,[]);assert.deepEqual(result.value.sessions[0].readiness,{sleep:3,energy:4,stress:1});
+  assert.ok(merge(base,{sessions:[{date,readiness:{sleep:2}}]},{sessions:[{date,readiness:{sleep:3}}]}).conflicts.length);
+});
+test('Manual sync rechecks a paused conflict, preserving the pause for actual competing edits',async()=>{
+  const api=server(),a=client(api),b=client(api);a.data.settings.target=1;
+  await a.sync.signIn('test@example.test','password');await b.sync.signIn('test@example.test','password');
+  a.data.settings.target=2;b.data.settings.target=3;await b.sync.sync();await a.sync.sync();
+  const writes=api.writes;await a.sync.sync({recheck:true});assert.equal(a.sync.state,'conflict');assert.equal(api.writes,writes);
+  b.data.settings.target=2;await b.sync.sync();await a.sync.sync({recheck:true});
+  assert.equal(a.sync.state,'synced');assert.equal(a.sync.conflict,null);assert.equal(a.sync.read('conflict_test-user'),null);
+  a.stop();b.stop();
+});
+test('A saved local edit shows pending immediately rather than stale synchronized status',async()=>{
+  const api=server(),a=client(api);await a.sync.signIn('test@example.test','password');
+  a.data.settings.changed=true;a.sync.changed();assert.equal(a.sync.state,'pending');a.stop();
+});

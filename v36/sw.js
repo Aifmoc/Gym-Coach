@@ -1,9 +1,9 @@
 /* Gym Coach v36. Offline shell, sync client and rest messages. */
-const VERSION='v36-20261009-sync39';
+const VERSION='v36-20261009-sync40';
 const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
 const CACHE=PREFIX+VERSION;
 const SHELL=new URL('index.html',self.registration.scope).href;
-const ASSETS=['cloud-config.js?v=36','cloud-sync.js?v=39'].map(path=>new URL(path,self.registration.scope).href);
+const ASSETS=['cloud-config.js?v=36','cloud-sync.js?v=40'].map(path=>new URL(path,self.registration.scope).href);
 let restTimer=null;
 self.addEventListener('install',event=>{
   event.waitUntil((async()=>{const cache=await caches.open(CACHE);await cache.addAll([SHELL,...ASSETS].map(url=>new Request(url,{cache:'reload'})));await self.skipWaiting()})());
