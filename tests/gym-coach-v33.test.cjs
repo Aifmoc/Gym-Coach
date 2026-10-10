@@ -35,6 +35,8 @@ test('Today is the reference, even with a better Saturday mark and an older comp
   assert.match(byId('todayGoal').innerHTML,/10,1 kg × 15/);
   assert.doesNotMatch(byId('todayGoal').innerHTML,/18 kg/);
   assert.match(byId('lastComparableDate').textContent,/2026-10-06.*mismo slot/);
+  assert.match(byId('lastComparableMini').innerHTML,/<div>Serie 1 · 8 × 13,5 · RIR 0<\/div>/);
+  assert.match(byId('lastComparableMini').innerHTML,/<div>Serie 2 · 14 × 10,1 · RIR 1<\/div>/);
 });
 test('Same-day order uses the latest saved execution, never the best',()=>{
   context.db.sessions.at(-1).exercises.push(log('later',{sets:[{weight:10.1,reps:10,rir:1}]}));

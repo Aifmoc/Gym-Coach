@@ -318,7 +318,7 @@ body.keyboard-open .toast{bottom:18px}
             <div class="compareSub">Peso × repeticiones sugeridos a partir del último registro comparable.</div>
           </div>
           <div class="compareBox last">
-            <div class="compareLabel">Último comparable</div>
+            <div class="compareLabel">Última sesión · reps × carga</div>
             <div class="compareMain" id="lastComparableMini">Aún sin referencia.</div>
             <div class="compareSub" id="lastComparableDate">—</div>
           </div>
@@ -3462,7 +3462,7 @@ function renderPerformanceComparison(){
   if(!e){todayBox.textContent='Selecciona un ejercicio.';lastBox.textContent='Aún sin referencia.';lastDate.textContent='—';refreshSetTargetHintsV22();return}
   const it=plannedItem(e.id),targets=it?.sets||[],coach=coachTargetForV22(e);
   const prev=v21FindExact(e),log=prev.log,prevSets=v21WorkSets(log);
-  if(log){lastBox.innerHTML=prevSets.map((z,i)=>`<span>${i+1}) ${fmt(z.reps)}×${fmt(z.weight)}${Number.isFinite(z.rir)?` RIR${z.rir}`:''}</span>`).join(' · ');lastDate.textContent=`${dateLabel(log.date)}${prev.exact?' · mismo slot y configuración':' · otro slot/configuración · solo contexto'}`}
+  if(log){lastBox.innerHTML=prevSets.map((z,i)=>`<div>Serie ${i+1} · ${fmt(z.reps)} × ${fmt(z.weight)}${Number.isFinite(z.rir)?` · RIR ${z.rir}`:' · RIR sin registrar'}</div>`).join('');lastDate.textContent=`${dateLabel(log.date)}${prev.exact?' · mismo slot y configuración':' · otro slot/configuración · solo contexto'}`}
   else{lastBox.textContent='Primera referencia limpia.';lastDate.textContent='Sin registro anterior'}
   if(coach){
     const lines=coach.sets.map((st,i)=>`<div class="v21TargetLine"><span class="n">${i+1}</span><div>${v22CoachSetHtml(st)}</div></div>`);
@@ -3878,7 +3878,6 @@ function gcNav37(name){
 function gcInitUx37(){
   const focus=byId('exerciseFocus37'),advanced=focus.querySelector('details.advanced'),series=document.querySelector('#record .seriesCard');
   focus.insertBefore(series,advanced);
-  const last=focus.querySelector('.compareBox.last');if(last)advanced.insertBefore(last,advanced.children[1]||null);
   const coach=document.createElement('div');coach.id='coachContext37';coach.className='small muted sectiongap';advanced.appendChild(coach);
   const options=document.createElement('details');options.className='options37';const title=document.createElement('summary');title.textContent='Avisos de descanso';options.appendChild(title);
   const alerts=byId('vibrationEnabled').closest('.row');options.appendChild(alerts);options.appendChild(byId('vibrationStatus'));series.querySelector('.seriesHeader').after(options);

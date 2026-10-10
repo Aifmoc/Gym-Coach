@@ -1,5 +1,5 @@
 /* Gym Coach v40. Offline shell, sync client and rest messages. */
-const VERSION='v40-20261010-target-import';
+const VERSION='v40-20261010-visible-history';
 const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
 const CACHE=PREFIX+VERSION;
 const SHELL=new URL('index.html',self.registration.scope).href;
