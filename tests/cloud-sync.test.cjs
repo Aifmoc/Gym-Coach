@@ -80,6 +80,12 @@ test('Edits during an asynchronous checkpoint remain pending and reach the next 
   await a.sync.sync();assert.equal(a.data.settings.second,true);assert.equal(a.sync.state,'pending');
   await a.sync.sync();assert.equal(api.row.document.settings.second,true);a.stop();
 });
+test('A reload without network still hydrates archived recovery downloads',async()=>{
+  const api=server(),a=client(api);a.sync.archive=new Archive();await a.sync.signIn('test@example.test','password');await a.sync.backup('Recovery');
+  let requests=0;const fresh=new Sync({config,storage:a.storage,archive:a.sync.archive,getData:()=>a.data,online:()=>false,fetch:async()=>{requests++;throw Error('Offline');}});
+  await fresh.sync();assert.equal(fresh.state,'offline');assert.equal(requests,0);
+  assert.equal(fresh.read('backups')[0].reason,'Recovery');assert.ok(fresh.read('base_test-user'));clearTimeout(fresh.timer);a.stop();
+});
 test('Public config rejects secret keys, arbitrary hosts and insecure URLs',()=>{
   assert.equal(validConfig(config),true);assert.equal(validConfig({...config,publishableKey:'sb_secret_do_not_use'}),false);
   assert.equal(validConfig({...config,url:'https://evil.test'}),false);assert.equal(validConfig({...config,url:'http://test-project.supabase.co'}),false);

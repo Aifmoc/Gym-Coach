@@ -222,13 +222,14 @@
     async sync({recheck=false}={}){
       if(!this.enabled||!this.session||(this.conflict&&!recheck))return;
       if(this.busy){this.pending=true;return;}
-      if(!this.online()){this.status('offline');return;}
       this.busy=true;this.pending=false;this.status('syncing');
       try{
+        const initialUid=this.session.user.id;
+        await this.prepareStorage(initialUid);
+        if(this.session?.user?.id!==initialUid)return;
+        if(!this.online()){this.status('offline');return;}
         await this.refresh();
         const uid=this.session.user.id;
-        await this.prepareStorage(uid);
-        if(this.session?.user?.id!==uid)return;
         for(let attempt=0;attempt<4;attempt++){
           const rows=await this.request('/rest/v1/gym_coach_state?select=document,revision&user_id=eq.'+encodeURIComponent(uid));
           if(this.session?.user?.id!==uid)return;
