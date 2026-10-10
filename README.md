@@ -129,3 +129,13 @@ valores del dispositivo y de la nube si persiste. El estado previo se edita en
 el registro por fecha; su copia dentro de la sesión se reconstruye desde ese
 registro antes de comparar revisiones antiguas. Una copia desactualizada no
 bloquea la cuenta; las diferencias reales conservan la elección y recuperación.
+
+### Corrección de almacenamiento local (10 de octubre)
+
+Las copias de recuperación, los checkpoints y las versiones en conflicto se
+guardan en IndexedDB para que sus duplicados del histórico no llenen localStorage
+e impidan sincronizar las comidas nuevas. Las copias antiguas se migran después
+de confirmar la transacción; un fallo conserva la copia original y pausa la
+sincronización. Los registros actuales, los borradores y la cuenta mantienen sus
+claves. La descarga de recuperación conserva el acceso a las copias migradas.
+La corrección también está incluida en el diseño v36.

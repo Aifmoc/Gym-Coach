@@ -98,15 +98,62 @@
     if(/^sb_publishable_[A-Za-z0-9_-]+$/.test(config.publishableKey||''))return true;
     try{const body=JSON.parse(atob(config.publishableKey.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return body.role==='anon';}catch{return false;}
   }
+  // Recovery copies and merge checkpoints can each be as large as the whole
+  // app. Keep them in IndexedDB, outside localStorage's much smaller quota.
+  // A legacy copy is removed only after its archive transaction commits.
+  function recoveryStore(indexedDB){
+    if(!indexedDB)return null;
+    let connection;
+    const open=()=>connection||(connection=new Promise((resolve,reject)=>{
+      const request=indexedDB.open('gymCoachCloudRecoveryV1',1);
+      request.onupgradeneeded=()=>request.result.createObjectStore('copies');
+      request.onsuccess=()=>{const db=request.result;db.onversionchange=()=>{db.close();connection=null;};resolve(db);};
+      request.onerror=()=>{connection=null;reject(request.error);};
+      request.onblocked=()=>{connection=null;reject(Error('Cierra las otras ventanas de Gym Coach para preparar las copias de recuperación.'));};
+    }));
+    const run=async(key,value,write=false)=>{
+      const db=await open();
+      return new Promise((resolve,reject)=>{
+        const tx=db.transaction('copies',write?'readwrite':'readonly');
+        const request=write?tx.objectStore('copies').put(value,key):tx.objectStore('copies').get(key);
+        tx.oncomplete=()=>resolve(request.result);
+        tx.onabort=()=>reject(tx.error||Error('No se ha podido guardar la copia de recuperación.'));
+        tx.onerror=()=>{}; // onabort reports the failed transaction
+      });
+    };
+    return {get:key=>run(key),set:(key,value)=>run(key,value,true)};
+  }
   class Sync{
     constructor(options){
       Object.assign(this,{fetch:globalThis.fetch?.bind(globalThis),storage:globalThis.localStorage,online:()=>globalThis.navigator?.onLine!==false,onStatus:()=>{},onApply:()=>{},delay:1200},options);
       this.prefix='gymCoachCloudV1';this.session=this.read('session');this.owner=this.read('owner');
+      this.largeValues=new Map();this.archive=options.archive===undefined?recoveryStore(globalThis.indexedDB):options.archive;
       this.busy=false;this.pending=false;this.timer=null;this.conflict=null;this.enabled=validConfig(this.config);
       this.status(this.enabled?(this.session?'pending':'signedout'):'setup');
     }
-    read(key){try{return JSON.parse(this.storage.getItem(this.prefix+'_'+key)||'null')}catch{return null;}}
+    read(key){try{const raw=this.storage.getItem(this.prefix+'_'+key);return raw!==null?JSON.parse(raw):this.largeValues?.get(key)??null;}catch{return this.largeValues?.get(key)??null;}}
     write(key,value){this.storage.setItem(this.prefix+'_'+key,JSON.stringify(value));}
+    async prepareStorage(uid){
+      if(!this.archive)return;
+      for(const key of ['backups','base_'+uid,'conflict_'+uid]){
+        const full=this.prefix+'_'+key,raw=this.storage.getItem(full);
+        if(raw!==null){
+          const value=JSON.parse(raw);
+          await this.archive.set(full,value);
+          this.largeValues.set(key,value);
+          // Another tab may have saved a newer copy during the transaction.
+          if(this.storage.getItem(full)===raw)this.storage.removeItem(full);
+        }else{
+          this.largeValues.set(key,await this.archive.get(full)??null);
+        }
+      }
+    }
+    async writeLarge(key,value){
+      if(!this.archive){this.write(key,value);return;}
+      await this.archive.set(this.prefix+'_'+key,clone(value));
+      this.largeValues.set(key,clone(value));
+      this.storage.removeItem(this.prefix+'_'+key);
+    }
     status(state,detail=''){this.state=state;this.onStatus({state,detail,email:this.session?.user?.email||''});}
     changed(){if(this.session&&equal(pack(this.getData()),this.read('base_'+this.session.user.id)?.document))return;this.pending=true;if(this.conflict)return;this.status(this.session?'pending':this.state);clearTimeout(this.timer);if(this.session)this.timer=setTimeout(()=>this.sync(),this.delay);}
     async request(path,{body,method=body?'POST':'GET',auth=true}={}){
@@ -156,11 +203,22 @@
       if(globalThis.navigator?.locks)await globalThis.navigator.locks.request(this.prefix+'_auth',async()=>{const newer=this.read('session');if(newer)this.session=newer;if(this.session.expires_at<=Date.now()/1000+60)await refresh();});
       else await refresh();
     }
-    backup(reason){
-      const backups=this.read('backups')||[];backups.push({at:new Date().toISOString(),reason,data:clone(this.getData())});this.write('backups',backups.slice(-5));
+    async backup(reason){
+      const backups=clone(this.read('backups')||[]);backups.push({at:new Date().toISOString(),reason,data:clone(this.getData())});await this.writeLarge('backups',backups.slice(-5));
     }
-    checkpoint(doc,revision){this.write('base_'+this.session.user.id,{document:clone(doc),revision});this.owner=this.session.user.id;this.write('owner',this.owner);}
+    async checkpoint(doc,revision){const uid=this.session?.user?.id;if(!uid)return;await this.writeLarge('base_'+uid,{document:clone(doc),revision});if(this.session?.user?.id!==uid)return;this.owner=uid;this.write('owner',this.owner);}
     apply(doc){this.onApply(unpack(doc,this.getData()));}
+    async accept(local,document,revision){
+      const uid=this.session?.user?.id;if(!uid)return;
+      await this.checkpoint(document,revision);if(this.session?.user?.id!==uid)return;
+      const latest=pack(this.getData()),after=merge(local,latest,document);
+      if(after.conflicts.length){
+        this.conflict={base:local,local:latest,remote:{document,revision},document:after.value,paths:after.conflicts};
+        await this.writeLarge('conflict_'+uid,{local:latest,remote:this.conflict.remote,paths:after.conflicts});
+        this.status('conflict',after.conflicts.join(', '));return;
+      }
+      this.apply(after.value);this.pending=!equal(after.value,document);this.status(this.pending?'pending':'synced');
+    }
     async sync({recheck=false}={}){
       if(!this.enabled||!this.session||(this.conflict&&!recheck))return;
       if(this.busy){this.pending=true;return;}
@@ -169,34 +227,34 @@
       try{
         await this.refresh();
         const uid=this.session.user.id;
+        await this.prepareStorage(uid);
+        if(this.session?.user?.id!==uid)return;
         for(let attempt=0;attempt<4;attempt++){
           const rows=await this.request('/rest/v1/gym_coach_state?select=document,revision&user_id=eq.'+encodeURIComponent(uid));
           if(this.session?.user?.id!==uid)return;
           const remote=rows[0]||null,base=this.read('base_'+uid);
           if(!base&&remote){
-            this.backup('Antes de traer la cuenta a este dispositivo');
-            this.checkpoint(remote.document,remote.revision);this.apply(remote.document);
-            this.status('synced');return;
+            const local=pack(this.getData());
+            await this.backup('Antes de traer la cuenta a este dispositivo');
+            if(this.session?.user?.id!==uid)return;
+            await this.accept(local,remote.document,remote.revision);return;
           }
           const local=pack(this.getData()),remoteDoc=remote?.document||{},baseDoc=remote?base?.document||{}:{};
           const result=merge(baseDoc,local,remoteDoc);
           if(result.conflicts.length){
             this.conflict={remote,base:baseDoc,local,document:result.value,paths:result.conflicts};
-            this.write('conflict_'+uid,{at:new Date().toISOString(),local,remote,paths:result.conflicts});
+            await this.writeLarge('conflict_'+uid,{at:new Date().toISOString(),local,remote,paths:result.conflicts});
             this.status('conflict',result.conflicts.join(', '));return;
           }
-          if(this.conflict){this.conflict=null;this.write('conflict_'+uid,null);}
+          if(this.conflict){await this.writeLarge('conflict_'+uid,null);this.conflict=null;}
           if(remote&&equal(result.value,remoteDoc)){
-            this.checkpoint(result.value,remote.revision);this.apply(result.value);this.status('synced');return;
+            await this.accept(local,result.value,remote.revision);return;
           }
           const resultRow=await this.request('/rest/v1/rpc/gym_coach_save',{body:{p_document:result.value,p_expected_revision:remote?.revision||0}});
           if(this.session?.user?.id!==uid)return;
           if(!resultRow?.ok)continue; // concurrent write: fetch and rebase again
           // Edits made while the request was in flight are rebased, never overwritten.
-          const latest=pack(this.getData()),after=merge(local,latest,result.value);
-          this.checkpoint(result.value,resultRow.revision);
-          if(after.conflicts.length){this.conflict={base:local,local:latest,remote:{document:result.value,revision:resultRow.revision},document:after.value,paths:after.conflicts};this.write('conflict_'+uid,{local:latest,remote:this.conflict.remote,paths:after.conflicts});this.status('conflict',after.conflicts.join(', '));return;}
-          this.apply(after.value);this.pending=!equal(after.value,result.value);this.status(this.pending?'pending':'synced');return;
+          await this.accept(local,result.value,resultRow.revision);return;
         }
         this.pending=true;this.status('pending','Otro dispositivo está guardando; volveré a intentarlo.');
       }catch(e){
@@ -208,17 +266,19 @@
     }
     async resolve(choice){
       if(!this.conflict)return;
-      this.backup('Antes de resolver cambios simultáneos');
       if(!['remote','local'].includes(choice))return;
-      const resolved=merge(this.conflict.base,pack(this.getData()),this.conflict.remote.document,'',[],choice).value;
-      this.checkpoint(this.conflict.remote.document,this.conflict.remote.revision);this.apply(resolved);
-      this.conflict=null;this.write('conflict_'+this.session.user.id,null);await this.sync();
+      const uid=this.session?.user?.id;if(!uid)return;
+      await this.backup('Antes de resolver cambios simultáneos');
+      if(this.session?.user?.id!==uid)return;
+      await this.checkpoint(this.conflict.remote.document,this.conflict.remote.revision);if(this.session?.user?.id!==uid)return;
+      const resolved=merge(this.conflict.base,pack(this.getData()),this.conflict.remote.document,'',[],choice).value;this.apply(resolved);
+      await this.writeLarge('conflict_'+this.session.user.id,null);this.conflict=null;await this.sync();
     }
     async signOut(){
       const old=this.session;this.session=null;clearTimeout(this.timer);this.storage.removeItem(this.prefix+'_session');this.status('signedout');
       if(old)await this.fetch(this.config.url.replace(/\/$/,'')+'/auth/v1/logout',{method:'POST',headers:{apikey:this.config.publishableKey,Authorization:'Bearer '+old.access_token}}).catch(()=>{});
     }
   }
-  return {Sync,merge,pack,unpack,validConfig,equal};
+  return {Sync,merge,pack,unpack,validConfig,equal,recoveryStore};
 });
 

@@ -32,6 +32,54 @@ function client(api,data=state()){
   holder.sync=new Sync({config,fetch:api.fetch,storage:holder.storage,getData:()=>holder.data,onApply:next=>{holder.data=next},online:()=>holder.online,onStatus:info=>holder.states.push(info.state)});
   holder.stop=()=>clearTimeout(holder.sync.timer);return holder;
 }
+class Archive{
+  constructor(){this.data=new Map();this.fail=false;this.beforeSet=null;}
+  async get(key){return copy(this.data.get(key)??null);}
+  async set(key,value){if(this.fail)throw Error('Archive unavailable');if(this.beforeSet){const cb=this.beforeSet;this.beforeSet=null;await cb(key,value);}this.data.set(key,copy(value));}
+}
+class QuotaStorage extends Storage{
+  setItem(key,value){
+    const bytes=[...this.data].filter(([k])=>k!==key).reduce((n,[k,v])=>n+k.length+v.length,0)+key.length+value.length;
+    if(bytes>this.limit){const e=new Error('Storage quota exceeded');e.name='QuotaExceededError';throw e;}
+    super.setItem(key,value);
+  }
+}
+test('Full mobile storage migrates recovery copies before pausing a conflict; resolving uploads its pending meal',async()=>{
+  const api=server(),a=client(api);await a.sync.signIn('test@example.test','password');
+  const archive=new Archive(),storage=new QuotaStorage();storage.data=new Map(a.storage.data);
+  storage.data.set('gymCoachCloudV1_backups',JSON.stringify([{data:{legacy:'x'.repeat(4000)}}]));
+  storage.data.set('gymCoachDiegoV1',JSON.stringify(a.data));
+  storage.limit=[...storage.data].reduce((n,[k,v])=>n+k.length+v.length,0)+50;
+  a.storage=storage;a.sync.storage=storage;a.sync.archive=archive;
+  const originalPrimary=storage.getItem('gymCoachDiegoV1');
+  a.data.settings.choice='mobile';api.row.document.settings.choice='web';api.row.revision++;
+  a.data.dayFood['2026-10-10']=[{id:'breakfast',name:'Test breakfast',kcal:700,p:40,c:80,f:20}];
+  await a.sync.sync();assert.equal(a.sync.state,'conflict');
+  assert.equal(storage.getItem('gymCoachCloudV1_backups'),null);
+  assert.equal(storage.getItem('gymCoachCloudV1_base_test-user'),null);
+  assert.equal(storage.getItem('gymCoachCloudV1_conflict_test-user'),null);
+  assert.equal(a.sync.read('backups')[0].data.legacy.length,4000);
+  assert.equal(storage.getItem('gymCoachDiegoV1'),originalPrimary);
+  await a.sync.resolve('remote');assert.equal(a.sync.state,'synced');
+  assert.equal(api.row.document.dayFood['2026-10-10'][0].kcal,700);
+  assert.equal(api.row.document.settings.choice,'web');assert.ok(a.sync.read('backups').length>=2);
+  const fresh=new Sync({config,fetch:api.fetch,storage,archive,getData:()=>a.data,onApply:next=>{a.data=next}});
+  await fresh.sync();assert.equal(fresh.state,'synced');assert.equal(fresh.read('base_test-user').revision,api.row.revision);
+  assert.equal(fresh.read('backups')[0].data.legacy.length,4000);clearTimeout(fresh.timer);a.stop();
+});
+test('Failed archive migration keeps local checkpoints and records and never uploads',async()=>{
+  const api=server(),a=client(api);await a.sync.signIn('test@example.test','password');
+  const base=a.storage.getItem('gymCoachCloudV1_base_test-user'),writes=api.writes;
+  a.sync.archive=new Archive();a.sync.archive.fail=true;a.data.settings.newMeal=true;
+  await a.sync.sync();assert.equal(a.sync.state,'error');assert.equal(api.writes,writes);
+  assert.equal(a.storage.getItem('gymCoachCloudV1_base_test-user'),base);assert.equal(a.data.settings.newMeal,true);a.stop();
+});
+test('Edits during an asynchronous checkpoint remain pending and reach the next upload',async()=>{
+  const api=server(),a=client(api);a.sync.archive=new Archive();await a.sync.signIn('test@example.test','password');
+  a.data.settings.first=true;a.sync.archive.beforeSet=(key)=>{if(key.endsWith('_base_test-user'))a.data.settings.second=true;};
+  await a.sync.sync();assert.equal(a.data.settings.second,true);assert.equal(a.sync.state,'pending');
+  await a.sync.sync();assert.equal(api.row.document.settings.second,true);a.stop();
+});
 test('Public config rejects secret keys, arbitrary hosts and insecure URLs',()=>{
   assert.equal(validConfig(config),true);assert.equal(validConfig({...config,publishableKey:'sb_secret_do_not_use'}),false);
   assert.equal(validConfig({...config,url:'https://evil.test'}),false);assert.equal(validConfig({...config,url:'http://test-project.supabase.co'}),false);
