@@ -139,3 +139,12 @@ de confirmar la transacción; un fallo conserva la copia original y pausa la
 sincronización. Los registros actuales, los borradores y la cuenta mantienen sus
 claves. La descarga de recuperación conserva el acceso a las copias migradas.
 La corrección también está incluida en el diseño v36.
+
+### Importación de objetivos (10 de octubre)
+
+El importador acepta tanto `@1` como `@RIR1` y series separadas por `|` o `·`.
+Un `slot=` explícito tiene prioridad sobre el destino seleccionado; si el ejercicio
+no pertenece al destino, el error explica que hay que elegir su rutina.
+Los objetivos sin unidad/peso base dejan esos campos sin especificar. La ubicación,
+máquina y variante siguen coincidiendo exactamente; los registros históricos y
+los objetivos con metadatos explícitos mantienen sus restricciones de carga.

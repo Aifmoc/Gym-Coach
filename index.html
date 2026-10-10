@@ -3309,6 +3309,15 @@ function gcSameConfiguration39(a,b){
   const base=x=>x.baseLoad==null||x.baseLoad===''?null:+x.baseLoad;
   return base(a)===base(b);
 }
+function gcSameTargetConfiguration41(target,scope){
+  // GC_TARGETS lines do not normally specify units/base weight. Missing metadata
+  // leaves those two fields unspecified; named machines/variants still match
+  // exactly, and an explicitly stored base or unit retains its restriction.
+  const resolved={...target};
+  if(target.baseLoad===undefined)resolved.baseLoad=scope.baseLoad;
+  if(target.loadUnit===undefined)resolved.loadUnit=scope.loadUnit;
+  return gcSameConfiguration39(resolved,scope);
+}
 function gcLegacyLogSlot39(log,date,session){
   if(log.workoutSlotId)return log.workoutSlotId;
   const candidates=Object.keys(TRAINING_PLAN_V21).filter(k=>TRAINING_PLAN_V21[k].items.some(it=>it.id===log.exerciseId));
@@ -3326,7 +3335,7 @@ function gcLegacyLogSlot39(log,date,session){
 }
 function gcTargetSlot39(t){
   if(t.workoutSlotId)return t.workoutSlotId;
-  const latest=gcHistoryLogs().find(x=>x.exerciseId===t.exerciseId&&gcSameConfiguration39(x,t)&&x.date<=String(t.createdAt||'').slice(0,10));
+  const latest=gcHistoryLogs().find(x=>x.exerciseId===t.exerciseId&&gcSameTargetConfiguration41(t,x)&&x.date<=String(t.createdAt||'').slice(0,10));
   if(latest?.workoutSlotId)return latest.workoutSlotId;
   const candidates=Object.keys(TRAINING_PLAN_V21).filter(k=>TRAINING_PLAN_V21[k].items.some(it=>it.id===t.exerciseId));
   return candidates.length===1?gcSlot(candidates[0],t.exerciseId):candidates.length===0?`extra:${t.exerciseId}`:null;
@@ -3360,7 +3369,7 @@ function v22ParseRange(raw){
   if(!m)return null;const a=+m[1].replace(',','.'),b=m[2]?+m[2].replace(',','.'):a;return [Math.min(a,b),Math.max(a,b)];
 }
 function v22ParseTargetSet(raw){
-  const m=String(raw||'').trim().replace(/×/g,'x').match(/^(\d+(?:[.,]\d+)?)\s*x\s*([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)\s*@\s*([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)$/i);
+  const m=String(raw||'').trim().replace(/×/g,'x').match(/^(\d+(?:[.,]\d+)?)\s*x\s*([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)\s*@\s*(?:RIR\s*)?([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)$/i);
   if(!m)return null;const weight=+m[1].replace(',','.'),reps=v22ParseRange(m[2]),rir=v22ParseRange(m[3]);if(!Number.isFinite(weight)||!reps||!rir)return null;
   return {weight,repMin:reps[0],repMax:reps[1],rirMin:rir[0],rirMax:rir[1],rirLabel:rir[0]===rir[1]?String(rir[0]):`${rir[0]}–${rir[1]}`};
 }
@@ -3379,11 +3388,11 @@ function importCoachTargetsV22(){
     parts.forEach(tok=>{
       const eq=tok.indexOf('=');
       if(eq>0){const k=v22CoachNorm(tok.slice(0,eq)),v=tok.slice(eq+1).trim();if(k==='slot'||k==='workoutslotid')workoutSlotId=v;else if(k==='day'||k==='dia')workoutSlotId=gcSlot(v,ex.id);else if(k==='location'||k==='ubicacion')location=v;else if(k==='machine'||k==='maquina')machine=v;else if(k==='variant'||k==='variante')variant=v;else{const st=v22ParseTargetSet(tok);if(st)sets.push(st)}}
-      else{const st=v22ParseTargetSet(tok);if(st)sets.push(st);else if(!location)location=tok;}
+      else{const parsed=tok.split(/\s*[·;]\s*/).map(v22ParseTargetSet);if(parsed.length&&parsed.every(Boolean))sets.push(...parsed);else if(!location)location=tok;}
     });
     if(!location)location=db.settings?.defaultLocation||'';
     if(!sets.length){errors.push(`L${ln+1}: sin series parseables`);return}
-    if(!workoutSlotId)workoutSlotId=gcImportSlot(ex.id);if(!workoutSlotId){errors.push(`L${ln+1}: ejercicio repetido; indica slot= o elige el día de destino`);return}if(!gcValidSlot(workoutSlotId,ex.id)){errors.push(`L${ln+1}: slot no válido para este ejercicio`);return}
+    if(!workoutSlotId)workoutSlotId=gcImportSlot(ex.id);if(!workoutSlotId){errors.push(`L${ln+1}: ejercicio repetido; indica slot= o elige el día de destino`);return}if(!gcValidSlot(workoutSlotId,ex.id)){errors.push(`L${ln+1}: ${ex.name} no pertenece al día de destino elegido; selecciona su rutina o indica slot=`);return}
     const same=t=>t.workoutSlotId===workoutSlotId&&t.status==='pending'&&t.exerciseId===ex.id&&v22CoachNorm(t.location)===v22CoachNorm(location)&&v22CoachNorm(t.machine||'')===v22CoachNorm(machine)&&v22CoachNorm(t.variant||'')===v22CoachNorm(variant);
     db.coachTargets.filter(same).forEach(t=>{t.status='replaced';t.replacedAt=new Date().toISOString()});
     db.coachTargets.push({id:'ct'+Date.now()+Math.random().toString(36).slice(2,7),exerciseId:ex.id,exerciseName:ex.name,location,machine,variant,workoutSlotId,sets,createdAt:new Date().toISOString(),status:'pending'});added++;
@@ -3699,7 +3708,7 @@ coachTargetForV22=function(e){
   const scope={exerciseId:e.id,workoutSlotId:gcCurrentSlot(e.id),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:byId('variant')?.value||'',loadUnit:byId('loadUnit')?.value||'unknown',baseLoad:byId('baseLoad')?.value||null};
   const latest=gcComparableHistory(scope)[0];
   return [...(db.coachTargets||[])].filter(t=>{
-    if(t.status!=='pending'||t.exerciseId!==e.id||gcTargetSlot39(t)!==scope.workoutSlotId||!gcSameConfiguration39(t,scope))return false;
+    if(t.status!=='pending'||t.exerciseId!==e.id||gcTargetSlot39(t)!==scope.workoutSlotId||!gcSameTargetConfiguration41(t,scope))return false;
     const recorded=latest?.loggedAt||Date.parse(latest?.savedAt||'');
     // Older goals remain visible in the list; the next prescription uses the
     // latest comparable execution instead of silently returning to an old mark.

@@ -5,7 +5,7 @@ function definition(name){const start=[...source.matchAll(new RegExp('^function 
 function harness(){
  const plans={1:{items:[{id:'reverse'},{id:'row_t'}]},2:{items:[{id:'triceps_v'},{id:'military'}]},5:{items:[{id:'pulldown_bi'},{id:'row_bi'},{id:'reverse'}]},6:{items:[{id:'triceps_v'},{id:'inc_plate'}]}};
  const ctx=vm.createContext({Date,Number,String,Math,Set,db:{sessions:[],settings:{workoutOverrides:{},combine:{}}},today:()=> '2026-10-09',TRAINING_PLAN_V21:plans,gcSlot:(k,id)=>`routine:${k}:${id}`,v21WorkSets:x=>x.sets.filter(s=>s.reps>0&&s.weight>0&&!s.warmup)});
- for(const name of ['normKey','gcConfiguration39','gcSameConfiguration39','gcLegacyLogSlot39','gcTargetSlot39','gcHistoryLogs','gcComparableHistory'])vm.runInContext(definition(name),ctx);
+ for(const name of ['normKey','gcConfiguration39','gcSameConfiguration39','gcSameTargetConfiguration41','gcLegacyLogSlot39','gcTargetSlot39','gcHistoryLogs','gcComparableHistory'])vm.runInContext(definition(name),ctx);
  return ctx;
 }
 const log=(exerciseId,extra={})=>({exerciseId,location:'Goya',machine:'',variant:'',baseLoad:null,sets:[{weight:73,reps:7,rir:1}],...extra});
