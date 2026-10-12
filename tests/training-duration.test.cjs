@@ -31,8 +31,8 @@ function harness(){
     ensureExerciseFromInput:()=>({exercise,isNew:false}),saveVariantMeta:()=>({loadUnit:'total_kg',variantKey:'row|goya'}),
     rawSetText:()=>'',gcCurrentSlot:()=> 'routine:1:row',gcReplacement:null,
     refreshNutritionDayType:noop,coachTargetForV22:()=>null,consumeCoachTargetV22:noop,gcCompletePending:noop,persist:()=>{saved=JSON.stringify(context.db);},
-    clearSetRows:noop,storeRestEndV21:noop,cancelRestNotification:noop,releaseWakeLockV21:noop,updateTimer:noop});
-  for(const name of ['currentSession','markTrainingEntry','trainingDurationLabel','renderTrainingDuration','bindTrainingTimeListeners','todayText','currentRestElapsed','confirmCurrentSet','saveExercise'])vm.runInContext(definition(name),context);
+    safeClone:structuredClone,gcSaveDraft41:()=>true,setAutosaveStatus:noop,clearTimeout:noop,draftTimer:null,clearDraft:noop,writeSnapshot:noop,renderAll:noop,setRest:noop,restSec:120,clearSetRows:noop,storeRestEndV21:noop,cancelRestNotification:noop,releaseWakeLockV21:noop,updateTimer:noop});
+  for(const name of ['currentSession','markTrainingEntry','trainingDurationLabel','renderTrainingDuration','bindTrainingTimeListeners','todayText','currentRestElapsed','gcValidSet41','gcConfirmSet41','confirmCurrentSet','saveExercise'])vm.runInContext(definition(name),context);
   context.bindTrainingTimeListeners();
   function event(selector,{type='input',value='8',invalid=false}={}){
     const target={value,type:'number',valueAsNumber:invalid?NaN:Number(value),matches:s=>s.split(',').includes(selector),closest:s=>s.split(',').includes(selector)?target:null};

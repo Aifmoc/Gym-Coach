@@ -24,7 +24,7 @@ test('Off-day Crunch retains its own routine and three prescribed series through
 });
 test('A newly selected exercise loads its own machine and variant; an active draft cannot be silently reassigned',()=>{
   const {c,fields}=harness();fields.exerciseSelect.value='Crunch';
-  Object.assign(c,{gcLoadedExercise40:'row_b',hasUnsavedSeries:()=>false,gcLoadContext39:()=>{},gcRenderExerciseRoutine40:()=>{},toast:()=>{}});
+  Object.assign(c,{gcLoadedExercise40:'row_b',hasUnsavedSeries:()=>false,gcFinishBeforeChange41:()=>false,gcLoadContext39:()=>{},gcRenderExerciseRoutine40:()=>{},toast:()=>{}});
   const start=source.indexOf('loadExerciseContext=function(){',source.indexOf('let gcLoadedExercise40=null;'));
   vm.runInContext(source.slice(start,source.indexOf('\n};',start)+4),c);
   c.loadExerciseContext();assert.equal(fields.machine.value,'');assert.equal(fields.variant.value,'');assert.equal(c.gcSelectedSlot,'routine:4:crunch');
