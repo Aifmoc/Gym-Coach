@@ -85,3 +85,8 @@ test('Restoring a draft retains confirmation, notes, rest intervals and replacem
  h.byId('sets').innerHTML='';assert.equal(h.c.restoreActiveDraft(true),true);const restored=h.rows()[0];
  assert.equal(restored.dataset.confirmed,'1');assert.equal(restored.dataset.rir,'1');assert.equal(restored.dataset.restActual,'35');assert.equal(restored.querySelector('.setnote').value,'seat 2');assert.equal(h.c.gcReplacement.slot,'routine:1:row_t');assert.equal(h.c.restEndsAt,end);assert.equal(h.c.gcConfirmSet41(restored,true),false);
 });
+
+test('Typing the next search query after confirmation commits the original exercise before releasing its identity',()=>{
+ const h=harness();h.c.gcConfirmSet41(h.addRow(),true);h.byId('exerciseSelect').value='Remo';h.c.loadExerciseContext();
+ assert.equal(h.c.db.sessions[0].exercises.length,1);assert.equal(h.c.db.sessions[0].exercises[0].exerciseId,'pullover');assert.equal(h.byId('exerciseSelect').value,'Remo');assert.equal(h.c.gcLoadedExercise40,null);assert.equal(h.rows().length,0);
+});

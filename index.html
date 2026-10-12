@@ -3760,10 +3760,11 @@ const gcLoadContext39=loadExerciseContext;
 loadExerciseContext=function(){
   const e=exerciseFromInput(),preserveRest=!!e&&e.id===gcLoadedExercise40||!gcLoadedExercise40&&restEndsAt>Date.now()-12*60*60*1000;
   if(gcLoadedExercise40&&hasUnsavedSeries()&&(!e||e.id!==gcLoadedExercise40)){
+    const requested=byId('exerciseSelect').value;
     byId('exerciseSelect').value=exById(gcLoadedExercise40)?.name||'';
-    if(!e){toast('Completa o confirma las series actuales antes de cambiar');return}
     if(!gcFinishBeforeChange41())return;
-    byId('exerciseSelect').value=e.name;
+    byId('exerciseSelect').value=requested;
+    if(!e){gcLoadedExercise40=null;gcSelectedSlot=null;gcReplacement=null;}
   }
   if(e&&e.id!==gcLoadedExercise40){
     // All entry routes (search, typed names, plan buttons) use the same context.
