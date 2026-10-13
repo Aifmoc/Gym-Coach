@@ -2211,7 +2211,7 @@ function syncDayNutritionFromLog(){
 // ---- Ración inteligente: modula suavemente la ración típica según el hueco que queda ----
 function suggestedQty(food){
   const base=food.defaultQty||food.base||100;
-  if(food.cat==='Bebidas')return base;
+  if(food.cat==='Bebidas'||food.portions?.length)return base;
   const g=nutritionGoal(currentDayType());
   if(!g||!g.kcal)return base; // sin objetivo estricto → ración típica
   const t=dayTotals();
@@ -2288,10 +2288,10 @@ function renderFoodSearch(){
     const sq=suggestedQty(f);
     const m=foodMacros(f,sq);
     const modo=f.modo?` · ${f.modo}`:'';
-    const portions=f.cat==='Bebidas'?`<div class="row sectiongap">${(f.portions||[]).map(([label,ml])=>`<button type="button" class="btn drinkPortion" data-name="${escapeAttr(f.name)}" data-ml="${ml}" style="min-height:34px;padding:4px 8px">${escapeHtml(label)} · ${ml} ml</button>`).join('')}</div>`:'';
+    const portions=f.portions?.length?`<div class="row sectiongap">${f.portions.map(([label,qty])=>`<button type="button" class="btn foodPortion" data-name="${escapeAttr(f.name)}" data-qty="${qty}" style="min-height:34px;padding:4px 8px">${escapeHtml(label)} · ${fmt(qty)} ${escapeHtml(f.unit)}</button>`).join('')}</div>`:'';
     return `<div class="item"><div class="itemtop"><div><b>${f.name}</b> <span class="small muted">${f.cat||''}${modo}</span></div></div>${portions}
       <div class="row sectiongap" style="align-items:center;gap:8px">
-        <div class="field" style="width:110px;margin:0"><input type="number" class="foodQtyInput" data-name="${escapeAttr(f.name)}" value="${sq}" step="${f.unit==='unidad'?1:5}" min="0" style="min-height:40px"><span class="small muted">${f.unit}</span></div>
+        <div class="field" style="width:110px;margin:0"><input type="number" class="foodQtyInput" data-name="${escapeAttr(f.name)}" value="${sq}" step="${f.unit==='unidad'?1:f.portions?.length?0.5:5}" min="0" style="min-height:40px"><span class="small muted">${f.unit}</span></div>
         <div class="small muted grow" data-macro-for="${escapeAttr(f.name)}">${Math.round(m.kcal)} kcal · P ${fmt(m.p)} · C ${fmt(m.c)} · G ${fmt(m.f)}${Number.isFinite(m.fiber)?` · Fi ${fmt(m.fiber)}`:''}${Number.isFinite(m.sugar)?` · Az ${fmt(m.sugar)}`:''}</div>
         <button class="btn ok addFoodBtn" data-name="${escapeAttr(f.name)}" style="min-height:40px;padding:6px 12px">Añadir</button>
       </div></div>`;
@@ -2302,9 +2302,9 @@ function renderFoodSearch(){
     const lbl=box.querySelector(`[data-macro-for="${CSS.escape(inp.dataset.name)}"]`);
     if(lbl)lbl.textContent=`${Math.round(m.kcal)} kcal · P ${fmt(m.p)} · C ${fmt(m.c)} · G ${fmt(m.f)}${Number.isFinite(m.fiber)?` · Fi ${fmt(m.fiber)}`:''}${Number.isFinite(m.sugar)?` · Az ${fmt(m.sugar)}`:''}`;
   }));
-  box.querySelectorAll('.drinkPortion').forEach(b=>b.addEventListener('click',()=>{
+  box.querySelectorAll('.foodPortion').forEach(b=>b.addEventListener('click',()=>{
     const inp=box.querySelector(`.foodQtyInput[data-name="${CSS.escape(b.dataset.name)}"]`);
-    if(inp){inp.value=b.dataset.ml;inp.dispatchEvent(new Event('input',{bubbles:true}))}
+    if(inp){inp.value=b.dataset.qty;inp.dispatchEvent(new Event('input',{bubbles:true}))}
   }));
   box.querySelectorAll('.addFoodBtn').forEach(b=>b.addEventListener('click',()=>{
     const f=db.foods.find(x=>x.name===b.dataset.name);if(!f)return;
@@ -3913,13 +3913,32 @@ function gcBeverages32(){
   db.profile.beverageDbVersion=32;db.profile.appVersion=Math.max(db.profile.appVersion||0,32);gcStore();
 }
 gcBeverages32();
+// Ticket Mercadona 13/10/2026: append missing foods without changing existing
+// catalog indices, recipe references, journal entries or edited nutritional data.
+function gcTicketFoods42(){
+  if((db.profile.mercadonaTicketVersion||0)>=1)return;
+  const rows=[
+    {name:'Pan Campeón del Mundo',aliases:['Pan Campeón del Mundo rebanado','Pan campeón mundo'],cat:'Hidratos',unit:'g',defaultQty:35,kcal:241,p:8.3,c:36,f:5.8,fiber:5.8,sugar:1.2,addedSugar:null,estimated:true,portions:[['Media rebanada mediana aprox.',17.5],['1 rebanada mediana aprox.',35],['2 rebanadas medianas aprox.',70],['3 rebanadas medianas aprox.',105]],modo:'tal cual · rebanada mediana ≈35 g; cantidad editable',note:'Referencia publicada por 100 g (241 kcal); comprobar etiqueta si cambia. El peso por rebanada es orientativo: pesa una y ajusta los gramos.',sourceUrl:'https://www.backshop-tk.de/produkt/weltmeisterbrot-510/'},
+    {name:'Digestive avena chocolate Hacendado',aliases:['Digestive avena chocolate','Galletas Digestive avena chocolate con leche Hacendado'],cat:'Otros',unit:'g',defaultQty:16.5,kcal:485,p:7.4,c:59,f:23,fiber:6.3,sugar:31,addedSugar:null,portions:[['1 galleta',16.5],['2 galletas',33],['3 galletas',49.5]],modo:'tal cual · 1 galleta ≈16,5 g',note:'Etiqueta oficial Mercadona: por 100 g; envase 280 g, unas 17 galletas de 16,5 g.',sourceUrl:'https://tienda.mercadona.es/product/52594/galletas-digestive-avena-chocolate-con-leche-hacendado-paquete'},
+    {name:'Café light sin lactosa Hacendado',aliases:['Café con leche light sin lactosa Hacendado','Café Latte Light sin lactosa','Café light sin lactosa'],cat:'Bebidas',unit:'ml',defaultQty:250,kcal:42,p:3,c:5.7,f:0.8,fiber:0,sugar:5.6,addedSugar:null,portions:[['Medio vaso',125],['1 vaso/envase',250]],modo:'listo para beber · envase 250 ml',note:'Etiqueta oficial Mercadona: por 100 ml. Contiene azúcar y edulcorante; sin lactosa.',sourceUrl:'https://tienda.mercadona.es/product/10642/cafe-con-leche-light-sin-lactosa-hacendado-vaso'},
+    {name:'Comino molido Hacendado',aliases:['Comino molido','Cominos molidos','Cominos molidos Hacendado'],cat:'Otros',unit:'g',defaultQty:2,kcal:375,p:17.8,c:33.7,f:22.3,fiber:10.5,sugar:2.3,addedSugar:0,estimated:true,portions:[['Ración pequeña',1],['Ración habitual',2]],modo:'especia · peso en gramos',note:'Estimación para comino puro; no es una etiqueta nutricional de Hacendado. Hidratos disponibles estimados descontando la fibra del total publicado.',sourceUrl:'https://www.alesframa.com/especias/296-comino-molido.html'}
+  ];
+  db.foods=db.foods||[];
+  for(const row of rows){
+    const names=[row.name,...row.aliases].map(v22CoachNorm);
+    if(db.foods.some(f=>names.includes(v22CoachNorm(f.name))))continue;
+    db.foods.push({base:100,editable:true,estimated:false,...row});
+  }
+  db.profile.mercadonaTicketVersion=1;gcStore();
+}
+gcTicketFoods42();
 byId('copyNutritionDay').addEventListener('click',copyNutritionDay);
 const gcOverride=setWorkoutOverride;
 setWorkoutOverride=function(value){if(hasUnsavedSeries()){toast('Finaliza el ejercicio actual antes de cambiar la rutina');return}gcSelectedSlot=null;gcReplacement=null;gcOverride(value);refreshNutritionDayType();renderPerformanceComparison();updateNextSetSuggestion()};
 const gcCombine=toggleCombine;
 toggleCombine=function(key){if(hasUnsavedSeries()){toast('Finaliza el ejercicio antes de combinar rutinas');return}gcSelectedSlot=null;gcReplacement=null;gcCombine(key);refreshNutritionDayType();renderPerformanceComparison()};
 const gcAll=renderAll;
-renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settings||{};gcFoods31();gcBeverages32();gcAll()};
+renderAll=function(){db.weeklyPending=db.weeklyPending||[];db.settings=db.settings||{};gcFoods31();gcBeverages32();gcTicketFoods42();gcAll()};
 
 
 // v37 changes presentation only; data, targets and sync retain their existing engine.
