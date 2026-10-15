@@ -1,5 +1,5 @@
 /* Gym Coach v40. Offline shell, sync client and rest messages. */
-const VERSION='v40-20261013-mercadona-ticket';
+const VERSION='v40-20261015-latest-references';
 const PREFIX='gym-coach-'+encodeURIComponent(self.registration.scope)+'-';
 const CACHE=PREFIX+VERSION;
 const SHELL=new URL('index.html',self.registration.scope).href;

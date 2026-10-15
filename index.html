@@ -3357,7 +3357,7 @@ function v21RirHtml(label){return `<span class="v21Rir">RIR ${label}</span>`}
 function v21Unit(){return v9UnitLabel()}
 function v21FormatPlanSet(st){return `${st[0]}–${st[1]} reps · RIR ${st[2]}`}
 function comparableLogs(exid,variant){
-  return gcComparableHistory({exerciseId:exid,workoutSlotId:gcCurrentSlot(exid),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:variant||''});
+  return gcComparableHistory({exerciseId:exid,workoutSlotId:gcCurrentSlot(exid),location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:variant||'',loadUnit:byId('loadUnit')?.value||'unknown',baseLoad:byId('baseLoad')?.value??null});
 }
 function gcHistoryLogs(){
   return db.sessions.flatMap((ss,sessionIndex)=>(ss.exercises||[]).map((x,logIndex)=>({...x,workoutSlotId:gcLegacyLogSlot39(x,ss.date,ss),slotInferred:!x.workoutSlotId,date:ss.date,sessionId:ss.id,order:x.order||logIndex+1,sessionIndex,logIndex})))
@@ -3441,7 +3441,7 @@ function v22ParseRange(raw){
   if(!m)return null;const a=+m[1].replace(',','.'),b=m[2]?+m[2].replace(',','.'):a;return [Math.min(a,b),Math.max(a,b)];
 }
 function v22ParseTargetSet(raw){
-  const m=String(raw||'').trim().replace(/×/g,'x').match(/^(\d+(?:[.,]\d+)?)\s*x\s*([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)\s*@\s*(?:RIR\s*)?([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)$/i);
+  const m=String(raw||'').trim().replace(/×/g,'x').match(/^(\d+(?:[.,]\d+)?)\s*(?:kg\s*)?x\s*([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)\s*@\s*(?:RIR\s*)?([\d.,]+(?:\s*[-–]\s*[\d.,]+)?)$/i);
   if(!m)return null;const weight=+m[1].replace(',','.'),reps=v22ParseRange(m[2]),rir=v22ParseRange(m[3]);if(!Number.isFinite(weight)||!reps||!rir)return null;
   return {weight,repMin:reps[0],repMax:reps[1],rirMin:rir[0],rirMax:rir[1],rirLabel:rir[0]===rir[1]?String(rir[0]):`${rir[0]}–${rir[1]}`};
 }
@@ -3539,11 +3539,12 @@ function renderPerformanceComparison(){
   if(coach){
     const lines=coach.sets.map((st,i)=>`<div class="v21TargetLine"><span class="n">${i+1}</span><div>${v22CoachSetHtml(st)}</div></div>`);
     const remaining=targets.slice(coach.sets.length).map((t,j)=>`<div class="v21TargetLine"><span class="n">${coach.sets.length+j+1}</span><div>${t[0]}–${t[1]} reps · ${v21RirHtml(t[2])} · carga según histórico</div></div>`);
-    todayBox.innerHTML=`<div class="small" style="margin-bottom:5px"><span class="coachBadge">COACH</span> ${escapeHtml(v22CoachScope(coach))}</div>`+lines.concat(remaining).join('');refreshSetTargetHintsV22();return;
+    const source=coach.createdAt?`<div class="small muted">Objetivo actualizado ${dateLabel(coach.createdAt.slice(0,10))}${coach.referenceDate?` · referencia ${dateLabel(coach.referenceDate)}`:''}${coach.newBaseline?' · nuevo recorrido: calibrar carga':''}</div>`:'';
+    todayBox.innerHTML=`<div class="small" style="margin-bottom:5px"><span class="coachBadge">COACH</span> ${escapeHtml(v22CoachScope(coach))}</div>`+source+lines.concat(remaining).join('');refreshSetTargetHintsV22();return;
   }
   if(!targets.length){todayBox.textContent='Sin esquema fijo: 2–3 series dentro del rango del ejercicio, guiadas por técnica y RIR.';refreshSetTargetHintsV22();return}
   const lines=targets.map((t,i)=>{const body=prev.exact?v21SeriesTarget(e,prevSets[i]||null,t):`${t[0]}–${t[1]} reps · ${v21RirHtml(t[2])} · calibra carga en esta máquina`;return `<div class="v21TargetLine"><span class="n">${i+1}</span><div>${body}</div></div>`});
-  const pf=prefatigueNote(e);todayBox.innerHTML=lines.join('')+(!prev.exact&&log?'<div class="small muted sectiongap">Sin referencia de este slot/configuración: calibra la carga.</div>':'')+(pf?`<div class="sectiongap" style="color:var(--warn);font-weight:600">${pf}</div>`:'');refreshSetTargetHintsV22();
+  const pf=prefatigueNote(e);todayBox.innerHTML=(prev.exact?`<div class="small muted">Desde la última ejecución comparable · ${dateLabel(log.date)}</div>`:'')+lines.join('')+(!prev.exact&&log?'<div class="small muted sectiongap">Sin referencia de este slot/configuración: calibra la carga.</div>':'')+(pf?`<div class="sectiongap" style="color:var(--warn);font-weight:600">${pf}</div>`:'');refreshSetTargetHintsV22();
 }
 function updateNextSetSuggestion(){
   refreshRecordedTargets();
@@ -3670,7 +3671,7 @@ if(byId('builderClear')) byId('builderClear').addEventListener('click',clearBuil
 
 
 if(byId('machineBusy')) byId('machineBusy').addEventListener('click',showSubstitutions);
-if(byId('loadUnit')) byId('loadUnit').addEventListener('change',()=>{updateSetWeightLabels();refreshVariantKey()});
+['loadUnit','baseLoad'].forEach(id=>['input','change'].forEach(event=>byId(id)?.addEventListener(event,()=>{updateSetWeightLabels();refreshVariantKey();renderPerformanceComparison();updateNextSetSuggestion()})));
 if(byId('todayWorkoutSelect')) byId('todayWorkoutSelect').addEventListener('change',e=>setWorkoutOverride(e.target.value));
 if(byId('resetWorkoutDay')) byId('resetWorkoutDay').addEventListener('click',()=>{if(byId('todayWorkoutSelect'))byId('todayWorkoutSelect').value='auto';setWorkoutOverride('auto')});
 ['variant','location','machine'].forEach(id=>{if(byId(id))byId(id).addEventListener('input',()=>{refreshVariantKey();const e=exerciseFromInput();if(e){const m=db.variantMeta[makeVariantKey(e)];if(m){byId('loadUnit').value=m.loadUnit||'unknown';byId('baseLoad').value=m.baseLoad!=null&&m.baseLoad!==''&&Number.isFinite(+m.baseLoad)?m.baseLoad:''}}renderPerformanceComparison();updateNextSetSuggestion();refreshSetTargetHintsV22()})});
@@ -3734,16 +3735,23 @@ plannedItem=function(id){
   const day=slot?.match(/^routine:(\d+):/);if(day)return TRAINING_PLAN_V21[day[1]]?.items.find(it=>it.id===id)||null;
   // Explicit extras keep their own history, but still need a series prescription.
   const e=exById(id);if(!e)return null;
-  const history=gcComparableHistory({exerciseId:id,workoutSlotId:slot,location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:byId('variant')?.value||''});
+  const history=gcComparableHistory({exerciseId:id,workoutSlotId:slot,location:byId('location')?.value||db.settings.defaultLocation||'',machine:byId('machine')?.value||'',variant:byId('variant')?.value||'',loadUnit:byId('loadUnit')?.value||'unknown',baseLoad:byId('baseLoad')?.value??null});
   const count=Math.max(2,v21WorkSets(history[0]).length||0);
   return {id,workoutSlotId:slot,sets:Array.from({length:Math.min(4,count)},()=>[e.repMin||8,e.repMax||12,'1'])};
 };
 const gcChoose=chooseExerciseFromPlan;
+function gcContextReference43(id,slot,location){
+  const previous=gcHistoryLogs().find(x=>x.exerciseId===id&&x.workoutSlotId===slot&&normKey(x.location)===normKey(location));
+  // A coach-confirmed change of technique starts a separate history. Only an
+  // explicitly marked new baseline can select a variant with no completed log.
+  const baseline=(db.coachTargets||[]).filter(t=>t.newBaseline&&t.status==='pending'&&t.exerciseId===id&&gcTargetSlot39(t)===slot&&normKey(t.location)===normKey(location)&&(!previous||String(t.createdAt||'')>=String(previous.savedAt||previous.date))).sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)))[0];
+  return baseline||previous;
+}
 function gcLoad(it,replacement=null){
   if(!gcFinishBeforeChange41())return false;
   gcSelectedSlot=it.workoutSlotId;gcReplacement=replacement;
   const location=byId('location').value||db.settings.defaultLocation||'';
-  const previous=gcHistoryLogs().find(x=>x.exerciseId===it.id&&x.workoutSlotId===it.workoutSlotId&&normKey(x.location)===normKey(location));
+  const previous=gcContextReference43(it.id,it.workoutSlotId,location);
   byId('machine').value=previous?.machine||'';byId('variant').value=previous?.variant||'';
   gcChoose(it.id);
   return true;
@@ -3770,7 +3778,7 @@ loadExerciseContext=function(){
     // All entry routes (search, typed names, plan buttons) use the same context.
     if(!gcSelectedSlot?.endsWith(':'+e.id)){gcSelectedSlot=gcDefaultSlot40(e.id);gcReplacement=null;}
     const location=byId('location')?.value||db.settings.defaultLocation||'';
-    const previous=gcHistoryLogs().find(x=>x.exerciseId===e.id&&x.workoutSlotId===gcCurrentSlot(e.id)&&normKey(x.location)===normKey(location));
+    const previous=gcContextReference43(e.id,gcCurrentSlot(e.id),location);
     byId('machine').value=previous?.machine||'';byId('variant').value=previous?.variant||'';
     gcLoadedExercise40=e.id;
   }
@@ -4044,7 +4052,7 @@ function gcRenderAutoReports38(){
   byId('automaticReportText').textContent=row?.report||'';
   const list=byId('automaticReportTargetList');list.replaceChildren();
   for(const target of row?.targets||[]){
-    const active=api.targetFor([row],target,gcComparableHistory(target));
+    const active=api.targetFor([row],target,gcComparableHistory({...target,loadUnit:target.reference_log?.loadUnit,baseLoad:target.reference_log?.baseLoad}));
     const item=document.createElement('div');item.className='item';
     const title=document.createElement('b');title.textContent=target.exerciseName||target.exerciseId;
     const context=document.createElement('div');context.className='small muted';context.textContent=[v22CoachScope(target),active?'Referencia del informe':'Referencia histórica'].filter(Boolean).join(' · ');

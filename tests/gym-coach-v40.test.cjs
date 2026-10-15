@@ -8,7 +8,7 @@ function harness(){
   const plans={1:{items:[{id:'row_a',sets:[[8,12,'1']]}]},4:{items:[{id:'crunch',sets:[[12,20,'1'],[12,20,'1'],[12,20,'0–1']]}]},5:{items:[{id:'row_b',sets:[[8,12,'1']]}]}};
   const history=[{exerciseId:'crunch',workoutSlotId:'routine:4:crunch',location:'Gym',machine:'',variant:'',sets:[{weight:40,reps:20}]}];
   const c=vm.createContext({Date,Number,String,Math,Set,db:{exercises,coachTargets:[],settings:{defaultLocation:'Gym'}},TRAINING_PLAN_V21:plans,byId:id=>fields[id],gcBaseItems:()=>[{id:'row_b',workoutSlotId:'routine:5:row_b'}],gcHistoryLogs:()=>history,gcTargetSlot39:t=>t.workoutSlotId,gcSlot:(k,id)=>`routine:${k}:${id}`,v21CombinedItems:()=>[{id:'row_b',workoutSlotId:'routine:5:row_b'}],exById:id=>exercises.find(e=>e.id===id),gcComparableHistory:()=>history,v21WorkSets:x=>x?.sets||[],gcSelectedSlot:null,gcReplacement:null});
-  for(const name of ['normKey','v22CoachNorm','exerciseFromInput','gcDefaultSlot40','gcCurrentSlot'])vm.runInContext(definition(name),c);
+  for(const name of ['normKey','v22CoachNorm','exerciseFromInput','gcDefaultSlot40','gcCurrentSlot','gcContextReference43'])vm.runInContext(definition(name),c);
   vm.runInContext(source.slice(source.indexOf('plannedItem=function(id){'),source.indexOf('\n};',source.indexOf('plannedItem=function(id){'))+4),c);
   return {c,fields,history};
 }
