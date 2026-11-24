@@ -3465,6 +3465,8 @@ function importCoachTargetsV22(){
     if(!location)location=db.settings?.defaultLocation||'';
     if(!sets.length){errors.push(`L${ln+1}: sin series parseables`);return}
     if(!workoutSlotId)workoutSlotId=gcImportSlot(ex.id);if(!workoutSlotId){errors.push(`L${ln+1}: ejercicio repetido; indica slot= o elige el día de destino`);return}if(!gcValidSlot(workoutSlotId,ex.id)){errors.push(`L${ln+1}: ${ex.name} no pertenece al día de destino elegido; selecciona su rutina o indica slot=`);return}
+    const rangeIssue=gcCoachTargetRangeIssue44(workoutSlotId,ex.id,sets);
+    if(rangeIssue){errors.push(`L${ln+1}: ${ex.name} S${rangeIssue.set} fuera del rango programado ${rangeIssue.min}–${rangeIssue.max} reps`);return}
     const same=t=>t.workoutSlotId===workoutSlotId&&t.status==='pending'&&t.exerciseId===ex.id&&v22CoachNorm(t.location)===v22CoachNorm(location)&&v22CoachNorm(t.machine||'')===v22CoachNorm(machine)&&v22CoachNorm(t.variant||'')===v22CoachNorm(variant);
     db.coachTargets.filter(same).forEach(t=>{t.status='replaced';t.replacedAt=new Date().toISOString()});
     db.coachTargets.push({id:'ct'+Date.now()+Math.random().toString(36).slice(2,7),exerciseId:ex.id,exerciseName:ex.name,location,machine,variant,workoutSlotId,sets,createdAt:new Date().toISOString(),status:'pending'});added++;
@@ -3707,6 +3709,35 @@ TRAINING_PLAN_V21[6].items=TRAINING_PLAN_V21[6].items.map(it=>it.id==='triceps_v
 TRAINING_PLAN_V21[6].goal+=' Tríceps habitual: unilateral con cuff; polea V disponible como sustitución.';
 function gcSlot(day,id){const names={'pull a':1,'push a':2,'pierna a':4,'pull b':5,'push b':6,'pierna b':6};const k=names[v22CoachNorm(String(day))]||+day;return TRAINING_PLAN_V21[k]?`routine:${k}:${id}`:null}
 function gcValidSlot(slot,id){return slot===`extra:${id}`||Object.keys(TRAINING_PLAN_V21).some(k=>slot===gcSlot(k,id)&&TRAINING_PLAN_V21[k].items.some(it=>it.id===id))}
+function gcCoachTargetRanges44(slot,id){
+  const match=String(slot||'').match(/^routine:(\\d+):(.+)$/);
+  if(!match||match[2]!==id)return null;
+  const item=TRAINING_PLAN_V21[match[1]]?.items?.find(it=>it.id===id);
+  return item?.sets?.map(set=>({min:+set[0],max:+set[1]}))||null;
+}
+function gcCoachTargetRangeIssue44(slot,id,sets){
+  const ranges=gcCoachTargetRanges44(slot,id);
+  if(!ranges)return null;
+  for(let i=0;i<Math.min(ranges.length,(sets||[]).length);i++){
+    const set=sets[i],range=ranges[i],min=+set.repMin,max=+set.repMax;
+    if(!Number.isFinite(min)||!Number.isFinite(max)||min>max||min<range.min||max>range.max)return {set:i+1,min:range.min,max:range.max};
+  }
+  return null;
+}
+function gcRepairInvalidCoachTargets44(){
+  let repaired=0;
+  for(const target of db.coachTargets||[]){
+    if(target.status!=='pending')continue;
+    const slot=gcTargetSlot39(target)||target.workoutSlotId||'';
+    const issue=gcCoachTargetRangeIssue44(slot,target.exerciseId,target.sets||[]);
+    if(!issue)continue;
+    target.status='replaced';target.replacedAt=new Date().toISOString();
+    target.validationError=`S${issue.set}: fuera del rango programado ${issue.min}–${issue.max} reps`;
+    repaired++;
+  }
+  if(repaired)gcSetLocal41(APPKEY,JSON.stringify(db));
+  return repaired;
+}
 function gcBaseItems(){const pick=workoutPlanSelection();return [pick.rest?null:pick.key,...combineSelectionForToday()].filter(k=>TRAINING_PLAN_V21[k]).flatMap(k=>TRAINING_PLAN_V21[k].items.map(it=>({...it,workoutSlotId:gcSlot(k,it.id)})))}
 function gcDefaultSlot40(id){
   const list=gcBaseItems().filter(it=>it.id===id);
@@ -4137,7 +4168,9 @@ function startCloudSync(){
   document.addEventListener('focusout',()=>setTimeout(gcFlushCloudView39,0));
   gcCloud.sync();
 }
+const gcRepairedTargets44=gcRepairInvalidCoachTargets44();
 startCloudSync();
+if(gcRepairedTargets44)setTimeout(()=>toast(`Sincronización reparada: ${gcRepairedTargets44} objetivo${gcRepairedTargets44===1?'':'s'} fuera de rango archivado${gcRepairedTargets44===1?'':'s'}.`),250);
 gcStartAutomaticCoach38();
 })();
 </script>
