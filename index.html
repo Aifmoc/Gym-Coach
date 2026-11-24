@@ -3710,7 +3710,7 @@ TRAINING_PLAN_V21[6].goal+=' Tríceps habitual: unilateral con cuff; polea V dis
 function gcSlot(day,id){const names={'pull a':1,'push a':2,'pierna a':4,'pull b':5,'push b':6,'pierna b':6};const k=names[v22CoachNorm(String(day))]||+day;return TRAINING_PLAN_V21[k]?`routine:${k}:${id}`:null}
 function gcValidSlot(slot,id){return slot===`extra:${id}`||Object.keys(TRAINING_PLAN_V21).some(k=>slot===gcSlot(k,id)&&TRAINING_PLAN_V21[k].items.some(it=>it.id===id))}
 function gcCoachTargetRanges44(slot,id){
-  const match=String(slot||'').match(/^routine:(\\d+):(.+)$/);
+  const match=String(slot||'').match(/^routine:(\d+):(.+)$/);
   if(!match||match[2]!==id)return null;
   const item=TRAINING_PLAN_V21[match[1]]?.items?.find(it=>it.id===id);
   return item?.sets?.map(set=>({min:+set[0],max:+set[1]}))||null;
