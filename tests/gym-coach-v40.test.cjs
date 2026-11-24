@@ -42,3 +42,24 @@ test('Conflict details look up a dated session even when it also has an ID',()=>
   const c=vm.createContext({});vm.runInContext(definition('gcConflictValue40'),c);
   assert.equal(c.gcConflictValue40({sessions:[{id:'session-id',date:'2026-10-09',readiness:{weight:70}}]},'sessions[2026-10-09].readiness.weight'),70);
 });
+
+test('Out-of-range coach targets are detected and stale local targets are archived before sync',()=>{
+  let writes=0;
+  const c=vm.createContext({
+    Date,Number,String,Math,Set,APPKEY:'app',
+    TRAINING_PLAN_V21:{4:{items:[{id:'perfect',sets:[[8,10,'1'],[10,12,'1'],[10,12,'1']]}]}},
+    db:{coachTargets:[
+      {id:'bad',exerciseId:'perfect',workoutSlotId:'routine:4:perfect',status:'pending',sets:[{repMin:13,repMax:13}]},
+      {id:'good',exerciseId:'perfect',workoutSlotId:'routine:4:perfect',status:'pending',sets:[{repMin:10,repMax:10}]}
+    ]},
+    gcTargetSlot39:t=>t.workoutSlotId,
+    gcSetLocal41:()=>{writes++}
+  });
+  for(const name of ['gcCoachTargetRanges44','gcCoachTargetRangeIssue44','gcRepairInvalidCoachTargets44'])vm.runInContext(definition(name),c);
+  assert.deepEqual(JSON.parse(JSON.stringify(c.gcCoachTargetRangeIssue44('routine:4:perfect','perfect',[{repMin:13,repMax:13}]))),{set:1,min:8,max:10});
+  assert.equal(c.gcRepairInvalidCoachTargets44(),1);
+  assert.equal(c.db.coachTargets[0].status,'replaced');
+  assert.match(c.db.coachTargets[0].validationError,/8–10/);
+  assert.equal(c.db.coachTargets[1].status,'pending');
+  assert.equal(writes,1);
+});
