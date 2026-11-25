@@ -583,6 +583,7 @@ Remo unilateral | Basic Fit Goya | machine=discos | 25x10-11@1 | 22.5x12@1 | 22.
           <div class="goal" id="plateEditorTotal">—</div>
           <div class="row sectiongap">
             <button class="btn ok" id="savePlate">Guardar plato</button>
+            <button class="btn ghost" id="addPlateDraft">Añadir al día</button>
             <button class="btn ghost" id="cancelPlate">Cancelar</button>
           </div>
         </div>
@@ -2325,6 +2326,7 @@ function renderPlates(){
     return `<div class="item"><div class="itemtop"><div><b>${p.name}</b><div class="small muted">${p.items.map(it=>`${it.name} ${it.qty}`).join(' · ')}</div></div></div>
       <div class="row sectiongap"><div class="small muted grow">${Math.round(m.kcal)} kcal · P ${fmt(m.p)} · C ${fmt(m.c)} · G ${fmt(m.f)}${m.fiberKnownKcal?` · Fi ${fmt(m.fiber)}`:''}${m.sugarKnownKcal?` · Az ${fmt(m.sugar)}`:''}</div>
       <button class="btn ok addPlate" data-i="${i}" style="min-height:36px;padding:5px 11px">Añadir</button>
+      <button class="btn ghost editPlate" data-i="${i}" style="min-height:36px;padding:5px 11px">Personalizar</button>
       <button class="btn ghost delPlate" data-i="${i}" style="min-height:36px;padding:5px 9px">×</button></div></div>`;
   }).join('');
   box.querySelectorAll('.addPlate').forEach(b=>b.addEventListener('click',()=>{
@@ -2332,6 +2334,7 @@ function renderPlates(){
     addFoodEntry(p.name,p.items.map(it=>`${it.name} ${it.qty}`).join(', '),plateMacros(p));
     toast(`${p.name} añadido`);
   }));
+  box.querySelectorAll('.editPlate').forEach(b=>b.addEventListener('click',()=>openPlateEditor(+b.dataset.i)));
   box.querySelectorAll('.delPlate').forEach(b=>b.addEventListener('click',()=>{
     if(confirm('¿Borrar este plato?')){db.myPlates.splice(+b.dataset.i,1);persist();renderPlates()}
   }));
@@ -2342,8 +2345,18 @@ function plateMacros(p){
   return m;
 }
 let plateDraft={name:'',items:[]};
-function openPlateEditor(){plateDraft={name:'',items:[]};byId('plateName').value='';byId('plateIngSearch').value='';byId('plateEditor').classList.remove('hidden');renderPlateIngResults();renderPlateDraft();byId('plateName').focus()}
-function closePlateEditor(){byId('plateEditor').classList.add('hidden')}
+let plateEditingIndex=null;
+function openPlateEditor(index=null){
+  const saved=Number.isInteger(index)?db.myPlates[index]:null;
+  plateEditingIndex=saved?index:null;
+  plateDraft=saved?{name:saved.name,items:saved.items.map(it=>({name:it.name,qtyNum:+it.qtyNum||0}))}:{name:'',items:[]};
+  byId('plateName').value=plateDraft.name;
+  byId('plateIngSearch').value='';
+  byId('savePlate').textContent=saved?'Guardar cambios':'Guardar plato';
+  byId('plateEditor').classList.remove('hidden');
+  renderPlateIngResults();renderPlateDraft();byId('plateName').focus();
+}
+function closePlateEditor(){plateEditingIndex=null;byId('plateEditor').classList.add('hidden')}
 function renderPlateIngResults(){
   const box=byId('plateIngResults');if(!box)return;
   const q=normText(byId('plateIngSearch')?.value||'');
@@ -2377,8 +2390,20 @@ function savePlateFromEditor(){
   if(!name){toast('Ponle nombre al plato');return}
   if(!plateDraft.items.length){toast('Añade al menos un ingrediente');return}
   const items=plateDraft.items.filter(it=>it.qtyNum>0).map(it=>{const f=db.foods.find(x=>x.name===it.name);return {name:it.name,qtyNum:it.qtyNum,qty:`${fmt(it.qtyNum)} ${f?f.unit:'g'}`}});
-  db.myPlates.push({name,items});persist();closePlateEditor();renderPlates();
+  if(plateEditingIndex!==null)db.myPlates[plateEditingIndex]={name,items};
+  else db.myPlates.push({name,items});
+  persist();closePlateEditor();renderPlates();
   toast(`Plato "${name}" guardado`);
+}
+function addPlateDraftToDay(){
+  const name=byId('plateName').value.trim()||'Plato personalizado';
+  const items=plateDraft.items.filter(it=>(+it.qtyNum||0)>0).map(it=>{
+    const f=db.foods.find(x=>x.name===it.name);
+    return {name:it.name,qtyNum:+it.qtyNum,qty:`${fmt(it.qtyNum)} ${f?f.unit:'g'}`};
+  });
+  if(!items.length){toast('Añade algún ingrediente primero');return;}
+  addFoodEntry(name,items.map(it=>`${it.name} ${it.qty}`).join(', '),plateMacros({items}));
+  closePlateEditor();renderPlates();toast(`${name} añadido al día`);
 }
 
 // ---- Barras de progreso de macros ----
@@ -3641,9 +3666,10 @@ if(byId('addManualFood'))byId('addManualFood').addEventListener('click',addManua
 document.querySelectorAll('.bfx').forEach(chk=>chk.addEventListener('change',renderBreakfastPreview));
 if(byId('foodSearch'))byId('foodSearch').addEventListener('input',debounce(renderFoodSearch,250));
 if(byId('foodGroupFilter'))byId('foodGroupFilter').addEventListener('change',renderFoodSearch);
-if(byId('newPlate'))byId('newPlate').addEventListener('click',openPlateEditor);
+if(byId('newPlate'))byId('newPlate').addEventListener('click',()=>openPlateEditor());
 if(byId('cancelPlate'))byId('cancelPlate').addEventListener('click',closePlateEditor);
 if(byId('savePlate'))byId('savePlate').addEventListener('click',savePlateFromEditor);
+if(byId('addPlateDraft'))byId('addPlateDraft').addEventListener('click',addPlateDraftToDay);
 if(byId('plateIngSearch'))byId('plateIngSearch').addEventListener('input',renderPlateIngResults);
 
 if(byId('restoreDraft'))byId('restoreDraft').addEventListener('click',()=>restoreActiveDraft(true));
