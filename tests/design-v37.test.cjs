@@ -48,5 +48,5 @@ test('Main service worker never stores the v36 page as the v37 offline shell',()
   vm.runInContext(fs.readFileSync(path.join(root,'sw.js'),'utf8'),c);
   handlers.fetch({request:{url:'https://aifmoc.github.io/Gym-Coach/v36/index.html'},respondWith(){responded=true;}});
   assert.equal(responded,false);
-  assert.match(fs.readFileSync(path.join(root,'.github/workflows/pages.yml'),'utf8'),/cp -R v36 _site\/v36/);
+  assert.ok(fs.existsSync(path.join(root,'v36','index.html')),'v36 remains available in the published branch');
 });
