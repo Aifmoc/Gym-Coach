@@ -4,8 +4,9 @@ function definition(name){const start=[...source.matchAll(new RegExp('^function 
 function harness(){
  const fields={coachTargetInput:{value:''},coachTargetImportStatus:{innerHTML:''},location:{value:'Test Gym'},machine:{value:''},variant:{value:''},loadUnit:{value:'added_kg'},baseLoad:{value:'22.7'}};
  const e={id:'hipthrust',name:'Hip thrust máquina'};
- const ctx=vm.createContext({Date,Number,String,Math,Set,db:{coachTargets:[],exercises:[e],settings:{coachImportDay:'5'}},byId:id=>fields[id],gcImportSlot:()=> 'routine:5:hipthrust',gcValidSlot:slot=>['routine:4:hipthrust','routine:6:hipthrust'].includes(slot),gcWriteDb:()=>{},renderCoachTargetsV22:()=>{},renderPerformanceComparison:()=>{},updateNextSetSuggestion:()=>{},refreshSetTargetHintsV22:()=>{},toast:()=>{},gcCurrentSlot:()=> 'routine:6:hipthrust',gcTargetSlot39:t=>t.workoutSlotId,gcComparableHistory:()=>[]});
- for(const name of ['normKey','v22CoachNorm','v22ParseRange','v22ParseTargetSet','v22FindExerciseByName','gcConfiguration39','gcSameConfiguration39','gcSameTargetConfiguration41','importCoachTargetsV22'])vm.runInContext(definition(name),ctx);
+ const TRAINING_PLAN_V21={'4':{items:[{id:'hipthrust',sets:[[10,15,'1'],[10,15,'1']]}]},'6':{items:[{id:'hipthrust',sets:[[10,15,'1'],[10,15,'1']]}]}};
+ const ctx=vm.createContext({Date,Number,String,Math,Set,TRAINING_PLAN_V21,db:{coachTargets:[],exercises:[e],settings:{coachImportDay:'5'}},byId:id=>fields[id],gcImportSlot:()=> 'routine:5:hipthrust',gcValidSlot:slot=>['routine:4:hipthrust','routine:6:hipthrust'].includes(slot),gcWriteDb:()=>{},renderCoachTargetsV22:()=>{},renderPerformanceComparison:()=>{},updateNextSetSuggestion:()=>{},refreshSetTargetHintsV22:()=>{},toast:()=>{},gcCurrentSlot:()=> 'routine:6:hipthrust',gcTargetSlot39:t=>t.workoutSlotId,gcComparableHistory:()=>[]});
+ for(const name of ['normKey','v22CoachNorm','v22ParseRange','v22ParseTargetSet','v22FindExerciseByName','gcConfiguration39','gcSameConfiguration39','gcSameTargetConfiguration41','gcCoachTargetRanges44','gcCoachTargetRangeIssue44','importCoachTargetsV22'])vm.runInContext(definition(name),ctx);
  const start=source.lastIndexOf('coachTargetForV22=function(e){');vm.runInContext(source.slice(start,source.indexOf('\n};',start)+4),ctx);
  return {ctx,fields,e};
 }
@@ -27,4 +28,10 @@ test('Unspecified target units/base allow the configured machine, while explicit
  assert.equal(ctx.gcSameTargetConfiguration41(target,scope),true);
  assert.equal(ctx.gcSameConfiguration39(target,scope),false); // historical comparisons remain strict
  for(const change of [{location:'Another Gym'},{machine:'Another machine'},{variant:'Another variant'},{baseLoad:30},{baseLoad:null},{loadUnit:'total_kg'}])assert.equal(ctx.gcSameTargetConfiguration41({...target,...change},scope),false);
+});
+
+test('Out-of-range targets are rejected using real programmed ranges',()=>{
+ const {ctx,fields}=harness();fields.coachTargetInput.value='Hip thrust máquina | Test Gym | slot=routine:6:hipthrust | 30 x 16-18@RIR1';
+ ctx.importCoachTargetsV22();assert.equal(ctx.db.coachTargets.length,0);
+ assert.match(fields.coachTargetImportStatus.innerHTML,/fuera del rango programado 10–15 reps/);
 });
