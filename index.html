@@ -1565,7 +1565,7 @@ function exById(id){return db.exercises.find(e=>e.id===id)}
 function e1rm(w,r){return w>0&&r>0?w*(1+r/30):0}
 function effectiveSets(log){return log.sets.filter(s=>!s.warmup&&!s.drop&&s.reps>0&&s.weight>=0)}
 function scoreButtons(){document.querySelectorAll('[data-score]').forEach(box=>{const key=box.dataset.score;box.innerHTML='';for(let i=1;i<=5;i++){const b=document.createElement('button');b.type='button';b.className='btn';b.textContent=i;b.dataset.val=i;b.addEventListener('click',()=>{box.dataset.selected=i;box.querySelectorAll('button').forEach(x=>x.classList.toggle('primary',x===b))});box.appendChild(b)}})}
-function normText(s){return (s||'').trim().toLowerCase()}
+function normText(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ')}
 function exerciseFromInput(){
   const q=v22CoachNorm(byId('exerciseSelect').value);if(!q)return null;
   const exact=db.exercises.find(e=>v22CoachNorm(e.name)===q);if(exact)return exact;
@@ -3140,8 +3140,8 @@ function v9RefLabel(f){
 function matrixFoodMacros(f,qty){return foodMacros(f,+qty||0)}
 function renderFoodMatrix(){
   const body=byId('foodMatrixBody'); if(!body)return;
-  const q=(byId('matrixSearch')?.value||'').trim().toLowerCase(), group=byId('matrixGroup')?.value||'';
-  const rows=(db.foods||[]).map((f,i)=>({f,i})).filter(({f})=>(!q||f.name.toLowerCase().includes(q))&&(!group||v9FoodGroup(f)===group));
+  const q=normText(byId('matrixSearch')?.value||''), group=byId('matrixGroup')?.value||'';
+  const rows=(db.foods||[]).map((f,i)=>({f,i})).filter(({f})=>(!q||normText(f.name).includes(q))&&(!group||v9FoodGroup(f)===group));
   body.innerHTML=rows.map(({f,i})=>{
     const ref=v9Ref(f),m=foodMacros(f,ref);
     return `<tr data-i="${i}">
